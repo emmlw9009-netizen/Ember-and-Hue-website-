@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What If Lab Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a studio console. Left = script + controls, right = the monitor. Tabs swap Studio / Channel kit / Playbook. */
+:root{
+  color-scheme:dark;
+  --bg:#0d1117; --panel:#151c26; --line:#263243; --fg:#e8edf4; --muted:#93a1b5;
+  --accent:#ffd23f; --accent-ink:#1a1400; --cool:#5ad1e6; --bad:#ff7a7a;
+  --display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{font:800 clamp(24px,4vw,34px)/1 var(--display);margin:0;letter-spacing:-.02em}
+.brand h1 span{color:var(--accent)}
+.flask{width:38px;height:38px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font:800 22px var(--display)}
+nav{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap}
+nav button{background:none;border:0;color:var(--muted);font:600 13px var(--mono);padding:8px 14px;border-radius:999px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
+nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+.studio{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;align-items:start}
+@media (max-width:900px){.studio{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px;min-width:0}
+label,.lbl{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+textarea{width:100%;min-height:360px;resize:vertical;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono)}
+select,input[type=text]{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:14px var(--body);width:100%}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.row>div{display:grid;gap:4px;flex:1 1 140px;min-width:0}
+.btn{background:var(--line);color:var(--fg);border:0;border-radius:10px;padding:10px 16px;font:700 14px var(--body);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.monitor{background:#000;border-radius:12px;overflow:hidden;display:grid;place-items:center;border:1px solid var(--line)}
+canvas#stage{display:block;max-width:100%;height:auto;max-height:70vh}
+.status{font:12px var(--mono);color:var(--muted);min-height:1.5em}
+.status.err{color:var(--bad)}
+.scenes{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 11px var(--mono);padding:4px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line);color:var(--muted);cursor:pointer}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.file{display:grid;gap:4px}
+input[type=file]{font:12px var(--mono);color:var(--muted);max-width:100%}
+.note{font-size:13px;color:var(--muted);margin:0}
+.kit{align-items:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px}
+.kit canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block}
+.copy{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono);white-space:pre-wrap;margin:0;overflow-wrap:anywhere}
+h2{font:800 22px/1.15 var(--display);margin:0;text-wrap:balance}
+h3{font:700 16px var(--display);margin:0}
+.prose{max-width:72ch;display:grid;gap:12px}
+.prose p,.prose li{margin:0}
+.prose ol,.prose ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px;list-style:none;padding:0;margin:0}
+.ideas li{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ideas li span{min-width:0}
+.ideas button{flex:none}
+.tag{font:600 10px var(--mono);color:var(--cool);text-transform:uppercase;letter-spacing:.08em}
+a{color:var(--cool)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand"><div class="flask" aria-hidden="true">?</div><h1>What If <span>Lab</span></h1></div>
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" aria-selected="true" data-tab="studio">Video maker</button>
+    <button role="tab" aria-selected="false" data-tab="kit">Channel kit</button>
+    <button role="tab" aria-selected="false" data-tab="play">Playbook</button>
+  </nav>
+</header>
+
+<!-- STUDIO -->
+<section id="tab-studio" class="studio">
+  <div class="panel">
+    <div class="row">
+      <div><label for="sample">Load a script</label>
+        <select id="sample"></select></div>
+      <div><label for="format">Format</label>
+        <select id="format"><option value="long">16:9 long video</option><option value="short">9:16 Short</option></select></div>
+    </div>
+    <div style="display:grid;gap:4px">
+      <label for="script">Script: first line "# Title", blank line between scenes, optional [visual: space] tag</label>
+      <textarea id="script" spellcheck="true"></textarea>
+    </div>
+    <div class="row">
+      <div><label for="voice">Preview voice</label><select id="voice"></select></div>
+      <div><label for="rate">Speed</label><select id="rate"><option>0.9</option><option selected>1</option><option>1.1</option><option>1.2</option></select></div>
+    </div>
+    <div class="file"><label for="vo">Voiceover audio for export (mp3/wav, optional)</label><input type="file" id="vo" accept="audio/*"></div>
+    <div class="file"><label for="music">Background music (optional, plays at 15%)</label><input type="file" id="music" accept="audio/*"></div>
+    <p class="note">Preview reads the script with your browser's voice. The export can't record that voice, so record yourself or make a voiceover in a TTS tool and upload it. Scenes stretch to fit its length.</p>
+  </div>
+  <div class="panel">
+    <div class="monitor"><canvas id="stage" width="1280" height="720" aria-label="Video preview"></canvas></div>
+    <div class="scenes" id="sceneChips"></div>
+    <div class="row">
+      <button class="btn primary" id="play">▶ Preview with voice</button>
+      <button class="btn" id="stop" disabled>■ Stop</button>
+      <button class="btn" id="export">● Export video (.webm)</button>
+      <button class="btn" id="thumb">Make thumbnail</button>
+    </div>
+    <div class="status" id="status" role="status"></div>
+    <p class="note">Export plays the whole video in real time and then saves a .webm file. YouTube accepts .webm uploads directly.</p>
+  </div>
+</section>
+
+<!-- KIT -->
+<section id="tab-kit" class="kit" hidden>
+  <div class="panel"><h3>Profile picture · 800×800</h3><canvas id="avatar" width="800" height="800"></canvas><button class="btn" data-dl="avatar">Download PNG</button></div>
+  <div class="panel"><h3>Channel banner · 2560×1440</h3><canvas id="banner" width="2560" height="1440"></canvas><p class="note">Keep text inside the middle 1546×423 safe area. This banner does.</p><button class="btn" data-dl="banner">Download PNG</button></div>
+  <div class="panel"><h3>Thumbnail · 1280×720</h3><canvas id="thumbC" width="1280" height="720"></canvas><button class="btn" data-dl="thumbC">Download PNG</button></div>
+  <div class="panel"><h3>Channel details</h3>
+    <div class="lbl">Name</div><pre class="copy">What If Lab</pre>
+    <div class="lbl">Handle (check availability)</div><pre class="copy">@WhatIfLab  ·  backups: @WhatIfLabTV, @TheWhatIfLab</pre>
+    <div class="lbl">Description</div><pre class="copy" id="desc">What if the Moon disappeared? What if you fell into a black hole? What if humans could photosynthesize?
+
+What If Lab takes one wild question at a time and follows the science all the way to the end. Every episode is researched, sourced, and explained in plain language with animated visuals.
+
+New experiments every Tuesday and Friday. Shorts daily.
+
+Sources for every video are in its description. Got a question for the Lab? Leave it in the comments.</pre>
+    <button class="btn" id="copyDesc">Copy description</button>
+    <div class="lbl">Keywords</div><pre class="copy">what if, science explained, hypothetical, space, physics, biology, history what if, science animation, explainer, educational</pre>
+  </div>
+</section>
+
+<!-- PLAYBOOK -->
+<section id="tab-play" class="panel" hidden>
+  <div class="prose">
+    <h2>Set up the account (10 minutes, you do this part)</h2>
+    <ol>
+      <li>Make a fresh Google account for the channel so it stays separate from your personal one.</li>
+      <li>On YouTube, go to your profile → <b>Create a channel</b> → name it <b>What If Lab</b> and claim the handle from the Channel kit tab.</li>
+      <li>Upload the profile picture and banner from the Channel kit. Paste the description and keywords.</li>
+      <li>Verify your phone number in YouTube Studio so you can upload videos over 15 minutes and custom thumbnails.</li>
+      <li>On every upload, set "Altered or synthetic content" to <b>Yes</b> if you use an AI voice. YouTube requires that disclosure for realistic AI content.</li>
+    </ol>
+
+    <h2>What the winning explainer channels do</h2>
+    <ul>
+      <li><b>Hook in the first 30 seconds.</b> That's where the steepest drop-off happens on every video. Open on the question and the most surprising consequence, not on a greeting.</li>
+      <li><b>Change the picture every 8 to 12 seconds.</b> The video maker does this per scene, so keep scenes to 2 to 4 sentences.</li>
+      <li><b>A real mechanism to reason through.</b> "What if" works best in space, physics, biology and history, where you can follow cause and effect step by step.</li>
+      <li><b>Use chapters.</b> Add timestamps in the description. They help retention, not just navigation.</li>
+      <li><b>Avoid mass-produced AI slop.</b> YouTube is demonetizing channels that pump unedited AI narration over stock footage. Write the angle yourself, fact-check, cite sources, and ideally record your own voice. That's what keeps you monetizable.</li>
+      <li><b>Watch for breakout videos:</b> ones with far more views than the channel has subscribers. They show topics people want right now.</li>
+    </ul>
+
+    <h2>Posting rhythm</h2>
+    <p>Two long videos a week (6 to 10 minutes, about 900 to 1,400 words of script) plus one Short a day cut from them. Switch Format to 9:16 and use a single 3-scene excerpt for each Short.</p>
+
+    <h2>Video ideas</h2>
+    <p class="note">Click "Draft" to load a starter outline into the video maker. Then fact-check it and write it in your own words.</p>
+  </div>
+  <ul class="ideas" id="ideas"></ul>
+  <p class="note">Research sources: <a href="https://nerdbot.com/2026/07/21/faceless-youtube-channels-ai-production-model/" target="_blank" rel="noopener">Nerdbot</a> · <a href="https://outlierkit.com/resources/faceless-youtube-growth-strategy/" target="_blank" rel="noopener">OutlierKit</a> · <a href="https://kineclip.com/blog/what-if-video-format-guide-2026/" target="_blank" rel="noopener">Kineclip</a> · <a href="https://tubemilestone.com/blog/youtube-hook-formula" target="_blank" rel="noopener">TubeMilestone</a> · <a href="https://www.socialmediaexaminer.com/youtube-retention" target="_blank" rel="noopener">Social Media Examiner</a></p>
+</section>
+</div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const ACC='#ffd23f', COOL='#5ad1e6', BG='#0d1117';
+
+/* ---------- sample scripts ---------- */
+const SAMPLES={
+"What if the Moon disappeared?":`# What if the Moon disappeared?
+
+Tonight, look up. The Moon is there, the way it has been for four and a half billion years. Now imagine it simply vanishes. No explosion. Just gone. [visual: moon]
+
+The first thing you'd notice is the dark. A full Moon reflects enough sunlight to read by. Without it, nights become pitch black, and nocturnal animals that hunt or navigate by moonlight lose their guide overnight. [visual: night]
+
+Next, the oceans. The Moon's gravity drives most of our tides. Without it, tides shrink to about a third of their height, driven only by the Sun. Tide pools, and every creature that depends on them, start to dry out. [visual: ocean]
+
+The slow change is the scary one. The Moon steadies the tilt of Earth's axis. Without it, over millions of years that tilt could wobble wildly, swinging our seasons between extremes. [visual: earth]
+
+And our days would change too. The Moon has been slowing Earth's spin for billions of years. Without that brake, days would stop getting longer. [visual: time]
+
+So the Moon is more than a light in the sky. It's a stabilizer for our whole planet. What should the Lab test next? Tell us in the comments. [visual: question]`,
+"What if you fell into a black hole?":`# What if you fell into a black hole?
+
+You're floating near a black hole, and you start to fall. What happens next depends on one thing: how big the black hole is. [visual: blackhole]
+
+Near a small, stellar black hole, gravity pulls on your feet much harder than your head. You get stretched thin like spaghetti. Scientists actually call this spaghettification. [visual: blackhole]
+
+Near a supermassive black hole, like the one at the center of our galaxy, that stretching is gentle at the edge. You could cross the event horizon without feeling a thing. [visual: space]
+
+To someone watching from far away, you'd never seem to fall in. Your image slows down, turns red, and fades as time near the horizon stretches. [visual: time]
+
+What happens inside? Nobody knows. It's one of the biggest open questions in physics. And that's exactly why we keep asking what if. [visual: question]`,
+"What if humans could photosynthesize?":`# What if humans could photosynthesize?
+
+Imagine skipping lunch and standing in the sun instead. What if your skin could make food from light, like a leaf? [visual: sun]
+
+Here's the problem: surface area. A person has about two square meters of skin. Even with perfect plant cells, sunbathing all day would cover only a tiny slice of the energy you burn. [visual: people]
+
+Plants get away with it because they barely move. No brain, no muscles, no body heat to maintain. Your brain alone uses about a fifth of your energy. [visual: brain]
+
+To live on sunlight, you'd need skin the size of a tennis court, or a much lazier body. Some sea slugs actually do borrow chloroplasts from algae, but even they still eat. [visual: ocean]
+
+So we'll keep eating lunch. But it's a great reminder of how hungry a human body really is. [visual: question]`
+};
+const IDEAS=[
+["What if Earth stopped spinning?","earth"],["What if the Sun went out for one day?","sun"],["What if all the ice melted?","ice"],
+["What if humans never slept?","brain"],["What if the dinosaurs never went extinct?","earth"],["What if you drilled through the Earth?","fire"],
+["What if the internet went down forever?","city"],["What if every human jumped at once?","people"],["What if Earth had rings like Saturn?","space"],
+["What if the oceans dried up?","ocean"],["What if time ran backwards?","time"],["What if a black hole passed the solar system?","blackhole"],
+["What if money disappeared?","money"],["What if we lived on Mars?","space"],["What if Earth was twice as big?","earth"],
+["What if lightning never struck?","fire"],["What if you only ate one food?","people"],["What if gravity doubled?","space"]
+];
+function outline(title,v){return `# ${title}
+
+[Hook: state the question and the single most surprising result in two sentences.] [visual: ${v}]
+
+[First effect, minutes to days: what changes right away and why.] [visual: ${v}]
+
+[Second effect: the knock-on consequence most people don't expect.] [visual: question]
+
+[Long-term effect: years to millions of years.] [visual: time]
+
+[Payoff: what this tells us about the real world, plus ask viewers for the next question.] [visual: question]`;}
+
+/* ---------- script parsing ---------- */
+const KINDS=['space','moon','sun','earth','ocean','ice','fire','blackhole','time','brain','people','city','money','night','question'];
+const KEYS={blackhole:/black hole|event horizon|singularity/i,moon:/\bmoon|lunar/i,sun:/\bsun\b|solar|sunlight|star\b/i,ocean:/ocean|sea\b|tide|water|wave/i,ice:/\bice|frozen|glacier|snow|cold/i,fire:/fire|lava|heat|burn|volcan|lightning/i,time:/time|year|day|clock|hour|second/i,brain:/brain|mind|sleep|think|memory/i,people:/human|people|person|body|we\b/i,city:/city|internet|build|power grid/i,money:/money|cash|econom|price/i,earth:/earth|planet|axis|spin|continent/i,space:/space|galaxy|orbit|mars|gravity|universe/i,night:/night|dark/i};
+function parse(text){
+  const lines=text.replace(/\r/g,'').split('\n');
+  let title='Untitled experiment';
+  if(lines[0]&&lines[0].startsWith('#')){title=lines.shift().replace(/^#+\s*/,'').trim();}
+  const blocks=lines.join('\n').split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);
+  return {title,scenes:blocks.map(b=>{
+    let kind=null; const m=b.match(/\[visual:\s*([a-z ]+)\]/i);
+    let txt=b.replace(/\[visual:[^\]]*\]/ig,'').replace(/\s+/g,' ').trim();
+    if(m){const k=m[1].toLowerCase().replace(/\s/g,''); if(KINDS.includes(k))kind=k;}
+    if(!kind){for(const k in KEYS){if(KEYS[k].test(txt)){kind=k;break;}} }
+    const words=txt.split(' ').filter(Boolean);
+    return {text:txt,kind:kind||'question',words,dur:Math.max(3.5,words.length/2.6+0.6)};
+  })};
+}
+
+/* ---------- drawing ---------- */
+const stage=$('#stage'), ctx=stage.getContext('2d');
+let rnd=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(7);
+const STARS=Array.from({length:220},()=>[rnd(),rnd(),rnd()*1.6+.3,rnd()*6]);
+function bgGrad(c,w,h,a,b){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,a);g.addColorStop(1,b);c.fillStyle=g;c.fillRect(0,0,w,h);}
+function stars(c,w,h,t,n=220){c.fillStyle='#fff';for(let i=0;i<n;i++){const s=STARS[i];c.globalAlpha=.35+.5*Math.abs(Math.sin(t*.8+s[3]));c.beginPath();c.arc(s[0]*w,s[1]*h,s[2]*(w/1280),0,7);c.fill();}c.globalAlpha=1;}
+function orb(c,x,y,r,inner,outer,glow){if(glow){const gg=c.createRadialGradient(x,y,r*.8,x,y,r*1.8);gg.addColorStop(0,glow);gg.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gg;c.beginPath();c.arc(x,y,r*1.8,0,7);c.fill();}
+  const g=c.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);g.addColorStop(0,inner);g.addColorStop(1,outer);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,7);c.fill();}
+function drawVisual(c,w,h,t,kind){
+  const m=Math.min(w,h), cx=w/2, cy=h*.42;
+  switch(kind){
+  case 'space': bgGrad(c,w,h,'#060a1a','#141033');stars(c,w,h,t);orb(c,cx+Math.cos(t*.3)*m*.05,cy,m*.2,'#f0b37a','#7a3b1d','rgba(255,150,80,.25)');
+    c.strokeStyle='rgba(255,210,63,.55)';c.lineWidth=m*.012;c.beginPath();c.ellipse(cx,cy,m*.36,m*.08,-.25,0,7);c.stroke();break;
+  case 'moon': bgGrad(c,w,h,'#03060f','#0f1b33');stars(c,w,h,t);{const a=Math.min(1,0.6+0.4*Math.cos(t*.5));c.globalAlpha=a;orb(c,cx,cy,m*.22,'#f4f1e6','#8d8a80','rgba(220,230,255,.25)');
+    c.fillStyle='rgba(90,90,85,.35)';[[-.07,-.05,.05],[.06,.04,.035],[-.02,.09,.025],[.09,-.08,.02]].forEach(([dx,dy,r])=>{c.beginPath();c.arc(cx+dx*m,cy+dy*m,r*m,0,7);c.fill();});c.globalAlpha=1;}break;
+  case 'night': bgGrad(c,w,h,'#000','#050912');stars(c,w,h,t,90);c.fillStyle='#02040a';c.beginPath();c.moveTo(0,h*.8);for(let x=0;x<=w;x+=w/20)c.lineTo(x,h*.72+Math.sin(x*.01)*h*.04);c.lineTo(w,h);c.lineTo(0,h);c.fill();break;
+  case 'sun': bgGrad(c,w,h,'#2a0d00','#7a2e00');for(let i=0;i<16;i++){const a=i/16*6.283+t*.15;c.strokeStyle='rgba(255,210,63,.25)';c.lineWidth=m*.03;c.beginPath();c.moveTo(cx+Math.cos(a)*m*.25,cy+Math.sin(a)*m*.25);c.lineTo(cx+Math.cos(a)*m*.55,cy+Math.sin(a)*m*.55);c.stroke();}
+    orb(c,cx,cy,m*(.2+.01*Math.sin(t*2)),'#fff6c2','#ff8c1a','rgba(255,180,40,.5)');break;
+  case 'earth': bgGrad(c,w,h,'#020611','#0b1630');stars(c,w,h,t);orb(c,cx,cy,m*.24,'#4fb3ff','#0b3d7a','rgba(90,209,230,.3)');
+    c.save();c.beginPath();c.arc(cx,cy,m*.24,0,7);c.clip();c.fillStyle='rgba(70,170,90,.85)';for(let i=0;i<5;i++){const x=cx+((i*.21+t*.03)%1.2-.6)*m*.8;c.beginPath();c.ellipse(x,cy+(i%3-1)*m*.08,m*.07,m*.045,i,0,7);c.fill();}c.restore();break;
+  case 'ocean': bgGrad(c,w,h,'#0a2a44','#021220');for(let k=0;k<6;k++){c.strokeStyle=`rgba(90,209,230,${.15+k*.08})`;c.lineWidth=m*.008;c.beginPath();for(let x=0;x<=w;x+=8){const y=h*(.45+k*.08)+Math.sin(x*.012+t*(1+k*.2)+k)*h*.025;x?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();}break;
+  case 'ice': bgGrad(c,w,h,'#dff4ff','#7fb8d6');c.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<7;i++){const x=(i/6)*w,hh=h*(.25+.15*((i*37)%5)/5);c.beginPath();c.moveTo(x-w*.1,h*.8);c.lineTo(x,h*.8-hh);c.lineTo(x+w*.1,h*.8);c.fill();}
+    c.fillStyle='#4b8fb3';c.fillRect(0,h*.8+Math.sin(t)*3,w,h*.2);break;
+  case 'fire': bgGrad(c,w,h,'#1a0500','#000');for(let i=0;i<60;i++){const s=STARS[i],x=s[0]*w,y=h-((t*60*(s[2]+.5)+s[1]*h)%h);c.fillStyle=`rgba(255,${120+i*2},40,${.3+s[2]/3})`;c.beginPath();c.arc(x,y,m*.01*s[2],0,7);c.fill();}
+    orb(c,cx,h*.85,m*.35,'#ffd23f','rgba(255,60,0,0)');break;
+  case 'blackhole': bgGrad(c,w,h,'#000','#06040d');stars(c,w,h,t);c.save();c.translate(cx,cy);for(let i=0;i<40;i++){c.rotate(.157+t*.002);c.strokeStyle=`rgba(255,${150+i*2},60,${.05+i/120})`;c.lineWidth=m*.006;c.beginPath();c.ellipse(0,0,m*(.18+i*.006),m*(.05+i*.0015),0,0,7);c.stroke();}c.restore();
+    c.fillStyle='#000';c.beginPath();c.arc(cx,cy,m*.13,0,7);c.fill();c.strokeStyle='rgba(255,210,63,.8)';c.lineWidth=m*.006;c.stroke();break;
+  case 'time': bgGrad(c,w,h,'#101827','#05080f');{const r=m*.25;c.strokeStyle=ACC;c.lineWidth=m*.012;c.beginPath();c.arc(cx,cy,r,0,7);c.stroke();for(let i=0;i<12;i++){const a=i/12*6.283;c.beginPath();c.moveTo(cx+Math.cos(a)*r*.85,cy+Math.sin(a)*r*.85);c.lineTo(cx+Math.cos(a)*r*.95,cy+Math.sin(a)*r*.95);c.stroke();}
+    [[t*2,r*.8,m*.006],[t*.3,r*.55,m*.012]].forEach(([a,l,lw])=>{c.lineWidth=lw;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(a-1.57)*l,cy+Math.sin(a-1.57)*l);c.stroke();});}break;
+  case 'brain': bgGrad(c,w,h,'#1b0f2e','#07040f');for(let i=0;i<40;i++){const s=STARS[i],a=s[3]+t*.2*(s[2]),x=cx+Math.cos(a)*m*.3*s[0],y=cy+Math.sin(a*1.3)*m*.22*s[1];c.fillStyle=COOL;c.beginPath();c.arc(x,y,m*.006,0,7);c.fill();
+      const s2=STARS[(i+7)%40],a2=s2[3]+t*.2*s2[2];c.strokeStyle='rgba(90,209,230,.2)';c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(cx+Math.cos(a2)*m*.3*s2[0],cy+Math.sin(a2*1.3)*m*.22*s2[1]);c.stroke();}break;
+  case 'people': bgGrad(c,w,h,'#12324a','#0a1a28');for(let i=0;i<9;i++){const x=w*(.1+i*.1),bob=Math.sin(t*2+i)*h*.01,s=m*(.06+((i*13)%3)*.01);c.fillStyle=i%3?'#5ad1e6':ACC;c.beginPath();c.arc(x,h*.48+bob-s*1.6,s*.5,0,7);c.fill();c.beginPath();c.roundRect(x-s*.55,h*.48+bob-s,s*1.1,s*1.8,s*.4);c.fill();}break;
+  case 'city': bgGrad(c,w,h,'#0b1020','#1d2340');for(let i=0;i<14;i++){const x=i*w/14,bh=h*(.2+((i*53)%7)/14);c.fillStyle='#070a14';c.fillRect(x,h*.8-bh,w/14-4,bh);c.fillStyle=ACC;for(let y=h*.8-bh+10;y<h*.8-10;y+=18)if(Math.sin(i*9+y+Math.floor(t))>.3)c.fillRect(x+8,y,6,8);}c.fillStyle='#070a14';c.fillRect(0,h*.8,w,h*.2);break;
+  case 'money': bgGrad(c,w,h,'#0d2316','#04100a');for(let i=0;i<30;i++){const s=STARS[i],x=s[0]*w,y=((t*40*(s[2]+.4)+s[1]*h)%(h+60))-30;c.save();c.translate(x,y);c.rotate(t+s[3]);c.fillStyle='#3fae6a';c.fillRect(-m*.04,-m*.02,m*.08,m*.04);c.restore();}
+    c.fillStyle=ACC;c.font=`800 ${m*.3}px ${getComputedStyle(document.body).getPropertyValue('--display')}`;c.textAlign='center';c.textBaseline='middle';c.fillText('$',cx,cy);break;
+  default: bgGrad(c,w,h,'#0d1117','#1a2333');c.strokeStyle='rgba(90,209,230,.12)';c.lineWidth=1;for(let x=0;x<w;x+=m*.06){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();}for(let y=0;y<h;y+=m*.06){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}
+    c.fillStyle=ACC;c.font=`800 ${m*.45}px ${getComputedStyle(document.body).getPropertyValue('--display')}`;c.textAlign='center';c.textBaseline='middle';c.save();c.translate(cx,cy);c.rotate(Math.sin(t)*.08);c.fillText('?',0,0);c.restore();
+  }
+}
+const DISPLAY=()=>getComputedStyle(document.body).getPropertyValue('--display');
+function wrapLines(c,text,maxW){const out=[];let line='';for(const wd of text.split(' ')){const tst=line?line+' '+wd:wd;if(c.measureText(tst).width>maxW&&line){out.push(line);line=wd;}else line=tst;}if(line)out.push(line);return out;}
+function drawFrame(c,w,h,t,proj,si,sceneT){
+  const sc=proj.scenes[si]; if(!sc)return;
+  const z=1+Math.min(sceneT/sc.dur,1)*.06; c.save();c.translate(w/2,h/2);c.scale(z,z);c.translate(-w/2,-h/2);drawVisual(c,w,h,t,sc.kind);c.restore();
+  const m=Math.min(w,h);
+  // caption: show ~7-word chunk at current progress
+  const per=7, idx=Math.min(sc.words.length-1,Math.floor(sceneT/sc.dur*sc.words.length));
+  const start=Math.floor(Math.max(idx,0)/per)*per, chunk=sc.words.slice(start,start+per).join(' ');
+  c.font=`800 ${m*.065}px ${DISPLAY()}`;c.textAlign='center';c.textBaseline='middle';
+  const lines=wrapLines(c,chunk,w*.86), lh=m*.08, y0=h*(w>h?.8:.72)-(lines.length-1)*lh/2;
+  lines.forEach((ln,i)=>{c.lineWidth=m*.014;c.strokeStyle='rgba(0,0,0,.85)';c.lineJoin='round';c.strokeText(ln,w/2,y0+i*lh);c.fillStyle='#fff';c.fillText(ln,w/2,y0+i*lh);});
+  // title tag on first scene
+  if(si===0&&sceneT<3.9){c.globalAlpha=Math.max(0,Math.min(1,4-sceneT));c.font=`600 ${m*.032}px JetBrains Mono, monospace`;c.textAlign='left';const tx=proj.title.toUpperCase(),tw=c.measureText(tx).width;c.fillStyle=ACC;c.fillRect(m*.05,m*.05,tw+m*.05,m*.06);c.fillStyle='#1a1400';c.textBaseline='middle';c.fillText(tx,m*.075,m*.08);c.globalAlpha=1;}
+  // watermark + progress
+  c.font=`800 ${m*.03}px ${DISPLAY()}`;c.textAlign='right';c.textBaseline='alphabetic';c.fillStyle='rgba(255,255,255,.7)';c.fillText('WHAT IF LAB',w-m*.04,h-m*.04);
+  const total=proj.scenes.reduce((a,s)=>a+s.dur,0), done=proj.scenes.slice(0,si).reduce((a,s)=>a+s.dur,0)+sceneT;
+  c.fillStyle='rgba(255,255,255,.15)';c.fillRect(0,h-m*.012,w,m*.012);c.fillStyle=ACC;c.fillRect(0,h-m*.012,w*Math.min(done/total,1),m*.012);
+}
+
+/* ---------- state + UI ---------- */
+const sel=$('#sample'), ta=$('#script'), st=$('#status');
+Object.keys(SAMPLES).forEach(k=>sel.add(new Option(k,k)));
+try{const d=localStorage.getItem('wil-script');ta.value=d||SAMPLES[sel.value];}catch(e){ta.value=SAMPLES[sel.value];}
+sel.onchange=()=>{ta.value=SAMPLES[sel.value];refresh();};
+let proj=parse(ta.value), cur=0, running=null;
+function setSize(){const s=$('#format').value==='short';stage.width=s?720:1280;stage.height=s?1280:720;}
+function chips(){const box=$('#sceneChips');box.innerHTML='';proj.scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=`${i+1} · ${s.kind} · ${s.dur.toFixed(0)}s`;b.onclick=()=>{if(!running){cur=i;still();chips();}};box.appendChild(b);});}
+function still(){drawFrame(ctx,stage.width,stage.height,1,proj,cur,proj.scenes[cur]?proj.scenes[cur].dur*.35:0);}
+function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';st.textContent=`${proj.scenes.length} scenes · about ${Math.round(tot)} s · ${proj.scenes.reduce((a,s)=>a+s.words.length,0)} words`;chips();if(!running)still();try{localStorage.setItem('wil-script',ta.value);}catch(e){}}
+let deb;ta.oninput=()=>{clearTimeout(deb);deb=setTimeout(refresh,250);};
+$('#format').onchange=()=>{setSize();refresh();};
+
+// voices
+const synth=window.speechSynthesis;
+function loadVoices(){if(!synth)return;const vs=synth.getVoices().filter(v=>/^en/i.test(v.lang));const vsel=$('#voice');vsel.innerHTML='';vs.forEach((v,i)=>vsel.add(new Option(`${v.name} (${v.lang})`,i)));vsel._v=vs;}
+if(synth){loadVoices();synth.onvoiceschanged=loadVoices;}else{$('#voice').add(new Option('Not supported in this browser',''));}
+
+function run({speak,durs,onDone}){
+  const t0=performance.now();let si=0,sStart=t0,spoken=-1,ended=false;
+  const totalLen=durs.reduce((a,b)=>a+b,0);
+  function speakScene(i){if(!speak||!synth)return;synth.cancel();const u=new SpeechSynthesisUtterance(proj.scenes[i].text);const vs=$('#voice')._v;if(vs&&vs[$('#voice').value])u.voice=vs[$('#voice').value];u.rate=+$('#rate').value;u.onend=()=>{if(si===i&&running)next();};synth.speak(u);}
+  function next(){si++;sStart=performance.now();if(si>=proj.scenes.length){ended=true;}}
+  function tick(now){
+    if(!running)return;
+    if(ended){stopRun();onDone&&onDone();return;}
+    const sceneT=(now-sStart)/1000;
+    if(spoken!==si){spoken=si;speakScene(si);}
+    const d=durs[si];
+    // with voice, onend advances; timer is a fallback at 1.6x
+    if(sceneT>(speak&&synth?d*1.6:d))next();
+    cur=si;const s=proj.scenes[si];if(s){const scaled={...proj,scenes:proj.scenes.map((x,k)=>({...x,dur:durs[k]}))};drawFrame(ctx,stage.width,stage.height,(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));}
+    st.textContent=`Scene ${Math.min(si+1,proj.scenes.length)} of ${proj.scenes.length} · ${((now-t0)/1000).toFixed(0)} / ${totalLen.toFixed(0)} s`;
+    running=requestAnimationFrame(tick);
+  }
+  running=requestAnimationFrame(tick);
+}
+function stopRun(){if(running)cancelAnimationFrame(running);running=null;if(synth)synth.cancel();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
+$('#play').onclick=()=>{refresh();if(!proj.scenes.length)return;$('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;run({speak:true,durs:proj.scenes.map(s=>s.dur)});};
+$('#stop').onclick=()=>{stopRun();if(recorder&&recorder.state==='recording')recorder.stop();refresh();};
+
+// export
+let recorder=null;
+function audioDur(file){return new Promise(r=>{if(!file)return r(0);const a=new Audio(URL.createObjectURL(file));a.onloadedmetadata=()=>r(a.duration||0);a.onerror=()=>r(0);});}
+function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
+$('#export').onclick=async()=>{
+  refresh();if(!proj.scenes.length)return;
+  if(!stage.captureStream||!window.MediaRecorder){st.className='status err';st.textContent='This browser can’t record video. Use Chrome, Edge or Firefox on a computer.';return;}
+  const vo=$('#vo').files[0], mu=$('#music').files[0];
+  let durs=proj.scenes.map(s=>s.dur);const vd=await audioDur(vo);
+  if(vd>1){const sum=durs.reduce((a,b)=>a+b,0);durs=durs.map(d=>d*vd/sum);}
+  const stream=stage.captureStream(30);let actx=null,els=[];
+  if(vo||mu){actx=new AudioContext();const dest=actx.createMediaStreamDestination();
+    for(const [f,vol] of [[vo,1],[mu,.15]]){if(!f)continue;const el=new Audio(URL.createObjectURL(f));el.loop=f===mu;const src=actx.createMediaElementSource(el);const g=actx.createGain();g.gain.value=vol;src.connect(g).connect(dest);els.push(el);}
+    dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));}
+  const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  const chunks=[];recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:6e6}:{});
+  recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;const blob=new Blob(chunks,{type:'video/webm'});
+    const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.webm';
+    saveBlob(blob,name);st.className='status';st.textContent=`Saved ${name} (${(blob.size/1e6).toFixed(1)} MB). If no file appeared, open this page from your website instead of the preview window.`;};
+  recorder.start(500);els.forEach(e=>e.play());
+  $('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;
+  run({speak:false,durs,onDone:()=>recorder.state==='recording'&&recorder.stop()});
+};
+
+/* ---------- channel kit ---------- */
+function avatar(){const c=$('#avatar').getContext('2d'),w=800;c.fillStyle=BG;c.fillRect(0,0,w,w);
+  const g=c.createRadialGradient(400,380,40,400,400,420);g.addColorStop(0,'#1d2b44');g.addColorStop(1,BG);c.fillStyle=g;c.fillRect(0,0,w,w);
+  c.fillStyle=ACC;c.beginPath();c.moveTo(330,170);c.lineTo(470,170);c.lineTo(470,330);c.lineTo(620,600);c.quadraticCurveTo(640,650,580,650);c.lineTo(220,650);c.quadraticCurveTo(160,650,180,600);c.lineTo(330,330);c.closePath();c.fill();
+  c.fillStyle=BG;c.font=`800 300px ${DISPLAY()}`;c.textAlign='center';c.textBaseline='middle';c.fillText('?',400,500);
+  c.fillStyle=ACC;c.fillRect(300,140,200,40);}
+function banner(){const c=$('#banner').getContext('2d'),w=2560,h=1440;drawVisual(c,w,h,2,'space');c.fillStyle='rgba(13,17,23,.55)';c.fillRect(0,0,w,h);
+  c.textAlign='center';c.textBaseline='middle';c.font=`800 190px ${DISPLAY()}`;c.textAlign='left';const w1=c.measureText('What If ').width,w2=c.measureText('Lab').width,x0=1280-(w1+w2)/2;c.fillStyle='#fff';c.fillText('What If ',x0,660);c.fillStyle=ACC;c.fillText('Lab',x0+w1,660);c.textAlign='center';
+  c.fillStyle='#e8edf4';c.font='600 52px JetBrains Mono, monospace';c.fillText('ONE WILD QUESTION · FOLLOWED ALL THE WAY',1280,800);}
+function thumb(){const c=$('#thumbC').getContext('2d'),w=1280,h=720,p=parse(ta.value);const k=p.scenes[0]?p.scenes[0].kind:'question';drawVisual(c,w,h,1.5,k);
+  const g=c.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(0,0,0,.85)');g.addColorStop(.65,'rgba(0,0,0,.1)');c.fillStyle=g;c.fillRect(0,0,w,h);
+  const words=p.title.replace(/\?$/,'').replace(/^what if\s*/i,'').toUpperCase();c.textAlign='left';c.textBaseline='alphabetic';
+  c.fillStyle=ACC;c.font=`800 70px ${DISPLAY()}`;c.fillText('WHAT IF',60,170);c.font=`800 110px ${DISPLAY()}`;const ls=wrapLines(c,words+'?',760).slice(0,3);
+  ls.forEach((l,i)=>{c.lineWidth=14;c.strokeStyle='#000';c.lineJoin='round';c.strokeText(l,60,290+i*115);c.fillStyle='#fff';c.fillText(l,60,290+i*115);});}
+document.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const id=b.dataset.dl;$('#'+id).toBlob(bl=>saveBlob(bl,`what-if-lab-${id}.png`),'image/png');});
+$('#thumb').onclick=()=>{thumb();tab('kit');};
+$('#copyDesc').onclick=async()=>{try{await navigator.clipboard.writeText($('#desc').textContent);$('#copyDesc').textContent='Copied';}catch(e){const r=document.createRange();r.selectNodeContents($('#desc'));getSelection().removeAllRanges();getSelection().addRange(r);$('#copyDesc').textContent='Selected, press Ctrl+C';}};
+
+// ideas
+const ul=$('#ideas');IDEAS.forEach(([t,v])=>{const li=document.createElement('li');li.innerHTML=`<span><div class="tag">${v}</div>${t}</span>`;const b=document.createElement('button');b.className='btn';b.textContent='Draft';b.onclick=()=>{ta.value=outline(t,v);refresh();tab('studio');};li.appendChild(b);ul.appendChild(li);});
+
+// tabs
+function tab(n){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===n));['studio','kit','play'].forEach(k=>$('#tab-'+k).hidden=k!==n);if(n==='kit'){avatar();banner();thumb();}}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+
+setSize();refresh();
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(!running)still();});
+})();
+</script>
+</body>
+</html>
