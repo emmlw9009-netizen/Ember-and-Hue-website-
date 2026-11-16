@@ -354,7 +354,9 @@ $('#stop').onclick=()=>{stopRun();if(recorder&&recorder.state==='recording')reco
 // export
 let recorder=null;
 function audioDur(file){return new Promise(r=>{if(!file)return r(0);const a=new Audio(URL.createObjectURL(file));a.onloadedmetadata=()=>r(a.duration||0);a.onerror=()=>r(0);});}
-function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
+let dlP=null;const getDl=()=>dlP||(dlP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null));
+async function saveBlob(blob,name){const dl=await getDl();if(dl){try{await dl.save({filename:name,data:blob});st.className='status';st.textContent='Saved '+name;}catch(e){st.className='status err';st.textContent=e&&e.code==='declined'?'Save cancelled.':'Couldn\u2019t save the file here ('+(e&&e.code||'error')+'). Open the studio from your website to download.';}return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
 $('#export').onclick=async()=>{
   refresh();if(!proj.scenes.length)return;
   if(!stage.captureStream||!window.MediaRecorder){st.className='status err';st.textContent='This browser can’t record video. Use Chrome, Edge or Firefox on a computer.';return;}
@@ -370,7 +372,7 @@ $('#export').onclick=async()=>{
   recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
   recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;const blob=new Blob(chunks,{type:'video/webm'});
     const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.webm';
-    saveBlob(blob,name);st.className='status';st.textContent=`Saved ${name} (${(blob.size/1e6).toFixed(1)} MB). If no file appeared, open this page from your website instead of the preview window.`;};
+    st.textContent=`Video ready (${(blob.size/1e6).toFixed(1)} MB). Saving…`;saveBlob(blob,name);};
   recorder.start(500);els.forEach(e=>e.play());
   $('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;
   run({speak:false,durs,onDone:()=>recorder.state==='recording'&&recorder.stop()});
