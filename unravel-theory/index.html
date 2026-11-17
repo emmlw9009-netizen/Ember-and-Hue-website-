@@ -611,7 +611,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy
 sel.onchange=()=>{if(sel.value)newVideo(SAMPLES[sel.value]);sel.value='';};
 let proj=parse(ta.value), cur=0, running=null;
 function setSize(){const s=$('#format').value==='short';stage.width=s?720:1280;stage.height=s?1280:720;}
-function chips(){const box=$('#sceneChips');box.innerHTML='';proj.scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=`${i+1} · ${s.kind} · ${s.dur.toFixed(0)}s`;b.onclick=()=>{if(!running){cur=i;still();chips();}};box.appendChild(b);});}
+function chips(){const box=$('#sceneChips');box.innerHTML='';proj.scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=`${i+1} · ${s.kind} · ${(padToMin(proj.scenes.map(x=>x.dur),false)[i]).toFixed(0)}s`;b.onclick=()=>{if(!running){cur=i;still();chips();}};box.appendChild(b);});}
 function still(){drawFrame(ctx,stage.width,stage.height,1,proj,cur,proj.scenes[cur]?proj.scenes[cur].dur*.35:0);}
 function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';const wc=proj.scenes.reduce((a,s)=>a+s.words.length,0);st.textContent=`${proj.scenes.length} scenes · about ${Math.round(Math.max(tot,MIN_LEN))} s · ${wc} words`+(tot<MIN_LEN&&proj.scenes.length?` · Short script: the video will be stretched to ${MIN_LEN} s. Add about ${Math.ceil((MIN_LEN-tot)*2.55*(+$('#rate').value||1.15))} words to fill it naturally.`:'');chips();if(!running)still();lastDurs=null;renderKit();}
 let deb;ta.oninput=()=>{clearTimeout(deb);deb=setTimeout(refresh,250);queueSave();};
@@ -639,7 +639,7 @@ function hookTts(t){t.onLine(e=>voiceHook&&voiceHook.line(+e.id));t.onPosition(e
 function run({speak,durs,onDone}){
   const t0=performance.now();let si=0,sStart=t0,ended=false,bnd=null,lastDraw=0,posMs=0,posAt=0,waiting=false;durs=durs.slice();
   const pace=+$('#rate').value, voice=$('#voice').value, n=proj.scenes.length, kKey='wil-k-'+voice+'-'+pace;let k=1;if(speak){try{k=+localStorage.getItem(kKey)||1;}catch(e){}for(let j=0;j<n;j++)durs[j]=proj.scenes[j].dur*k;}
-  function goTo(i,now){if(i===si||i>=n)return;if(i>0){const actual=(now-sStart)/1000;if(actual>.5){const r=actual/proj.scenes[si].dur;k=k*.3+r*.7;durs[si]=actual;if(speak){try{localStorage.setItem(kKey,String(k));}catch(e){}}}for(let j=i;j<n;j++)durs[j]=proj.scenes[j].dur*k;}si=i;sStart=now;posMs=0;posAt=now;bnd=null;}
+  function goTo(i,now){if(i===si||i>=n)return;if(i>0&&(mode==='claude'||mode==='browser')){const actual=(now-sStart)/1000;if(actual>.5){const r=actual/proj.scenes[si].dur;k=k*.3+r*.7;durs[si]=actual;if(speak){try{localStorage.setItem(kKey,String(k));}catch(e){}}}for(let j=i;j<n;j++)durs[j]=proj.scenes[j].dur*k;}si=i;sStart=now;posMs=0;posAt=now;bnd=null;}
   let mode='timer';
   if(speak&&voice.startsWith('c:')&&tts){mode='claude';waiting=true;
     voiceHook={line:i=>{waiting=false;goTo(i,performance.now());},pos:(i,ms)=>{if(i===si){posMs=ms;posAt=performance.now();}}};
@@ -648,6 +648,7 @@ function run({speak,durs,onDone}){
       .catch(e=>{if(!running)return;const why=e&&(e.reason||e.code);if(why==='stopped'||why==='replaced')return;mode='timer';waiting=false;st.className='status err';st.textContent='Claude voice stopped ('+(why||'error')+'). Continuing without it.';});
   }else if(speak&&synth&&voice.startsWith('b:')){mode='browser';waiting=true;synth.cancel();const vs=$('#voice')._v,bv=vs&&vs[+voice.slice(2)];
     proj.scenes.forEach((s,i)=>{const u=new SpeechSynthesisUtterance(s.text);if(bv)u.voice=bv;u.rate=pace;u.onstart=()=>{waiting=false;goTo(i,performance.now());};u.onboundary=e=>{if(i!==si||(e.name&&e.name!=='word'))return;let wi=0;while(wi+1<s.wpos.length&&s.wpos[wi+1]<=e.charIndex)wi++;bnd={wi,at:performance.now()};};if(i===n-1)u.onend=()=>{ended=true;};synth.speak(u);});}
+  if(mode==='timer')durs=padToMin(durs,false);
   function tick(now){
     if(!running)return;
     if(ended&&(now-t0)/1000<MIN_LEN&&mode!=='hold'){ended=false;mode='hold';durs[si]=Math.max(durs[si],(now-sStart)/1000+MIN_LEN-(now-t0)/1000);}
@@ -658,7 +659,7 @@ function run({speak,durs,onDone}){
     let sceneT;
     if(mode==='claude'){sceneT=waiting?0:(posAt>sStart?(posMs+Math.min(now-posAt,300))/1000:(now-sStart)/1000);
       if(!waiting&&sceneT>durs[si]*2.5+2)goTo(si+1,now);} // safety net if the voice stalls
-    else{sceneT=(now-sStart)/1000;if(mode==='timer'&&sceneT>durs[si]){if(si+1>=n){ended=true;return;}goTo(si+1,now);sceneT=0;}}
+    else{sceneT=(now-sStart)/1000;if(mode==='timer'&&sceneT>durs[si]){if(si+1>=n){const el=(now-t0)/1000;if(el<MIN_LEN){durs[si]+=MIN_LEN-el;}else{ended=true;return;}}else{goTo(si+1,now);sceneT=0;}}}
     if(waiting){st.className='status';st.textContent='Starting narrator…';}
     if((mode==='claude'||mode==='browser')&&!waiting&&sceneT>durs[si]*.95)durs[si]=sceneT/.95; // voice slower than guessed: stretch, never run ahead
     let sp=null;if(bnd){const s=proj.scenes[si],d=durs[si],a=bnd.wi?s.cum[bnd.wi-1]*d:0,b=s.cum[bnd.wi]*d;sp=a+Math.min((now-bnd.at)/1000,(b-a)*.9);}
