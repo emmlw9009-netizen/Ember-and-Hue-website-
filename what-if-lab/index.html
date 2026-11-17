@@ -566,6 +566,11 @@ async function connectCloud(){if(!(window.claude&&window.claude.use))return;try{
   const want=prefs().current;if(want&&LIB[want]&&want!==curId)openVideo(want);else renderLib();applyPrefs();setSync('Saved to your Claude account');}
   catch(e){setSync('Cloud save unavailable. Saving in this browser.',true);}}
 function applyPrefs(){const p=prefs();if(p.pace&&[...$('#rate').options].some(o=>o.value===p.pace))$('#rate').value=p.pace;if(p.voice&&[...$('#voice').options].some(o=>o.value===p.voice))$('#voice').value=p.voice;}
+/* ---------- Minimum video length ---------- */
+const MIN_LEN=20;
+// With a voiceover, the ending card holds after the voice finishes; without one, every scene slows evenly.
+function padToMin(durs,hasVoice){const tot=durs.reduce((a,b)=>a+b,0);if(tot>=MIN_LEN||!durs.length)return durs;
+  if(hasVoice){const d=durs.slice();d[d.length-1]+=MIN_LEN-tot;return d;}return durs.map(x=>x*MIN_LEN/tot);}
 /* ---------- Ideas tab ---------- */
 function renderIdeas(){const box=$('#ideaGroups');if(!box)return;const have=new Map(Object.entries(LIB).filter(([id])=>isVid(id)).map(([id,d])=>[d.title.toLowerCase(),id]));
   const q=($('#ideaSearch').value||'').toLowerCase();box.innerHTML='';let shown=0;
@@ -580,7 +585,7 @@ function renderIdeas(){const box=$('#ideaGroups');if(!box)return;const have=new 
 let lastDurs=null;
 const ts=s=>{s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 function uploadKit(){const P=proj;if(!P.scenes.length)return null;const short=$('#format').value==='short';
-  const durs=lastDurs&&lastDurs.length===P.scenes.length?lastDurs:P.scenes.map(s=>s.dur);const total=durs.reduce((a,b)=>a+b,0);
+  const durs=lastDurs&&lastDurs.length===P.scenes.length?lastDurs:padToMin(P.scenes.map(s=>s.dur),false);const total=durs.reduce((a,b)=>a+b,0);
   const base=P.title.replace(/\?+$/,''),body=base.replace(/^what if\s*/i,'');
   const titles=[P.title,`${base}? The Science Explained`,`What would actually happen if ${body}?`,`${base}? (It's Worse Than You Think)`].map(t=>t.slice(0,100));
   const lbl=s=>{let f=(s.text.match(/[^.!?]+/)||[s.text])[0].replace(/\[[^\]]*\]/g,'').trim().replace(/^(next|so|and|but|now|then|first|finally|here's the problem|here's the thing|meanwhile)\b[,:]?\s*/i,'');const w=f.split(/\s+/).slice(0,7);let t=w.join(' ').replace(/[,;:]+$/,'');if(f.split(/\s+/).length>7)t+='…';return t.charAt(0).toUpperCase()+t.slice(1);};
@@ -603,7 +608,7 @@ let proj=parse(ta.value), cur=0, running=null;
 function setSize(){const s=$('#format').value==='short';stage.width=s?720:1280;stage.height=s?1280:720;}
 function chips(){const box=$('#sceneChips');box.innerHTML='';proj.scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=`${i+1} · ${s.kind} · ${s.dur.toFixed(0)}s`;b.onclick=()=>{if(!running){cur=i;still();chips();}};box.appendChild(b);});}
 function still(){drawFrame(ctx,stage.width,stage.height,1,proj,cur,proj.scenes[cur]?proj.scenes[cur].dur*.35:0);}
-function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';st.textContent=`${proj.scenes.length} scenes · about ${Math.round(tot)} s · ${proj.scenes.reduce((a,s)=>a+s.words.length,0)} words`;chips();if(!running)still();lastDurs=null;renderKit();}
+function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';const wc=proj.scenes.reduce((a,s)=>a+s.words.length,0);st.textContent=`${proj.scenes.length} scenes · about ${Math.round(Math.max(tot,MIN_LEN))} s · ${wc} words`+(tot<MIN_LEN&&proj.scenes.length?` · Short script: the video will be stretched to ${MIN_LEN} s. Add about ${Math.ceil((MIN_LEN-tot)*2.55*(+$('#rate').value||1.15))} words to fill it naturally.`:'');chips();if(!running)still();lastDurs=null;renderKit();}
 let deb;ta.oninput=()=>{clearTimeout(deb);deb=setTimeout(refresh,250);queueSave();};
 $('#format').onchange=()=>{setSize();refresh();queueSave();};
 $('#newVid').onclick=$('#newVid2').onclick=()=>newVideo(outline('What if …?','question').replace('# What if …?','# What if ...?'));
@@ -640,6 +645,8 @@ function run({speak,durs,onDone}){
     proj.scenes.forEach((s,i)=>{const u=new SpeechSynthesisUtterance(s.text);if(bv)u.voice=bv;u.rate=pace;u.onstart=()=>{waiting=false;goTo(i,performance.now());};u.onboundary=e=>{if(i!==si||(e.name&&e.name!=='word'))return;let wi=0;while(wi+1<s.wpos.length&&s.wpos[wi+1]<=e.charIndex)wi++;bnd={wi,at:performance.now()};};if(i===n-1)u.onend=()=>{ended=true;};synth.speak(u);});}
   function tick(now){
     if(!running)return;
+    if(ended&&(now-t0)/1000<MIN_LEN&&mode!=='hold'){ended=false;mode='hold';durs[si]=Math.max(durs[si],(now-sStart)/1000+MIN_LEN-(now-t0)/1000);}
+    if(mode==='hold'&&(now-sStart)/1000>=durs[si])ended=true;
     if(ended){stopRun();onDone&&onDone();return;}
     running=requestAnimationFrame(tick);
     if(now-lastDraw<31)return; lastDraw=now; // ~30 fps keeps the CPU free for audio
@@ -648,7 +655,7 @@ function run({speak,durs,onDone}){
       if(!waiting&&sceneT>durs[si]*2.5+2)goTo(si+1,now);} // safety net if the voice stalls
     else{sceneT=(now-sStart)/1000;if(mode==='timer'&&sceneT>durs[si]){if(si+1>=n){ended=true;return;}goTo(si+1,now);sceneT=0;}}
     if(waiting){st.className='status';st.textContent='Starting narrator…';}
-    if(mode!=='timer'&&!waiting&&sceneT>durs[si]*.95)durs[si]=sceneT/.95; // voice slower than guessed: stretch, never run ahead
+    if((mode==='claude'||mode==='browser')&&!waiting&&sceneT>durs[si]*.95)durs[si]=sceneT/.95; // voice slower than guessed: stretch, never run ahead
     let sp=null;if(bnd){const s=proj.scenes[si],d=durs[si],a=bnd.wi?s.cum[bnd.wi-1]*d:0,b=s.cum[bnd.wi]*d;sp=a+Math.min((now-bnd.at)/1000,(b-a)*.9);}
     cur=si;const scaled={...proj,scenes:proj.scenes.map((x,j)=>({...x,dur:durs[j],sp:j===si?sp:null}))};
     drawFrame(ctx,stage.width,stage.height,(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));
@@ -683,6 +690,7 @@ $('#export').onclick=async()=>{
   const vo=$('#vo').files[0], mu=$('#music').files[0];
   let durs=proj.scenes.map(s=>s.dur);
   if(vo){st.className='status';st.textContent='Lining scenes up with your voiceover…';const al=await alignVoice(vo,proj.scenes);if(al)durs=al;else{const vd=await audioDur(vo);if(vd>1){const sum=durs.reduce((a,b)=>a+b,0);durs=durs.map(d=>d*vd/sum);}}}
+  durs=padToMin(durs,!!vo);
   const stream=stage.captureStream(30);let actx=null,els=[];
   if(vo||mu){actx=new AudioContext();const dest=actx.createMediaStreamDestination();
     for(const [f,vol] of [[vo,1],[mu,.15]]){if(!f)continue;const el=new Audio(URL.createObjectURL(f));el.loop=f===mu;const src=actx.createMediaElementSource(el);const g=actx.createGain();g.gain.value=vol;src.connect(g).connect(dest);els.push(el);}
