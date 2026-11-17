@@ -44,7 +44,7 @@ CHECKLIST = (
 )
 SCHEDULE = (
     "*Posting rhythm*\n"
-    "• One Short every day, 20 seconds to 3 minutes.\n"
+    "• Three Shorts every day, 20 seconds to 3 minutes each.\n"
     "• Two longer videos a week (Tue and Fri) if you want them.\n"
     "• Hook in the first 2 seconds: say the question and the most surprising result."
 )
@@ -139,6 +139,7 @@ def menu_buttons(host):
 
 
 HELP = ("*Unravel Theory bot*\n"
+        "/today — today's 3 Shorts to make\n"
         "/idea — a video idea (add a category: /idea space)\n"
         "/ideas — browse categories\n"
         "/outline <title> — a script outline for any title\n"
@@ -207,6 +208,8 @@ def handle_update(update, host):
         if not arg:
             return send(chat, "Send a title after the command, for example:\n`/outline What if the Sun disappeared?`")
         send(chat, f"```\n{outline(arg, 'question')}\n```", [[{"text": "Open in studio", "url": draft_link(host, arg, 'question')}]])
+    elif cmd == "/today":
+        daily(host, chat)
     elif cmd == "/checklist":
         send(chat, CHECKLIST)
     elif cmd == "/schedule":
@@ -240,14 +243,27 @@ def handle_update(update, host):
         send(chat, "I didn't catch that. " + HELP, menu_buttons(host))
 
 
-def daily(host):
-    if not OWNER:
+def daily(host, chat=None):
+    chat = chat or OWNER
+    if not chat:
         return "TELEGRAM_CHAT_ID is not set"
-    day = datetime.date.today().toordinal()
-    item = IDEAS[day % len(IDEAS)]
-    text, kb = idea_message(host, item)
-    send(OWNER, "☀️ *Today's Short*\n\n" + text.split("\n", 1)[0].replace("💡 ", "") + "\n\nWrite it, export it with sound, and post it. Tap below to start.", kb)
+    picks = todays_ideas()
+    lines = "\n".join(f"{i + 1}. *{t}*  _{c}_" for i, (c, t, _) in enumerate(picks))
+    kb = [[{"text": f"{i + 1} · Open in studio", "url": draft_link(host, t, k)}] for i, (c, t, k) in enumerate(picks)]
+    kb.append([{"text": "Swap for other ideas", "callback_data": "i:"}, {"text": "✅ Checklist", "callback_data": "check"}])
+    send(chat, f"☀️ *Today: make {DAILY_COUNT} Shorts*\n\n{lines}\n\nWrite each one, export it with sound, and post it. Tap a button to start.", kb)
     return "sent"
+
+
+DAILY_COUNT = 3
+
+
+def todays_ideas(day=None):
+    """Three different ideas from three different categories, rotating every day."""
+    day = day if day is not None else datetime.date.today().toordinal()
+    rng = random.Random(day)
+    cats = rng.sample(CATEGORIES, min(DAILY_COUNT, len(CATEGORIES)))
+    return [rng.choice([i for i in IDEAS if i[0] == c]) for c in cats]
 
 
 class handler(BaseHTTPRequestHandler):
@@ -269,7 +285,7 @@ class handler(BaseHTTPRequestHandler):
                 return self._reply(403, {"ok": False, "error": "Wrong or missing setup key (use your TELEGRAM_WEBHOOK_SECRET)."})
             res = tg("setWebhook", {"url": f"https://{host}/api/telegram", "secret_token": SECRET, "allowed_updates": ["message", "callback_query"]})
             tg("setMyCommands", {"commands": [{"command": c, "description": d} for c, d in [
-                ("idea", "Get a video idea"), ("ideas", "Browse idea categories"), ("outline", "Outline for a title"),
+                ("today", "Today's 3 Shorts to make"), ("idea", "Get a video idea"), ("ideas", "Browse idea categories"), ("outline", "Outline for a title"),
                 ("voice", "Narrate text as MP3"), ("checklist", "Before-you-post checklist"), ("schedule", "Posting rhythm"), ("studio", "Open the studio")]]})
             return self._reply(200, {"ok": res.get("ok"), "webhook": f"https://{host}/api/telegram", "telegram": res.get("description")})
         if q.get("cron") == ["daily"]:

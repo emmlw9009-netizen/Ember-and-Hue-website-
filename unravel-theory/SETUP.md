@@ -42,6 +42,7 @@ then choose **Save video** in the share sheet. 720p is the default on phones bec
 7. Optional: add `CRON_SECRET` (any random word) so only Vercel can trigger the daily reminder.
 
 ### What the bot does
+- `/today`: today's 3 Shorts to make (the same list as the daily reminder).
 - `/idea` (or `/idea space`, `/idea history`…): a video idea with **Open in studio**, which opens the studio with that idea drafted.
 - `/ideas`: browse the 7 categories.
 - `/outline <title>`: a script outline for any title.
@@ -49,7 +50,7 @@ then choose **Save video** in the share sheet. 720p is the default on phones bec
   4 title options, a description, tags and a pinned comment.
 - `/voice <text>`: narrate any text as an MP3.
 - `/checklist`, `/schedule`, `/studio`.
-- Every day at 15:00 UTC: today's Short idea with buttons.
+- Every day at 15:00 UTC: a reminder to make **3 Shorts**, with 3 ideas from different categories and an **Open in studio** button for each.
 
 ## Notes
 - Exports with sound need a **studio voice**. Claude voices (claude.ai) and browser voices are preview-only,
