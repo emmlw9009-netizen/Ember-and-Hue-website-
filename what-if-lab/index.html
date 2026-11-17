@@ -470,30 +470,43 @@ function loadVoices(){const vsel=$('#voice'),keep=vsel.value;vsel.innerHTML='';i
   if(vs.length){const g=document.createElement('optgroup');g.label='Browser voices';vs.forEach((v,i)=>g.appendChild(new Option(v.name.replace(/Microsoft |Google /,'')+(/natural|neural|online/i.test(v.name)?' ★':''),'b:'+i)));vsel.appendChild(g);}
   vsel._v=vs;if([...vsel.options].some(o=>o.value===keep))vsel.value=keep;if(!vsel.options.length)vsel.add(new Option('No voice available',''));}
 if(synth){synth.onvoiceschanged=loadVoices;}loadVoices();
-(window.claude&&window.claude.use?window.claude.use('tts').catch(()=>null):Promise.resolve(null)).then(t=>{if(t){tts=t;loadVoices();}});
+(window.claude&&window.claude.use?window.claude.use('tts').catch(()=>null):Promise.resolve(null)).then(t=>{if(t){tts=t;hookTts(t);loadVoices();}});
 $('#rate').onchange=()=>refresh();
-function stopVoice(){try{synth&&synth.cancel();}catch(e){}try{tts&&tts.stop();}catch(e){}}
+function stopVoice(){try{synth&&synth.cancel();}catch(e){}try{tts&&tts.active()&&tts.stop().catch(()=>{});}catch(e){}}
 
+// One reading for the whole script: the voice is handed every scene at once (from the click),
+// so the next line is buffered while the current one plays. Scenes follow the voice, not a timer.
+let voiceHook=null;
+function hookTts(t){t.onLine(e=>voiceHook&&voiceHook.line(+e.id));t.onPosition(e=>voiceHook&&voiceHook.pos(+e.id,e.ms));}
 function run({speak,durs,onDone}){
-  const t0=performance.now();let si=0,sStart=t0,spoken=-1,ended=false,k=1;durs=durs.slice();
-  const pace=+$('#rate').value, voice=$('#voice').value;
-  function speakScene(i){if(!speak)return;const text=proj.scenes[i].text,done=()=>{if(si===i&&running){const r=((performance.now()-sStart)/1000)/durs[i];k=k*.4+r*.6;for(let j=i+1;j<durs.length;j++)durs[j]=proj.scenes[j].dur*k;next();}};
-    if(voice.startsWith('c:')&&tts){tts.speak(text,{voice:voice.slice(2),rate:Math.min(1.5,pace)}).then(done).catch(e=>{if(e&&e.code!=='viewer_stopped'&&running){st.className='status err';st.textContent='Claude voice unavailable ('+(e.code||'error')+'), using timing only.';}});return;}
-    if(!synth)return;synth.cancel();const u=new SpeechSynthesisUtterance(text);const vs=$('#voice')._v,bi=+voice.slice(2);if(vs&&vs[bi])u.voice=vs[bi];u.rate=pace;u.onend=done;synth.speak(u);}
-  function next(){si++;sStart=performance.now();if(si>=proj.scenes.length){ended=true;}}
+  const t0=performance.now();let si=0,sStart=t0,ended=false,k=1,lastDraw=0,posMs=0,posAt=0,waiting=false;durs=durs.slice();
+  const pace=+$('#rate').value, voice=$('#voice').value, n=proj.scenes.length;
+  function goTo(i,now){if(i===si||i>=n)return;if(i>0){const actual=(now-sStart)/1000;if(actual>.5){const r=actual/proj.scenes[si].dur;k=k*.3+r*.7;durs[si]=actual;}for(let j=i;j<n;j++)durs[j]=proj.scenes[j].dur*k;}si=i;sStart=now;posMs=0;posAt=now;}
+  let mode='timer';
+  if(speak&&voice.startsWith('c:')&&tts){mode='claude';waiting=true;
+    voiceHook={line:i=>{waiting=false;goTo(i,performance.now());},pos:(i,ms)=>{if(i===si){posMs=ms;posAt=performance.now();}}};
+    tts.speak(proj.scenes.map((s,i)=>({text:s.text.slice(0,2000),id:String(i)})),{voice:voice.slice(2),rate:Math.min(1.5,pace),language:'en'})
+      .then(()=>{ended=true;})
+      .catch(e=>{if(!running)return;const why=e&&(e.reason||e.code);if(why==='stopped'||why==='replaced')return;mode='timer';waiting=false;st.className='status err';st.textContent='Claude voice stopped ('+(why||'error')+'). Continuing without it.';});
+  }else if(speak&&synth&&voice.startsWith('b:')){mode='browser';waiting=true;synth.cancel();const vs=$('#voice')._v,bv=vs&&vs[+voice.slice(2)];
+    proj.scenes.forEach((s,i)=>{const u=new SpeechSynthesisUtterance(s.text);if(bv)u.voice=bv;u.rate=pace;u.onstart=()=>{waiting=false;goTo(i,performance.now());};if(i===n-1)u.onend=()=>{ended=true;};synth.speak(u);});}
   function tick(now){
     if(!running)return;
     if(ended){stopRun();onDone&&onDone();return;}
-    const sceneT=(now-sStart)/1000;
-    if(spoken!==si){spoken=si;speakScene(si);}
-    if(sceneT>(speak?durs[si]*1.8+1:durs[si]))next();
-    cur=si;const s=proj.scenes[si];if(s){const scaled={...proj,scenes:proj.scenes.map((x,j)=>({...x,dur:durs[j]}))};drawFrame(ctx,stage.width,stage.height,(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));}
-    const tot=durs.reduce((a,b)=>a+b,0);st.className='status';st.textContent=`Scene ${Math.min(si+1,proj.scenes.length)} of ${proj.scenes.length} · ${((now-t0)/1000).toFixed(0)} / ${tot.toFixed(0)} s`;
     running=requestAnimationFrame(tick);
+    if(now-lastDraw<31)return; lastDraw=now; // ~30 fps keeps the CPU free for audio
+    let sceneT;
+    if(mode==='claude'){sceneT=waiting?0:(posAt>sStart?(posMs+Math.min(now-posAt,300))/1000:(now-sStart)/1000);
+      if(!waiting&&sceneT>durs[si]*2.5+2)goTo(si+1,now);} // safety net if the voice stalls
+    else{sceneT=(now-sStart)/1000;if(mode==='timer'&&sceneT>durs[si]){if(si+1>=n){ended=true;return;}goTo(si+1,now);sceneT=0;}}
+    if(waiting){st.className='status';st.textContent='Starting narrator…';}
+    cur=si;const scaled={...proj,scenes:proj.scenes.map((x,j)=>({...x,dur:durs[j]}))};
+    drawFrame(ctx,stage.width,stage.height,(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));
+    if(!waiting&&!/err/.test(st.className)){const tot=durs.reduce((a,b)=>a+b,0);st.textContent=`Scene ${si+1} of ${n} · ${((now-t0)/1000).toFixed(0)} / ${tot.toFixed(0)} s`;}
   }
   running=requestAnimationFrame(tick);
 }
-function stopRun(){if(running)cancelAnimationFrame(running);running=null;stopVoice();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
+function stopRun(){if(running)cancelAnimationFrame(running);running=null;voiceHook=null;stopVoice();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
 $('#play').onclick=()=>{refresh();if(!proj.scenes.length)return;$('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;run({speak:true,durs:proj.scenes.map(s=>s.dur)});};
 $('#stop').onclick=()=>{stopRun();if(recorder&&recorder.state==='recording')recorder.stop();refresh();};
 
