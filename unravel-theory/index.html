@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>What If Lab Studio</title>
+<title>Unravel Theory Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,8 +12,8 @@
 /* Layout: a studio console. Left = script + controls, right = the monitor. Tabs swap Studio / Channel kit / Playbook. */
 :root{
   color-scheme:dark;
-  --bg:#0d1117; --panel:#151c26; --line:#263243; --fg:#e8edf4; --muted:#93a1b5;
-  --accent:#ffd23f; --accent-ink:#1a1400; --cool:#5ad1e6; --bad:#ff7a7a;
+  --bg:#0c0f17; --panel:#141925; --line:#262f42; --fg:#e8edf4; --muted:#93a1b5;
+  --accent:#ff5d3b; --accent-ink:#1c0700; --cool:#3fd6c4; --bad:#ff7a7a;
   --display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -28,7 +28,7 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .brand{display:flex;align-items:center;gap:12px}
 .brand h1{font:800 clamp(24px,4vw,34px)/1 var(--display);margin:0;letter-spacing:-.02em}
 .brand h1 span{color:var(--accent)}
-.flask{width:38px;height:38px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font:800 22px var(--display)}
+.mark{width:44px;height:44px;display:block}
 nav{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap}
 nav button{background:none;border:0;color:var(--muted);font:600 13px var(--mono);padding:8px 14px;border-radius:999px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
 nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -91,7 +91,7 @@ a{color:var(--cool)}
 <body>
 <div class="wrap">
 <header>
-  <div class="brand"><div class="flask" aria-hidden="true">?</div><h1>What If <span>Lab</span></h1></div>
+  <div class="brand"><canvas class="mark" id="mark" width="88" height="88" aria-hidden="true"></canvas><h1>Unravel <span>Theory</span></h1></div>
   <nav role="tablist" aria-label="Sections">
     <button role="tab" aria-selected="true" data-tab="studio">Video maker</button>
     <button role="tab" aria-selected="false" data-tab="lib">My videos</button>
@@ -167,17 +167,17 @@ a{color:var(--cool)}
   <div class="panel"><h3>Channel banner · 2560×1440</h3><canvas id="banner" width="2560" height="1440"></canvas><p class="note">Keep text inside the middle 1546×423 safe area. This banner does.</p><button class="btn" data-dl="banner">Download PNG</button></div>
   <div class="panel"><h3>Thumbnail · 1280×720</h3><canvas id="thumbC" width="1280" height="720"></canvas><button class="btn" data-dl="thumbC">Download PNG</button></div>
   <div class="panel"><h3>Channel details</h3>
-    <div class="lbl">Name</div><pre class="copy">What If Lab</pre>
-    <div class="lbl">Handle (check availability)</div><pre class="copy">@WhatIfLab  ·  backups: @WhatIfLabTV, @TheWhatIfLab</pre>
+    <div class="lbl">Name</div><pre class="copy">Unravel Theory</pre>
+    <div class="lbl">Handle (check availability)</div><pre class="copy">@UnravelTheory  ·  backups: @UnravelTheoryTV, @UnravelingTheory</pre>
     <div class="lbl">Description</div><pre class="copy" id="desc">What if the Moon disappeared? What if you fell into a black hole? What if humans could photosynthesize?
 
-What If Lab takes one wild question at a time and follows the science all the way to the end. Every episode is researched, sourced, and explained in plain language with animated visuals.
+Every big question has a loose thread. Unravel Theory pulls on it until the whole thing makes sense: wild hypotheticals, strange theories and the science behind them, explained in plain language with animated visuals.
 
-New experiments every Tuesday and Friday. Shorts daily.
+New videos every Tuesday and Friday. Shorts daily.
 
-Sources for every video are in its description. Got a question for the Lab? Leave it in the comments.</pre>
+Sources for every video are in its description. Got a question you want unraveled? Leave it in the comments.</pre>
     <button class="btn" id="copyDesc">Copy description</button>
-    <div class="lbl">Keywords</div><pre class="copy">what if, science explained, hypothetical, space, physics, biology, history what if, science animation, explainer, educational</pre>
+    <div class="lbl">Keywords</div><pre class="copy">unravel theory, theories explained, what if, science explained, hypothetical, space, physics, biology, history what if, science animation, explainer, educational</pre>
   </div>
 </section>
 
@@ -187,7 +187,7 @@ Sources for every video are in its description. Got a question for the Lab? Leav
     <h2>Set up the account (10 minutes, you do this part)</h2>
     <ol>
       <li>Make a fresh Google account for the channel so it stays separate from your personal one.</li>
-      <li>On YouTube, go to your profile → <b>Create a channel</b> → name it <b>What If Lab</b> and claim the handle from the Channel kit tab.</li>
+      <li>On YouTube, go to your profile → <b>Create a channel</b> → name it <b>Unravel Theory</b> and claim the handle from the Channel kit tab.</li>
       <li>Upload the profile picture and banner from the Channel kit. Paste the description and keywords.</li>
       <li>Verify your phone number in YouTube Studio so you can upload videos over 15 minutes and custom thumbnails.</li>
       <li>On every upload, set "Altered or synthetic content" to <b>Yes</b> if you use an AI voice. YouTube requires that disclosure for realistic AI content.</li>
@@ -223,7 +223,7 @@ Sources for every video are in its description. Got a question for the Lab? Leav
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
-const ACC='#ffd23f', COOL='#5ad1e6', BG='#0d1117';
+const ACC='#ff5d3b', COOL='#3fd6c4', BG='#0c0f17', INK='#1c0700';
 
 /* ---------- sample scripts ---------- */
 const SAMPLES={
@@ -239,7 +239,7 @@ The slow change is the scary one. The Moon steadies the tilt of Earth's axis. Wi
 
 And our days would change too. The Moon has been slowing Earth's spin for billions of years. Without that brake, days would stop getting longer. [visual: time]
 
-So the Moon is more than a light in the sky. It's a stabilizer for our whole planet. What should the Lab test next? Tell us in the comments. [visual: question]`,
+So the Moon is more than a light in the sky. It's a stabilizer for our whole planet. What should we unravel next? Tell us in the comments. [visual: question]`,
 "What if you fell into a black hole?":`# What if you fell into a black hole?
 
 You're floating near a black hole, and you start to fall. What happens next depends on one thing: how big the black hole is. [visual: blackhole]
@@ -264,6 +264,10 @@ To live on sunlight, you'd need skin the size of a tennis court, or a much lazie
 So we'll keep eating lunch. But it's a great reminder of how hungry a human body really is. [visual: question]`
 };
 const IDEAS=[
+["Theories","Is the universe a simulation?","space"],["Theories","Where is everybody? The Fermi paradox","space"],["Theories","Why do we dream?","brain"],
+["Theories","Is free will an illusion?","brain"],["Theories","Could the multiverse be real?","blackhole"],["Theories","Why does time only go forward?","time"],
+["Theories","What came before the Big Bang?","sun"],["Theories","Why do we get déjà vu?","brain"],["Theories","The Mandela effect, explained","people"],
+["Theories","Is math invented or discovered?","question"],["Theories","Will the universe end? The 3 theories","blackhole"],["Theories","What is dark matter actually?","space"],
 ["Space","What if the Moon disappeared?","moon"],["Space","What if you fell into a black hole?","blackhole"],["Space","What if Earth had rings like Saturn?","space"],
 ["Space","What if the Sun went out for one day?","sun"],["Space","What if a black hole passed through the solar system?","blackhole"],["Space","What if we lived on Mars?","space"],
 ["Space","What if Earth was twice as big?","earth"],["Space","What if gravity doubled for one minute?","space"],["Space","What if Jupiter became a star?","sun"],
@@ -303,7 +307,7 @@ const KINDS=['space','moon','sun','earth','ocean','ice','fire','blackhole','time
 const KEYS={blackhole:/black hole|event horizon|singularity/i,moon:/\bmoon|lunar/i,sun:/\bsun\b|solar|sunlight|star\b/i,ocean:/ocean|sea\b|tide|water|wave/i,ice:/\bice|frozen|glacier|snow|cold/i,fire:/fire|lava|heat|burn|volcan|lightning/i,time:/time|year|day|clock|hour|second/i,brain:/brain|mind|sleep|think|memory/i,people:/human|people|person|body|we\b/i,city:/city|internet|build|power grid/i,money:/money|cash|econom|price/i,earth:/earth|planet|axis|spin|continent/i,space:/space|galaxy|orbit|mars|gravity|universe/i,night:/night|dark/i};
 function parse(text){
   const lines=text.replace(/\r/g,'').split('\n');
-  let title='Untitled experiment';
+  let title='Untitled video';
   if(lines[0]&&lines[0].startsWith('#')){title=lines.shift().replace(/^#+\s*/,'').trim();}
   const blocks=lines.join('\n').split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);
   return {title,scenes:blocks.map(b=>{
@@ -456,7 +460,7 @@ function drawVisual(c,w,h,t,kind,st=9){
     const pts=[[.05,.85],[.2,.72],[.32,.78],[.48,.55],[.6,.6],[.78,.32],[.95,.18]].map(([x,y])=>[x*w,h*y]),gk=easeO(st/1.2);c.strokeStyle=hsl(140,90,60);c.lineWidth=m*.016;c.lineJoin='round';c.beginPath();pts.forEach((p,i)=>{const q=i/(pts.length-1)<=gk;if(q)i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);});c.stroke();
     for(let i=0;i<22;i++){const s=STARS[i+90],y=((t*m*.12*(s[2]+.5)+s[1]*h*1.2)%(h*1.2))-h*.1;if(i%3)coin(c,s[0]*w,y,m*.03*s[2],t*3+i);else{c.save();c.translate(s[0]*w,y);c.rotate(t+i);poly(c,[[-m*.05,-m*.025],[m*.05,-m*.025],[m*.05,m*.025],[-m*.05,m*.025]],hsl(130,45,55));c.restore();}}
     coin(c,cx,cy,m*.2*e,t*1.2);break;}
-  default:{burst(c,cx,cy,m*1.2,t,'rgba(255,255,255,.1)');glow(c,cx,cy,m*.45,'rgba(255,210,63,.3)');
+  default:{burst(c,cx,cy,m*1.2,t,'rgba(255,255,255,.1)');glow(c,cx,cy,m*.45,'rgba(255,93,59,.3)');
     for(let i=0;i<14;i++){const a=i/14*6.2832+t*.4,r=m*(.32+.05*Math.sin(t*2+i));shard(c,cx+Math.cos(a)*r*1.3,cy+Math.sin(a)*r,m*.035*stg(i%7),a+t,[i%2?45:190,90,60]);}
     c.save();c.translate(cx,cy);c.rotate(Math.sin(t*1.5)*.1);c.scale(e,e);c.font=`800 ${m*.5}px ${DISPLAY()}`;c.textAlign='center';c.textBaseline='middle';c.lineWidth=m*.03;c.strokeStyle=hsl(215,60,10);c.lineJoin='round';c.strokeText('?',0,0);c.fillStyle=ACC;c.fillText('?',0,0);c.fillStyle='rgba(255,255,255,.35)';c.save();c.beginPath();c.rect(-m*.3,-m*.3,m*.3,m*.6);c.clip();c.fillText('?',0,0);c.restore();c.restore();}
   }
@@ -490,12 +494,13 @@ function drawFrame(c,w,h,t,proj,si,sceneT){
   if(sc.stat&&!inIntro&&sp>=at(sc.statIdx)){const a=sp-at(sc.statIdx),s=pop(a/.4);c.save();c.translate(w*(w>h?.8:.73),h*(w>h?.24:.2));c.rotate(.05+Math.sin(t*1.7)*.02);c.scale(s,s);
     c.font=`800 ${m*.05}px ${DISPLAY()}`;const ls=wrapLines(c,sc.stat,m*.42),bw=Math.max(...ls.map(l=>c.measureText(l).width))+m*.06,bh=ls.length*m*.06+m*.05;
     poly(c,[[-bw/2+m*.012,-bh/2+m*.012],[bw/2+m*.012,-bh/2+m*.012],[bw/2+m*.012,bh/2+m*.012],[-bw/2+m*.012,bh/2+m*.012]],'rgba(0,0,0,.45)');poly(c,[[-bw/2,-bh/2],[bw/2,-bh/2],[bw/2,bh/2],[-bw/2,bh/2]],ACC);
-    c.fillStyle='#1a1400';c.textAlign='center';c.textBaseline='middle';ls.forEach((l,i)=>c.fillText(l,0,(i-(ls.length-1)/2)*m*.06));c.restore();}
+    c.fillStyle=INK;c.textAlign='center';c.textBaseline='middle';ls.forEach((l,i)=>c.fillText(l,0,(i-(ls.length-1)/2)*m*.06));c.restore();}
   // intro title slam
   const INTRO=2.2; let capA=1;
   if(si===0&&sceneT<INTRO){const ws=proj.title.toUpperCase().split(' ');c.font=`800 ${m*(w>h?.085:.1)}px ${DISPLAY()}`;c.textAlign='left';c.textBaseline='middle';
     const fade=sceneT>INTRO-.4?(INTRO-sceneT)/.4:1;c.fillStyle=`rgba(0,0,0,${.3*fade})`;c.fillRect(0,0,w,h);
     const lines=wrapLines(c,ws.join(' '),w*.82),lh=m*.11,y0=h*(w>h?.3:.24)-(lines.length-1)*lh/2;let k=0;
+    {const ka=Math.min(1,sceneT/.3)*fade;c.save();c.globalAlpha=ka;c.font=`600 ${m*.03}px JetBrains Mono, monospace`;c.textAlign='center';c.fillStyle=ACC;c.fillText('UNRAVEL THEORY',w/2,y0-lh*.85);c.restore();c.font=`800 ${m*(w>h?.085:.1)}px ${DISPLAY()}`;c.textAlign='left';}
     lines.forEach((ln,li)=>{const lw=c.measureText(ln).width;let x=(w-lw)/2;ln.split(' ').forEach(wd=>{const a=Math.max(0,Math.min(1,(sceneT-k*.09)/.35));const s=back(a);c.save();c.globalAlpha=a*fade;c.translate(x,y0+li*lh+(1-a)*m*.06);c.scale(s,s);
       c.lineWidth=m*.016;c.strokeStyle='#000';c.lineJoin='round';c.strokeText(wd,0,0);c.fillStyle=/^WHAT$|^IF$/.test(wd)?ACC:'#fff';c.fillText(wd,0,0);c.restore();x+=c.measureText(wd+' ').width;k++;});});
     }
@@ -507,10 +512,10 @@ function drawFrame(c,w,h,t,proj,si,sceneT){
     chunk.forEach((wd,j)=>{const ww=c.measureText(wd).width,on=start+j===idx,pop=on?1+.16*(1-ease(Math.min(1,(sp-wStart)/.2))):1;c.save();c.globalAlpha=ca*(start+j>idx?.6:1);c.translate(x+ww/2,y);c.scale(pop,pop);
       c.lineWidth=fs*.2;c.strokeStyle='rgba(0,0,0,.9)';c.lineJoin='round';c.strokeText(wd,-ww/2,0);c.fillStyle=on?ACC:'#fff';c.fillText(wd,-ww/2,0);c.restore();x+=c.measureText(wd+' ').width;});}
   // outro call to action
-  if(si===proj.scenes.length-1&&p>.55){const a=ease(Math.min(1,(p-.55)/.15));c.font=`700 ${m*.032}px JetBrains Mono, monospace`;const tx='SUBSCRIBE · NEW EXPERIMENTS WEEKLY',tw=c.measureText(tx).width,bx=(w-tw)/2-m*.03,by=h*.12-(1-a)*m*.05;
-    c.globalAlpha=a;c.fillStyle=ACC;c.beginPath();c.roundRect(bx,by,tw+m*.06,m*.07,m*.035);c.fill();c.fillStyle='#1a1400';c.textAlign='center';c.textBaseline='middle';c.fillText(tx,w/2,by+m*.035);c.globalAlpha=1;}
+  if(si===proj.scenes.length-1&&p>.55){const a=ease(Math.min(1,(p-.55)/.15));c.font=`700 ${m*.032}px JetBrains Mono, monospace`;const tx='SUBSCRIBE · NEW THEORY UNRAVELED WEEKLY',tw=c.measureText(tx).width,bx=(w-tw)/2-m*.03,by=h*.12-(1-a)*m*.05;
+    c.globalAlpha=a;c.fillStyle=ACC;c.beginPath();c.roundRect(bx,by,tw+m*.06,m*.07,m*.035);c.fill();c.fillStyle=INK;c.textAlign='center';c.textBaseline='middle';c.fillText(tx,w/2,by+m*.035);c.globalAlpha=1;}
   // watermark + progress
-  c.font=`800 ${m*.03}px ${DISPLAY()}`;c.textAlign='right';c.textBaseline='alphabetic';c.fillStyle='rgba(255,255,255,.7)';c.fillText('WHAT IF LAB',w-m*.04,h-m*.04);
+  c.font=`800 ${m*.03}px ${DISPLAY()}`;c.textAlign='right';c.textBaseline='alphabetic';c.fillStyle='rgba(255,255,255,.75)';c.fillText('UNRAVEL THEORY',w-m*.04,h-m*.04);c.globalAlpha=.85;drawMark(c,w-m*.04-c.measureText('UNRAVEL THEORY').width-m*.06,h-m*.05,m*.017,t);c.globalAlpha=1;
   const total=proj.scenes.reduce((a,s)=>a+s.dur,0), done=proj.scenes.slice(0,si).reduce((a,s)=>a+s.dur,0)+sceneT;
   c.fillStyle='rgba(255,255,255,.15)';c.fillRect(0,h-m*.012,w,m*.012);c.fillStyle=ACC;c.fillRect(0,h-m*.012,w*Math.min(done/total,1),m*.012);
 }
@@ -535,7 +540,7 @@ const isVid=id=>id&&id[0]==='v';
 function prefs(){return LIB.prefs||{};}
 function setPref(k,v){const p={...prefs(),[k]:v};LIB.prefs=p;store.put('prefs',p);}
 function setSync(msg,err){const el=$('#sync');if(el){el.textContent=msg;el.className='status'+(err?' err':'');}}
-function titleOf(text){const m=text.match(/^#\s*(.+)/);return m?m[1].trim():'Untitled experiment';}
+function titleOf(text){const m=text.match(/^#\s*(.+)/);return m?m[1].trim():'Untitled video';}
 function saveNow(){if(!curId)return;const old=LIB[curId]||{};const doc={title:titleOf(ta.value),script:ta.value,format:$('#format').value,status:old.status||'draft',created:old.created||Date.now(),updated:Date.now()};
   LIB[curId]=doc;store.put(curId,doc);setSync('Saved · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));renderLib();}
 function queueSave(){clearTimeout(saveT);setSync('Saving…');saveT=setTimeout(saveNow,800);}
@@ -593,9 +598,9 @@ function uploadKit(){const P=proj;if(!P.scenes.length)return null;const short=$(
   const chapters=!short&&ch.length>=3&&total-ch[ch.length-1].t>=10?ch.map(c=>`${ts(c.t)} ${c.l}`).join('\n'):'';
   const hook=(P.scenes[0].text.match(/[^.!?]+[.!?]/g)||[P.scenes[0].text]).slice(0,2).map(x=>x.trim()).join(' ');
   const kinds=[...new Set(P.scenes.map(s=>s.kind).filter(k=>k!=='question'))];
-  const tags=[...new Set(['what if','what if science',body.toLowerCase(),'science explained','hypothetical','educational','what if lab',...kinds.map(k=>k==='blackhole'?'black hole':k),...P.scenes.map(s=>(s.kwText||'').toLowerCase().replace(/'s$/,'')).filter(w=>w.length>3)])].filter(Boolean).slice(0,15);
-  const desc=`${hook}\n\nIn this experiment, What If Lab follows the science step by step to find out what would really happen.\n\n${chapters?'CHAPTERS\n'+chapters+'\n\n':''}SOURCES\n(Add the articles and papers you used to fact-check this video, one link per line.)\n\nGot a question for the Lab? Leave it in the comments and it might be our next experiment.\n\n#whatif #science ${short?'#shorts ':''}#explained`;
-  return {titles,desc,tags:tags.join(', '),pin:`What should the Lab test next? Reply with your best "what if" question and we'll pick one for a future video.`,len:ts(total)};}
+  const tags=[...new Set(['what if','what if science',body.toLowerCase(),'science explained','hypothetical','educational','unravel theory','theory explained',...kinds.map(k=>k==='blackhole'?'black hole':k),...P.scenes.map(s=>(s.kwText||'').toLowerCase().replace(/'s$/,'')).filter(w=>w.length>3)])].filter(Boolean).slice(0,15);
+  const desc=`${hook}\n\nOn Unravel Theory, we pull the thread on this question step by step until the science makes sense.\n\n${chapters?'CHAPTERS\n'+chapters+'\n\n':''}SOURCES\n(Add the articles and papers you used to fact-check this video, one link per line.)\n\nGot a question you want unraveled? Leave it in the comments and it might be our next video.\n\n#unraveltheory #whatif #science ${short?'#shorts ':''}#explained`;
+  return {titles,desc,tags:tags.join(', '),pin:`Which question should we unravel next? Reply with yours and we'll pick one for a future video.`,len:ts(total)};}
 function renderKit(){const k=uploadKit(),box=$('#upkit');if(!box)return;if(!k){box.hidden=true;return;}box.hidden=false;
   $('#kTitles').innerHTML='';k.titles.forEach(t=>{const li=document.createElement('li'),b=document.createElement('button');b.className='tbtn';b.textContent=t;b.title='Click to copy';b.onclick=async()=>{try{await navigator.clipboard.writeText(t);b.dataset.done='1';setTimeout(()=>delete b.dataset.done,1500);}catch(e){const r=document.createRange();r.selectNodeContents(b);getSelection().removeAllRanges();getSelection().addRange(r);}};li.appendChild(b);$('#kTitles').appendChild(li);});
   $('#kDesc').textContent=k.desc;$('#kTags').textContent=k.tags;$('#kPin').textContent=k.pin;$('#kLen').textContent=`Video length about ${k.len}${lastDurs?' (timed from your last export)':' (estimated; export to get exact chapter times)'}`;}
@@ -707,20 +712,23 @@ $('#export').onclick=async()=>{
 };
 
 /* ---------- channel kit ---------- */
-function avatar(){const c=$('#avatar').getContext('2d'),w=800;c.fillStyle=BG;c.fillRect(0,0,w,w);
-  const g=c.createRadialGradient(400,380,40,400,400,420);g.addColorStop(0,'#1d2b44');g.addColorStop(1,BG);c.fillStyle=g;c.fillRect(0,0,w,w);
-  c.fillStyle=ACC;c.beginPath();c.moveTo(330,170);c.lineTo(470,170);c.lineTo(470,330);c.lineTo(620,600);c.quadraticCurveTo(640,650,580,650);c.lineTo(220,650);c.quadraticCurveTo(160,650,180,600);c.lineTo(330,330);c.closePath();c.fill();
-  c.fillStyle=BG;c.font=`800 300px ${DISPLAY()}`;c.textAlign='center';c.textBaseline='middle';c.fillText('?',400,500);
-  c.fillStyle=ACC;c.fillRect(300,140,200,40);}
-function banner(){const c=$('#banner').getContext('2d'),w=2560,h=1440;drawVisual(c,w,h,2,'space');c.fillStyle='rgba(13,17,23,.55)';c.fillRect(0,0,w,h);
-  c.textAlign='center';c.textBaseline='middle';c.font=`800 190px ${DISPLAY()}`;c.textAlign='left';const w1=c.measureText('What If ').width,w2=c.measureText('Lab').width,x0=1280-(w1+w2)/2;c.fillStyle='#fff';c.fillText('What If ',x0,660);c.fillStyle=ACC;c.fillText('Lab',x0+w1,660);c.textAlign='center';
-  c.fillStyle='#e8edf4';c.font='600 52px JetBrains Mono, monospace';c.fillText('ONE WILD QUESTION · FOLLOWED ALL THE WAY',1280,800);}
+// Logo: a low-poly ball of thread with one loose strand pulling free
+function drawMark(c,x,y,r,t=0){c.save();c.strokeStyle=ACC;c.lineCap='round';c.lineWidth=r*.17;c.beginPath();c.moveTo(x+r*.5,y+r*.78);
+  c.bezierCurveTo(x+r*1.25,y+r*1.35,x+r*1.45,y+r*.1,x+r*2.05,y+r*.55+Math.sin(t*2)*r*.08);c.stroke();c.restore();
+  facet(c,x,y,r,.3,[12,95,58],21,{segs:12,paint:k=>k<.3?[8,90,50]:[14,100,60]});
+  c.save();c.beginPath();c.arc(x,y,r*.96,0,7);c.clip();c.strokeStyle='rgba(255,236,226,.7)';c.lineWidth=r*.07;
+  for(let i=-2;i<=2;i++){c.beginPath();c.ellipse(x+i*r*.34,y,r*.24,r*1.15,.55,0,7);c.stroke();}c.restore();}
+function avatar(){const c=$('#avatar').getContext('2d'),w=800;meshBG(c,w,w,1,[230,45,9],[245,40,17]);glow(c,360,380,420,'rgba(255,93,59,.28)');drawMark(c,330,390,215,0);}
+function banner(){const c=$('#banner').getContext('2d'),w=2560,h=1440;drawVisual(c,w,h,2,'space');c.fillStyle='rgba(12,15,23,.6)';c.fillRect(0,0,w,h);
+  c.font=`800 180px ${DISPLAY()}`;c.textAlign='left';c.textBaseline='middle';const w1=c.measureText('Unravel ').width,w2=c.measureText('Theory').width,mk=230,x0=1280-(w1+w2+mk)/2+mk;
+  drawMark(c,x0-mk+70,650,85,0);c.fillStyle='#fff';c.fillText('Unravel ',x0,660);c.fillStyle=ACC;c.fillText('Theory',x0+w1,660);
+  c.textAlign='center';c.font='600 50px JetBrains Mono, monospace';const tw=c.measureText('PULLING THE THREAD ON BIG QUESTIONS').width;c.fillStyle='rgba(12,15,23,.85)';c.beginPath();c.roundRect(1280-tw/2-40,760,tw+80,80,40);c.fill();c.fillStyle='#e8edf4';c.fillText('PULLING THE THREAD ON BIG QUESTIONS',1280,802);}
 function thumb(){const c=$('#thumbC').getContext('2d'),w=1280,h=720,p=parse(ta.value);const k=p.scenes[0]?p.scenes[0].kind:'question';drawVisual(c,w,h,1.5,k);
   const g=c.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(0,0,0,.85)');g.addColorStop(.65,'rgba(0,0,0,.1)');c.fillStyle=g;c.fillRect(0,0,w,h);
-  const words=p.title.replace(/\?$/,'').replace(/^what if\s*/i,'').toUpperCase();c.textAlign='left';c.textBaseline='alphabetic';
-  c.fillStyle=ACC;c.font=`800 70px ${DISPLAY()}`;c.fillText('WHAT IF',60,170);c.font=`800 110px ${DISPLAY()}`;const ls=wrapLines(c,words+'?',760).slice(0,3);
+  const isWI=/^what if\b/i.test(p.title),words=(isWI?p.title.replace(/\?$/,'').replace(/^what if\s*/i,''):p.title.replace(/\?$/,'')).toUpperCase();c.textAlign='left';c.textBaseline='alphabetic';
+  c.fillStyle=ACC;c.font=`800 70px ${DISPLAY()}`;c.fillText(isWI?'WHAT IF':'UNRAVELED',60,170);drawMark(c,1185,620,42,0);c.font=`800 110px ${DISPLAY()}`;const ls=wrapLines(c,words+'?',760).slice(0,3);
   ls.forEach((l,i)=>{c.lineWidth=14;c.strokeStyle='#000';c.lineJoin='round';c.strokeText(l,60,290+i*115);c.fillStyle='#fff';c.fillText(l,60,290+i*115);});}
-document.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const id=b.dataset.dl;$('#'+id).toBlob(bl=>saveBlob(bl,`what-if-lab-${id}.png`),'image/png');});
+document.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const id=b.dataset.dl;$('#'+id).toBlob(bl=>saveBlob(bl,`unravel-theory-${id}.png`),'image/png');});
 $('#thumb').onclick=()=>{thumb();tab('kit');};
 $('#copyDesc').onclick=async()=>{try{await navigator.clipboard.writeText($('#desc').textContent);$('#copyDesc').textContent='Copied';}catch(e){const r=document.createRange();r.selectNodeContents($('#desc'));getSelection().removeAllRanges();getSelection().addRange(r);$('#copyDesc').textContent='Selected, press Ctrl+C';}};
 
@@ -731,6 +739,7 @@ function tab(n){document.querySelectorAll('nav button').forEach(b=>b.setAttribut
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 
 window.__wil={alignVoice,get proj(){return proj;}};
+(function headerMark(){const c=$('#mark').getContext('2d');c.clearRect(0,0,88,88);drawMark(c,30,40,26,0);})();
 setSize();applyPrefs();refresh();renderLib();connectCloud();
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(!running)still();});
 })();
