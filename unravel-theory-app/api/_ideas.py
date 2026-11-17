@@ -1,4 +1,4 @@
-"""Video ideas for the Telegram bot. Generated from the IDEAS list in unravel-theory/index.html; keep them in sync."""
+"""Video ideas for the Telegram bot. Generated from the IDEAS list in index.html; keep them in sync."""
 IDEAS = [
 [
 "Theories",

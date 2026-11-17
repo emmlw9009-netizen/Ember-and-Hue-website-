@@ -1,25 +1,29 @@
-# Unravel Theory: setup
+# Unravel Theory Studio
 
-Everything lives in this repository and runs on the same Vercel project as the website.
+A studio for making narrated YouTube Shorts for the Unravel Theory channel, plus a narrator API and a Telegram bot. Everything deploys as one Vercel project.
+
+## Setup
+
 
 | Piece | Where | Needs |
 |---|---|---|
-| Video studio (phone + computer) | `https://<your-site>/unravel-theory/` | Nothing. Works once deployed |
+| Video studio (phone + computer) | `https://<your-app>.vercel.app/` | Nothing. Works once deployed |
 | Narrator voices for exports with sound | `/api/tts` (`api/tts.py`, `api/_voice.py`) | Nothing. Uses Microsoft's free neural voices via `edge-tts` |
 | Telegram bot | `/api/telegram` (`api/telegram.py`) | A bot token and 2 settings (below) |
 | Daily reminder | Vercel Cron in `vercel.json` (15:00 UTC) | `TELEGRAM_CHAT_ID` |
 
 ## 1. Deploy
 
-Merge the branch `claude/what-if-lab-files-351wzx` into your main branch. Vercel deploys it automatically
-(Python functions are picked up from `api/`, dependencies from `requirements.txt`).
+In Vercel: **Add New → Project → Import** this GitHub repository and press **Deploy** (no settings to change).
+Vercel picks up the Python functions in `api/` and their dependencies from `requirements.txt`.
+Your app gets an address like `https://unravel-theory.vercel.app`.
 
-Check it worked: open `https://<your-site>/api/tts`. You should see `{"ok": true, "voices": [...]}`.
+Check it worked: open `https://<your-app>.vercel.app/api/tts`. You should see `{"ok": true, "voices": [...]}`.
 Then open the studio: the **Narrator voice** list now starts with **Studio voices (built into exports)**.
 
 ## 2. Put the studio on your phone
 
-Open `https://<your-site>/unravel-theory/` on your phone.
+Open `https://<your-app>.vercel.app/` on your phone.
 - iPhone (Safari): Share → **Add to Home Screen**.
 - Android (Chrome): ⋮ menu → **Add to Home screen** / **Install app**.
 
@@ -34,7 +38,7 @@ then choose **Save video** in the share sheet. 720p is the default on phones bec
    - `TELEGRAM_BOT_TOKEN` = the token from BotFather
    - `TELEGRAM_WEBHOOK_SECRET` = any long random word you make up (letters and numbers only)
 3. Redeploy (Deployments → ⋯ → Redeploy).
-4. Open `https://<your-site>/api/telegram?setup=<your TELEGRAM_WEBHOOK_SECRET>` in a browser.
+4. Open `https://<your-app>.vercel.app/api/telegram?setup=<your TELEGRAM_WEBHOOK_SECRET>` in a browser.
    You should see `"ok": true`.
 5. Open your bot in Telegram and send `/start`. It replies with your **chat id**.
 6. Add `TELEGRAM_CHAT_ID` = that number in Vercel and redeploy. The bot now only answers you,
@@ -55,6 +59,6 @@ then choose **Save video** in the share sheet. 720p is the default on phones bec
 ## Notes
 - Exports with sound need a **studio voice**. Claude voices (claude.ai) and browser voices are preview-only,
   because browsers don't let a page record them. On claude.ai you can still upload a voiceover file.
-- The bot's idea list is in `api/_ideas.py`, generated from the studio's `IDEAS` list. Keep them in sync if you add ideas.
-- Saved videos live in your Claude account (when using the studio on claude.ai) or in the browser (website version).
+- The bot's idea list is in `api/_ideas.py`, generated from the `IDEAS` list in `index.html`. Keep them in sync if you add ideas.
+- Saved videos live in your Claude account (when using the studio on claude.ai) or in the browser (web app).
   The bot doesn't read them.

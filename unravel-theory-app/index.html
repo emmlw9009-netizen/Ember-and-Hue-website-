@@ -167,7 +167,7 @@ a{color:var(--cool)}
     <div class="status" id="status" role="status"></div>
     <div class="warnbox" id="silentWarn" hidden role="alert">
       <b>This video would have no sound.</b>
-      <span class="note">Pick a studio voice (website and phone version) or upload a voiceover file above, then export again.</span>
+      <span class="note">Pick a studio voice (Unravel Theory web app and phone app) or upload a voiceover file above, then export again.</span>
       <div class="row"><button class="btn" id="silentCancel">Go back</button><button class="btn" id="silentGo">Export without sound</button></div>
     </div>
     <div class="exportOut" id="exportOut" hidden>
@@ -725,7 +725,7 @@ const sel=$('#sample'), ta=$('#script'), st=$('#status');
 sel.add(new Option('Choose a sample…',''));Object.keys(SAMPLES).forEach(k=>sel.add(new Option(k,k)));
 /* ---------- My videos: everything is saved automatically ----------
    On claude.ai it saves to this page's private storage for your account (follows you to any device);
-   on the website it saves in this browser. */
+   in the web app it saves in this browser. */
 const STATUS=[['draft','Draft'],['recorded','Exported'],['uploaded','Uploaded']];
 const store={db:null,uid:null,
   local(){try{return JSON.parse(localStorage.getItem('wil-lib')||'{}');}catch(e){return {};}},
@@ -838,12 +838,12 @@ function stopVoice(){try{synth&&synth.cancel();}catch(e){}try{tts&&tts.active()&
 let voiceHook=null;
 function hookTts(t){t.onLine(e=>voiceHook&&voiceHook.line(+e.id));t.onPosition(e=>voiceHook&&voiceHook.pos(+e.id,e.ms));}
 
-/* ---------- Audio engine: one AudioContext; studio narration from the website's /api/tts ---------- */
+/* ---------- Audio engine: one AudioContext; studio narration from the web app's /api/tts ---------- */
 let AC=null;const ac=()=>AC||(AC=new (window.AudioContext||window.webkitAudioContext)());
 function unlockAudio(){try{const a=ac();if(a.state!=='running')a.resume();}catch(e){}}
 var NAR={ok:false,voices:[],cache:new Map()};
 async function checkServer(){try{const r=await fetch('/api/tts',{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j&&j.ok){NAR.ok=true;NAR.voices=j.voices||[];loadVoices();applyPrefs();voiceNote();}}catch(e){}}
-function voiceNote(){const el=$('#voiceNote');if(!el)return;el.textContent=NAR.ok?'Studio voices are built into exported videos, with captions timed to every word. Claude and browser voices are for previewing only.':'Exported videos get sound from a voiceover file you upload. Automatic narration in exports works in the studio on your website (it has the studio voices); here, Claude and browser voices are preview only.';}
+function voiceNote(){const el=$('#voiceNote');if(!el)return;el.textContent=NAR.ok?'Studio voices are built into exported videos, with captions timed to every word. Claude and browser voices are for previewing only.':'Exported videos get sound from a voiceover file you upload. Automatic narration in exports works in the Unravel Theory web app (it has the studio voices); here, Claude and browser voices are preview only.';}
 function b64ToBuf(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
 const normW=x=>String(x).toLowerCase().replace(/[^a-z0-9]/g,'');
 // Matches the narrator's word timings back onto the script's words (punctuation and numbers can differ).
@@ -926,7 +926,7 @@ let dlP=null;const getDl=()=>dlP||(dlP=(window.claude&&window.claude.use)?window
 async function saveBlob(blob,name){const dl=await getDl();
   if(dl){try{const r=await dl.save({filename:name,data:blob});st.className='status';st.textContent=r&&r.status==='delivered'?'Sent '+name:'Saved '+name+' to your downloads.';return true;}
     catch(e){const c=e&&e.code;st.className='status err';st.textContent=c==='declined'?'Save cancelled. Press Download video to try again.':c==='rate_limited'?'A save prompt is already open. Finish it, or wait a moment and press Download video.':'This view can’t save files ('+(c||'error')+'). Open the studio in Chrome on claude.ai, or long-press the video below and save it.';return false;}}
-  if(window.top!==window){st.className='status err';st.textContent='This view blocks downloads. Long-press or right-click the video below to save it, or open the studio from your website.';}
+  if(window.top!==window){st.className='status err';st.textContent='This view blocks downloads. Long-press or right-click the video below to save it, or open the Unravel Theory web app.';}
   // phones: the share sheet is the most reliable way to save a video to the camera roll
   if(navigator.canShare&&matchMedia('(pointer:coarse)').matches){try{const f=new File([blob],name,{type:blob.type});if(navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});st.className='status';st.textContent='Shared '+name+'. Choose “Save video” to keep it in your photos.';return true;}}catch(e){if(e&&e.name==='AbortError'){st.className='status';st.textContent='Share closed. Press Download video to try again.';return false;}}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);if(window.top===window){st.className='status';st.textContent='Downloaded '+name+'. Check your Downloads folder.';}return true;}

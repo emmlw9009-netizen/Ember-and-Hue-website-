@@ -1,6 +1,6 @@
 """Unravel Theory Telegram bot (Vercel serverless function).
 
-Setup (see unravel-theory/SETUP.md):
+Setup (see README.md):
   TELEGRAM_BOT_TOKEN       from @BotFather (required)
   TELEGRAM_WEBHOOK_SECRET  any long random word you choose (required)
   TELEGRAM_CHAT_ID         your chat id; the bot then only answers you and sends the daily reminder
@@ -84,7 +84,7 @@ def send(chat, text, buttons=None):
 
 # ---------- content helpers (mirror the studio) ----------
 def studio_url(host):
-    base = os.environ.get("STUDIO_URL") or f"https://{host}/unravel-theory/"
+    base = os.environ.get("STUDIO_URL") or f"https://{host}/"
     return base
 
 
