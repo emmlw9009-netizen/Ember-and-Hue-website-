@@ -62,6 +62,23 @@ h3{font:700 16px var(--display);margin:0}
 .prose{max-width:72ch;display:grid;gap:12px}
 .prose p,.prose li{margin:0}
 .prose ol,.prose ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.vid{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.vid.on{border-color:var(--accent)}
+.vmeta{display:grid;gap:2px;min-width:0;flex:1 1 240px}
+.vmeta b{font:700 16px var(--display);overflow-wrap:anywhere}
+.vact{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vact select{width:auto}
+.libhead{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.wide{grid-column:1/-1}
+.kitgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.kitgrid>div{display:grid;gap:8px;align-content:start;min-width:0}
+.kitgrid ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.tbtn{background:none;border:0;color:var(--fg);font:15px/1.4 var(--body);text-align:left;padding:2px 0;cursor:pointer}
+.tbtn:hover{color:var(--accent)}
+.tbtn[data-done]::after{content:'  Copied';color:var(--cool);font:600 11px var(--mono)}
+.kh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.btn.sm{padding:6px 12px;font-size:12px}
+#ideaGroups{display:grid;gap:12px}
 .ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px;list-style:none;padding:0;margin:0}
 .ideas li{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .ideas li span{min-width:0}
@@ -77,6 +94,8 @@ a{color:var(--cool)}
   <div class="brand"><div class="flask" aria-hidden="true">?</div><h1>What If <span>Lab</span></h1></div>
   <nav role="tablist" aria-label="Sections">
     <button role="tab" aria-selected="true" data-tab="studio">Video maker</button>
+    <button role="tab" aria-selected="false" data-tab="lib">My videos</button>
+    <button role="tab" aria-selected="false" data-tab="ideas">Ideas</button>
     <button role="tab" aria-selected="false" data-tab="kit">Channel kit</button>
     <button role="tab" aria-selected="false" data-tab="play">Playbook</button>
   </nav>
@@ -85,8 +104,9 @@ a{color:var(--cool)}
 <!-- STUDIO -->
 <section id="tab-studio" class="studio">
   <div class="panel">
+    <div class="kh"><span class="status" id="sync" role="status">Autosave on</span><button class="btn sm" id="newVid">+ New video</button></div>
     <div class="row">
-      <div><label for="sample">Load a script</label>
+      <div><label for="sample">Start from a sample</label>
         <select id="sample"></select></div>
       <div><label for="format">Format</label>
         <select id="format"><option value="long">16:9 long video</option><option value="short">9:16 Short</option></select></div>
@@ -115,6 +135,30 @@ a{color:var(--cool)}
     <div class="status" id="status" role="status"></div>
     <p class="note">Export plays the whole video in real time and then saves a .webm file. YouTube accepts .webm uploads directly.</p>
   </div>
+  <div class="panel wide" id="upkit">
+    <div class="kh"><h2>Upload kit</h2><span class="note" id="kLen"></span></div>
+    <p class="note">Everything to paste into YouTube Studio for this video. It updates as you edit the script.</p>
+    <div class="kitgrid">
+      <div><div class="kh"><span class="lbl">Title options (click one to copy)</span></div><ol id="kTitles"></ol>
+        <div class="kh"><span class="lbl">Tags</span><button class="btn sm" data-copy="kTags">Copy</button></div><pre class="copy" id="kTags"></pre>
+        <div class="kh"><span class="lbl">Pinned comment</span><button class="btn sm" data-copy="kPin">Copy</button></div><pre class="copy" id="kPin"></pre></div>
+      <div><div class="kh"><span class="lbl">Description</span><button class="btn sm" data-copy="kDesc">Copy</button></div><pre class="copy" id="kDesc"></pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- MY VIDEOS -->
+<section id="tab-lib" class="panel" hidden>
+  <div class="libhead"><div><h2>My videos</h2><span class="note" id="libCount"></span></div><button class="btn primary" id="newVid2">+ New video</button></div>
+  <p class="note">Every script saves automatically as you type. Set each one to Exported or Uploaded to track where it is.</p>
+  <div id="lib" style="display:grid;gap:8px"></div>
+</section>
+
+<!-- IDEAS -->
+<section id="tab-ideas" class="panel" hidden>
+  <div class="libhead"><div><h2>Video ideas</h2><span class="note">Click Draft to start a video from an outline. Fact-check it, then write it in your own words.</span></div>
+    <input type="text" id="ideaSearch" placeholder="Search ideas" aria-label="Search ideas" style="max-width:260px"></div>
+  <div id="ideaGroups"></div>
 </section>
 
 <!-- KIT -->
@@ -162,10 +206,16 @@ Sources for every video are in its description. Got a question for the Lab? Leav
     <h2>Posting rhythm</h2>
     <p>Two long videos a week (6 to 10 minutes, about 900 to 1,400 words of script) plus one Short a day cut from them. Switch Format to 9:16 and use a single 3-scene excerpt for each Short.</p>
 
-    <h2>Video ideas</h2>
-    <p class="note">Click "Draft" to load a starter outline into the video maker. Then fact-check it and write it in your own words.</p>
+    <h2>Before you hit publish</h2>
+    <ol>
+      <li>Fact-check every claim and paste your sources into the description.</li>
+      <li>Export with a voiceover attached so the video has sound.</li>
+      <li>Make the thumbnail in the Channel kit and upload it as a custom thumbnail.</li>
+      <li>Copy the title, description, tags and pinned comment from the Upload kit under the video maker.</li>
+      <li>Set "Altered or synthetic content" to Yes if you used an AI voice.</li>
+      <li>Mark the video as Uploaded in My videos.</li>
+    </ol>
   </div>
-  <ul class="ideas" id="ideas"></ul>
   <p class="note">Research sources: <a href="https://nerdbot.com/2026/07/21/faceless-youtube-channels-ai-production-model/" target="_blank" rel="noopener">Nerdbot</a> · <a href="https://outlierkit.com/resources/faceless-youtube-growth-strategy/" target="_blank" rel="noopener">OutlierKit</a> · <a href="https://kineclip.com/blog/what-if-video-format-guide-2026/" target="_blank" rel="noopener">Kineclip</a> · <a href="https://tubemilestone.com/blog/youtube-hook-formula" target="_blank" rel="noopener">TubeMilestone</a> · <a href="https://www.socialmediaexaminer.com/youtube-retention" target="_blank" rel="noopener">Social Media Examiner</a></p>
 </section>
 </div>
@@ -214,12 +264,27 @@ To live on sunlight, you'd need skin the size of a tennis court, or a much lazie
 So we'll keep eating lunch. But it's a great reminder of how hungry a human body really is. [visual: question]`
 };
 const IDEAS=[
-["What if Earth stopped spinning?","earth"],["What if the Sun went out for one day?","sun"],["What if all the ice melted?","ice"],
-["What if humans never slept?","brain"],["What if the dinosaurs never went extinct?","earth"],["What if you drilled through the Earth?","fire"],
-["What if the internet went down forever?","city"],["What if every human jumped at once?","people"],["What if Earth had rings like Saturn?","space"],
-["What if the oceans dried up?","ocean"],["What if time ran backwards?","time"],["What if a black hole passed the solar system?","blackhole"],
-["What if money disappeared?","money"],["What if we lived on Mars?","space"],["What if Earth was twice as big?","earth"],
-["What if lightning never struck?","fire"],["What if you only ate one food?","people"],["What if gravity doubled?","space"]
+["Space","What if the Moon disappeared?","moon"],["Space","What if you fell into a black hole?","blackhole"],["Space","What if Earth had rings like Saturn?","space"],
+["Space","What if the Sun went out for one day?","sun"],["Space","What if a black hole passed through the solar system?","blackhole"],["Space","What if we lived on Mars?","space"],
+["Space","What if Earth was twice as big?","earth"],["Space","What if gravity doubled for one minute?","space"],["Space","What if Jupiter became a star?","sun"],
+["Space","What if you took off your helmet in space?","space"],["Space","What if an asteroid hit the Moon?","moon"],["Space","What if Earth had two suns?","sun"],
+["Earth","What if Earth stopped spinning?","earth"],["Earth","What if all the ice melted?","ice"],["Earth","What if the oceans dried up?","ocean"],
+["Earth","What if you drilled through the Earth?","fire"],["Earth","What if lightning never struck?","fire"],["Earth","What if every volcano erupted at once?","fire"],
+["Earth","What if it never stopped raining?","ocean"],["Earth","What if Earth's magnetic field vanished?","earth"],["Earth","What if a new ice age started tomorrow?","ice"],
+["Earth","What if all the trees disappeared?","night"],["Earth","What if the oceans were twice as deep?","ocean"],["Earth","What if Earth had no tilt?","earth"],
+["Body","What if humans never slept?","brain"],["Body","What if humans could photosynthesize?","sun"],["Body","What if you only ate one food?","people"],
+["Body","What if you stopped drinking water?","ocean"],["Body","What if humans could hibernate?","ice"],["Body","What if you used 100% of your brain?","brain"],
+["Body","What if you never got sick again?","people"],["Body","What if humans lived to 500?","time"],["Body","What if you stayed awake for 11 days?","brain"],
+["Body","What if you swallowed gum?","people"],["Body","What if everyone had perfect memory?","brain"],["Body","What if you lived on the bottom of the ocean?","ocean"],
+["History","What if the dinosaurs never went extinct?","earth"],["History","What if the Library of Alexandria never burned?","fire"],["History","What if the Roman Empire never fell?","city"],
+["History","What if electricity was never discovered?","night"],["History","What if the wheel was never invented?","people"],["History","What if humans never left Africa?","people"],
+["History","What if writing was never invented?","brain"],["History","What if Pangaea never broke apart?","earth"],["History","What if the printing press came 1,000 years early?","city"],
+["Future","What if the internet went down forever?","city"],["Future","What if robots did every job?","city"],["Future","What if we could freeze people and wake them later?","ice"],
+["Future","What if we built a city on the Moon?","moon"],["Future","What if time travel was real?","time"],["Future","What if nobody ever had to work?","money"],
+["Future","What if cars could fly?","city"],["Future","What if we turned Mars green?","space"],["Future","What if everyone spoke one language?","people"],
+["Wild","What if every human jumped at once?","people"],["Wild","What if money disappeared?","money"],["Wild","What if time ran backwards?","time"],
+["Wild","What if you were the last person on Earth?","night"],["Wild","What if the speed of light was 100 km/h?","time"],["Wild","What if everyone became a billionaire?","money"],
+["Wild","What if you shrank to the size of an ant?","question"],["Wild","What if colors disappeared?","question"],["Wild","What if the Earth was hollow?","earth"]
 ];
 function outline(title,v){return `# ${title}
 
@@ -452,16 +517,97 @@ function drawFrame(c,w,h,t,proj,si,sceneT){
 
 /* ---------- state + UI ---------- */
 const sel=$('#sample'), ta=$('#script'), st=$('#status');
-Object.keys(SAMPLES).forEach(k=>sel.add(new Option(k,k)));
-try{const d=localStorage.getItem('wil-script');ta.value=d||SAMPLES[sel.value];}catch(e){ta.value=SAMPLES[sel.value];}
-sel.onchange=()=>{ta.value=SAMPLES[sel.value];refresh();};
+sel.add(new Option('Choose a sample…',''));Object.keys(SAMPLES).forEach(k=>sel.add(new Option(k,k)));
+/* ---------- My videos: everything is saved automatically ----------
+   On claude.ai it saves to this page's private storage for your account (follows you to any device);
+   on the website it saves in this browser. */
+const STATUS=[['draft','Draft'],['recorded','Exported'],['uploaded','Uploaded']];
+const store={db:null,uid:null,
+  local(){try{return JSON.parse(localStorage.getItem('wil-lib')||'{}');}catch(e){return {};}},
+  saveLocal(lib){try{localStorage.setItem('wil-lib',JSON.stringify(lib));}catch(e){}},
+  col(){return this.db.collection('data/users/'+this.uid);},
+  put(id,doc){const lib=this.local();lib[id]=doc;this.saveLocal(lib);if(this.db)this.col().doc(id).set(doc).catch(()=>setSync('Couldn’t reach cloud save. Saved in this browser.',true));},
+  del(id){const lib=this.local();delete lib[id];this.saveLocal(lib);if(this.db)this.col().doc(id).delete().catch(()=>{});}
+};
+let LIB=store.local(), curId=null, saveT=null;
+const newId=()=>'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const isVid=id=>id&&id[0]==='v';
+function prefs(){return LIB.prefs||{};}
+function setPref(k,v){const p={...prefs(),[k]:v};LIB.prefs=p;store.put('prefs',p);}
+function setSync(msg,err){const el=$('#sync');if(el){el.textContent=msg;el.className='status'+(err?' err':'');}}
+function titleOf(text){const m=text.match(/^#\s*(.+)/);return m?m[1].trim():'Untitled experiment';}
+function saveNow(){if(!curId)return;const old=LIB[curId]||{};const doc={title:titleOf(ta.value),script:ta.value,format:$('#format').value,status:old.status||'draft',created:old.created||Date.now(),updated:Date.now()};
+  LIB[curId]=doc;store.put(curId,doc);setSync('Saved · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));renderLib();}
+function queueSave(){clearTimeout(saveT);setSync('Saving…');saveT=setTimeout(saveNow,800);}
+function openVideo(id){const d=LIB[id];if(!d)return;curId=id;ta.value=d.script;if(d.format&&$('#format').value!==d.format){$('#format').value=d.format;setSize();}setPref('current',id);refresh();renderLib();tab('studio');}
+function newVideo(script){curId=newId();ta.value=script;saveNow();setPref('current',curId);refresh();tab('studio');}
+function setStatus(id,s){if(!LIB[id])return;LIB[id]={...LIB[id],status:s,updated:Date.now()};store.put(id,LIB[id]);renderLib();}
+let confirmDel=null;
+function renderLib(){const box=$('#lib');if(!box)return;const vids=Object.entries(LIB).filter(([id])=>isVid(id)).sort((a,b)=>b[1].updated-a[1].updated);
+  $('#libCount').textContent=vids.length?`${vids.length} saved · ${vids.filter(v=>v[1].status==='uploaded').length} uploaded`:'';
+  box.innerHTML='';if(!vids.length){box.innerHTML='<p class="note">No saved videos yet. Pick an idea in the Ideas tab, or start writing in the video maker. Everything saves automatically.</p>';return;}
+  for(const [id,d] of vids){const li=document.createElement('div');li.className='vid'+(id===curId?' on':'');
+    const words=(d.script.replace(/^#.*$/m,'').match(/\S+/g)||[]).length;
+    li.innerHTML=`<div class="vmeta"><div class="tag"></div><b></b><span class="note"></span></div>`;
+    li.querySelector('.tag').textContent=(id===curId?'Open now · ':'')+(d.format==='short'?'Short':'Long video');li.querySelector('b').textContent=d.title;
+    li.querySelector('.note').textContent=`${words} words · edited ${new Date(d.updated).toLocaleDateString([], {month:'short',day:'numeric'})}`;
+    const ss=document.createElement('select');ss.setAttribute('aria-label','Status of '+d.title);STATUS.forEach(([v,l])=>ss.add(new Option(l,v)));ss.value=d.status||'draft';ss.onchange=()=>setStatus(id,ss.value);
+    const ob=document.createElement('button');ob.className='btn';ob.textContent='Open';ob.onclick=()=>openVideo(id);
+    const db=document.createElement('button');db.className='btn';db.textContent=confirmDel===id?'Confirm delete':'Delete';if(confirmDel===id)db.style.background='var(--bad)';
+    db.onclick=()=>{if(confirmDel!==id){confirmDel=id;renderLib();return;}confirmDel=null;delete LIB[id];store.del(id);if(curId===id)curId=null;renderLib();};
+    const act=document.createElement('div');act.className='vact';act.append(ss,ob,db);li.append(act);box.appendChild(li);}
+  renderIdeas();}
+async function connectCloud(){if(!(window.claude&&window.claude.use))return;try{const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);if(!db||!user)return;const uid=await user.id();if(!uid)return;
+  store.db=db;store.uid=uid;setSync('Loading your saved videos…');
+  const snap=await Promise.race([store.col().get(),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))]);const cloud={};snap.docs.forEach(d=>{cloud[d.id]=d.data();});
+  // keep the newest copy of each; push anything only this browser has
+  for(const [id,d] of Object.entries(LIB)){const c=cloud[id];if(!c||(isVid(id)&&(d.updated||0)>(c.updated||0)))store.col().doc(id).set(d).catch(()=>{});else if(id==='prefs')cloud.prefs={...d,...c};}
+  LIB={...LIB,...Object.fromEntries(Object.entries(cloud).filter(([id,c])=>!LIB[id]||id==='prefs'||(c.updated||0)>=(LIB[id].updated||0)))};store.saveLocal(LIB);
+  const want=prefs().current;if(want&&LIB[want]&&want!==curId)openVideo(want);else renderLib();applyPrefs();setSync('Saved to your Claude account');}
+  catch(e){setSync('Cloud save unavailable. Saving in this browser.',true);}}
+function applyPrefs(){const p=prefs();if(p.pace&&[...$('#rate').options].some(o=>o.value===p.pace))$('#rate').value=p.pace;if(p.voice&&[...$('#voice').options].some(o=>o.value===p.voice))$('#voice').value=p.voice;}
+/* ---------- Ideas tab ---------- */
+function renderIdeas(){const box=$('#ideaGroups');if(!box)return;const have=new Map(Object.entries(LIB).filter(([id])=>isVid(id)).map(([id,d])=>[d.title.toLowerCase(),id]));
+  const q=($('#ideaSearch').value||'').toLowerCase();box.innerHTML='';let shown=0;
+  [...new Set(IDEAS.map(i=>i[0]))].forEach(cat=>{const list=IDEAS.filter(i=>i[0]===cat&&i[1].toLowerCase().includes(q));if(!list.length)return;
+    const h=document.createElement('h3');h.textContent=`${cat} · ${list.length}`;const ul=document.createElement('ul');ul.className='ideas';
+    list.forEach(([,t,v])=>{shown++;const li=document.createElement('li'),sp=document.createElement('span'),tg=document.createElement('div');tg.className='tag';const vid=have.get(t.toLowerCase());tg.textContent=vid?'Saved in My videos':v;sp.append(tg,document.createTextNode(t));
+      const b=document.createElement('button');b.className='btn'+(vid?'':' primary');b.textContent=vid?'Open':'Draft';b.onclick=()=>vid?openVideo(vid):newVideo(outline(t,v));li.append(sp,b);ul.appendChild(li);});
+    box.append(h,ul);});
+  if(!shown)box.innerHTML='<p class="note">No ideas match. Try another word.</p>';}
+
+/* ---------- Upload kit: title, description with chapters, tags, pinned comment ---------- */
+let lastDurs=null;
+const ts=s=>{s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+function uploadKit(){const P=proj;if(!P.scenes.length)return null;const short=$('#format').value==='short';
+  const durs=lastDurs&&lastDurs.length===P.scenes.length?lastDurs:P.scenes.map(s=>s.dur);const total=durs.reduce((a,b)=>a+b,0);
+  const base=P.title.replace(/\?+$/,''),body=base.replace(/^what if\s*/i,'');
+  const titles=[P.title,`${base}? The Science Explained`,`What would actually happen if ${body}?`,`${base}? (It's Worse Than You Think)`].map(t=>t.slice(0,100));
+  const lbl=s=>{let f=(s.text.match(/[^.!?]+/)||[s.text])[0].replace(/\[[^\]]*\]/g,'').trim().replace(/^(next|so|and|but|now|then|first|finally|here's the problem|here's the thing|meanwhile)\b[,:]?\s*/i,'');const w=f.split(/\s+/).slice(0,7);let t=w.join(' ').replace(/[,;:]+$/,'');if(f.split(/\s+/).length>7)t+='…';return t.charAt(0).toUpperCase()+t.slice(1);};
+  const ch=[];let tt=0;P.scenes.forEach((s,i)=>{if(i===0)ch.push({t:0,l:'The question'});else if(tt-ch[ch.length-1].t>=10)ch.push({t:tt,l:lbl(s)});tt+=durs[i];});
+  const chapters=!short&&ch.length>=3&&total-ch[ch.length-1].t>=10?ch.map(c=>`${ts(c.t)} ${c.l}`).join('\n'):'';
+  const hook=(P.scenes[0].text.match(/[^.!?]+[.!?]/g)||[P.scenes[0].text]).slice(0,2).map(x=>x.trim()).join(' ');
+  const kinds=[...new Set(P.scenes.map(s=>s.kind).filter(k=>k!=='question'))];
+  const tags=[...new Set(['what if','what if science',body.toLowerCase(),'science explained','hypothetical','educational','what if lab',...kinds.map(k=>k==='blackhole'?'black hole':k),...P.scenes.map(s=>(s.kwText||'').toLowerCase().replace(/'s$/,'')).filter(w=>w.length>3)])].filter(Boolean).slice(0,15);
+  const desc=`${hook}\n\nIn this experiment, What If Lab follows the science step by step to find out what would really happen.\n\n${chapters?'CHAPTERS\n'+chapters+'\n\n':''}SOURCES\n(Add the articles and papers you used to fact-check this video, one link per line.)\n\nGot a question for the Lab? Leave it in the comments and it might be our next experiment.\n\n#whatif #science ${short?'#shorts ':''}#explained`;
+  return {titles,desc,tags:tags.join(', '),pin:`What should the Lab test next? Reply with your best "what if" question and we'll pick one for a future video.`,len:ts(total)};}
+function renderKit(){const k=uploadKit(),box=$('#upkit');if(!box)return;if(!k){box.hidden=true;return;}box.hidden=false;
+  $('#kTitles').innerHTML='';k.titles.forEach(t=>{const li=document.createElement('li'),b=document.createElement('button');b.className='tbtn';b.textContent=t;b.title='Click to copy';b.onclick=async()=>{try{await navigator.clipboard.writeText(t);b.dataset.done='1';setTimeout(()=>delete b.dataset.done,1500);}catch(e){const r=document.createRange();r.selectNodeContents(b);getSelection().removeAllRanges();getSelection().addRange(r);}};li.appendChild(b);$('#kTitles').appendChild(li);});
+  $('#kDesc').textContent=k.desc;$('#kTags').textContent=k.tags;$('#kPin').textContent=k.pin;$('#kLen').textContent=`Video length about ${k.len}${lastDurs?' (timed from your last export)':' (estimated; export to get exact chapter times)'}`;}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy]');if(!b)return;const el=$('#'+b.dataset.copy),txt=el.tagName==='OL'?[...el.children].map(li=>li.textContent)[0]:el.textContent;
+  try{await navigator.clipboard.writeText(txt);b.textContent='Copied';}catch(err){const r=document.createRange();r.selectNodeContents(el);getSelection().removeAllRanges();getSelection().addRange(r);b.textContent='Selected, press Ctrl+C';}setTimeout(()=>b.textContent='Copy',1800);});
+{const want=prefs().current;if(want&&LIB[want]){curId=want;ta.value=LIB[want].script;if(LIB[want].format)$('#format').value=LIB[want].format;}
+  else{let old=null;try{old=localStorage.getItem('wil-script');}catch(e){}curId=newId();ta.value=old||SAMPLES[Object.keys(SAMPLES)[0]];LIB[curId]={title:titleOf(ta.value),script:ta.value,format:'long',status:'draft',created:Date.now(),updated:Date.now()};store.put(curId,LIB[curId]);LIB.prefs={...prefs(),current:curId};store.put('prefs',LIB.prefs);}}
+sel.onchange=()=>{if(sel.value)newVideo(SAMPLES[sel.value]);sel.value='';};
 let proj=parse(ta.value), cur=0, running=null;
 function setSize(){const s=$('#format').value==='short';stage.width=s?720:1280;stage.height=s?1280:720;}
 function chips(){const box=$('#sceneChips');box.innerHTML='';proj.scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=`${i+1} · ${s.kind} · ${s.dur.toFixed(0)}s`;b.onclick=()=>{if(!running){cur=i;still();chips();}};box.appendChild(b);});}
 function still(){drawFrame(ctx,stage.width,stage.height,1,proj,cur,proj.scenes[cur]?proj.scenes[cur].dur*.35:0);}
-function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';st.textContent=`${proj.scenes.length} scenes · about ${Math.round(tot)} s · ${proj.scenes.reduce((a,s)=>a+s.words.length,0)} words`;chips();if(!running)still();try{localStorage.setItem('wil-script',ta.value);}catch(e){}}
-let deb;ta.oninput=()=>{clearTimeout(deb);deb=setTimeout(refresh,250);};
-$('#format').onchange=()=>{setSize();refresh();};
+function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';st.textContent=`${proj.scenes.length} scenes · about ${Math.round(tot)} s · ${proj.scenes.reduce((a,s)=>a+s.words.length,0)} words`;chips();if(!running)still();lastDurs=null;renderKit();}
+let deb;ta.oninput=()=>{clearTimeout(deb);deb=setTimeout(refresh,250);queueSave();};
+$('#format').onchange=()=>{setSize();refresh();queueSave();};
+$('#newVid').onclick=$('#newVid2').onclick=()=>newVideo(outline('What if …?','question').replace('# What if …?','# What if ...?'));
+$('#ideaSearch').oninput=renderIdeas;
 
 // voices: Claude voices when the page runs on claude.ai, browser voices otherwise
 const synth=window.speechSynthesis; let tts=null;
@@ -469,10 +615,11 @@ const CV=[['buttery','Buttery · warm narrator'],['rounded','Rounded · deep, ca
 function loadVoices(){const vsel=$('#voice'),keep=vsel.value;vsel.innerHTML='';if(tts){const g=document.createElement('optgroup');g.label='Claude voices (best)';CV.forEach(([v,l])=>g.appendChild(new Option(l,'c:'+v)));vsel.appendChild(g);}
   const vs=synth?synth.getVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>(/natural|neural|online|premium|enhanced|google/i.test(b.name))-(/natural|neural|online|premium|enhanced|google/i.test(a.name))):[];
   if(vs.length){const g=document.createElement('optgroup');g.label='Browser voices';vs.forEach((v,i)=>g.appendChild(new Option(v.name.replace(/Microsoft |Google /,'')+(/natural|neural|online/i.test(v.name)?' ★':''),'b:'+i)));vsel.appendChild(g);}
-  vsel._v=vs;if([...vsel.options].some(o=>o.value===keep))vsel.value=keep;if(!vsel.options.length)vsel.add(new Option('No voice available',''));}
+  vsel._v=vs;const pv=(typeof LIB!=='undefined'&&LIB.prefs&&LIB.prefs.voice)||keep;if([...vsel.options].some(o=>o.value===pv))vsel.value=pv;if(!vsel.options.length)vsel.add(new Option('No voice available',''));}
 if(synth){synth.onvoiceschanged=loadVoices;}loadVoices();
 (window.claude&&window.claude.use?window.claude.use('tts').catch(()=>null):Promise.resolve(null)).then(t=>{if(t){tts=t;hookTts(t);loadVoices();}});
-$('#rate').onchange=()=>refresh();
+$('#rate').onchange=()=>{setPref('pace',$('#rate').value);refresh();};
+$('#voice').onchange=()=>setPref('voice',$('#voice').value);
 function stopVoice(){try{synth&&synth.cancel();}catch(e){}try{tts&&tts.active()&&tts.stop().catch(()=>{});}catch(e){}}
 
 // One reading for the whole script: the voice is handed every scene at once (from the click),
@@ -543,7 +690,7 @@ $('#export').onclick=async()=>{
   const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
   const chunks=[];recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:6e6}:{});
   recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
-  recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;const blob=new Blob(chunks,{type:'video/webm'});
+  const expDurs=durs.slice();recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;lastDurs=expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');const blob=new Blob(chunks,{type:'video/webm'});
     const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.webm';
     st.textContent=`Video ready (${(blob.size/1e6).toFixed(1)} MB). Saving…`;saveBlob(blob,name);};
   recorder.start(500);els.forEach(e=>e.play());
@@ -570,14 +717,13 @@ $('#thumb').onclick=()=>{thumb();tab('kit');};
 $('#copyDesc').onclick=async()=>{try{await navigator.clipboard.writeText($('#desc').textContent);$('#copyDesc').textContent='Copied';}catch(e){const r=document.createRange();r.selectNodeContents($('#desc'));getSelection().removeAllRanges();getSelection().addRange(r);$('#copyDesc').textContent='Selected, press Ctrl+C';}};
 
 // ideas
-const ul=$('#ideas');IDEAS.forEach(([t,v])=>{const li=document.createElement('li');li.innerHTML=`<span><div class="tag">${v}</div>${t}</span>`;const b=document.createElement('button');b.className='btn';b.textContent='Draft';b.onclick=()=>{ta.value=outline(t,v);refresh();tab('studio');};li.appendChild(b);ul.appendChild(li);});
 
 // tabs
-function tab(n){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===n));['studio','kit','play'].forEach(k=>$('#tab-'+k).hidden=k!==n);if(n==='kit'){avatar();banner();thumb();}}
+function tab(n){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===n));['studio','lib','ideas','kit','play'].forEach(k=>$('#tab-'+k).hidden=k!==n);if(n==='ideas')renderIdeas();if(n==='kit'){avatar();banner();thumb();}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 
 window.__wil={alignVoice,get proj(){return proj;}};
-setSize();refresh();
+setSize();applyPrefs();refresh();renderLib();connectCloud();
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(!running)still();});
 })();
 </script>
