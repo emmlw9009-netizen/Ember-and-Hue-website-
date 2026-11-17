@@ -998,6 +998,9 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.t
 window.__wil={alignVoice,drawMark,get proj(){return proj;}};
 (function headerMark(){const c=$('#mark').getContext('2d');c.clearRect(0,0,88,88);drawMark(c,30,40,26,0);})();
 migrateShorts();setSize();applyPrefs();refresh();renderLib();connectCloud();voiceNote();checkServer();
+// links from the Telegram bot: ?draft=<title>&v=<visual> opens that idea (or the saved video with that title)
+try{const q=new URLSearchParams(location.search),d=q.get('draft');if(d){const hit=Object.entries(LIB).find(([id,x])=>isVid(id)&&x.title.toLowerCase()===d.toLowerCase());
+  if(hit)openVideo(hit[0]);else newVideo(outline(d,KINDS.includes(q.get('v'))?q.get('v'):'question'));history.replaceState(null,'',location.pathname);}}catch(e){}
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(!running)still();});
 })();
 </script>
