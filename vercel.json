@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/tts.py": { "maxDuration": 60, "includeFiles": "api/_*.py" },
+    "api/telegram.py": { "maxDuration": 60, "includeFiles": "api/_*.py" }
+  },
+  "crons": [
+    { "path": "/api/telegram?cron=daily", "schedule": "0 15 * * *" }
+  ]
+}

@@ -72,6 +72,7 @@ h3{font:700 16px var(--display);margin:0}
 .wide{grid-column:1/-1}
 .prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s linear}
+.warnbox{display:grid;gap:8px;border:1px solid var(--bad);border-radius:12px;padding:12px;background:var(--bg)}
 .exportOut{display:grid;gap:10px;border:1px solid var(--accent);border-radius:12px;padding:12px;background:var(--bg)}
 .exportOut video{width:100%;max-height:50vh;border-radius:8px;background:#000}
 .kitgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
@@ -113,7 +114,9 @@ a{color:var(--cool)}
       <div><label for="sample">Start from a sample</label>
         <select id="sample"></select></div>
       <div><label for="format">Format</label>
-        <select id="format"><option value="short" selected>YouTube Short · 9:16 · 1080×1920</option><option value="long">Long video · 16:9 · 1280×720</option></select></div>
+        <select id="format"><option value="short" selected>YouTube Short · 9:16</option><option value="long">Long video · 16:9</option></select></div>
+      <div><label for="quality">Quality</label>
+        <select id="quality"><option value="1080">1080p · best</option><option value="720">720p · faster on phones</option></select></div>
     </div>
     <div style="display:grid;gap:4px">
       <label for="script">Script: first line "# Title", blank line between scenes, optional [visual: space] tag</label>
@@ -125,7 +128,8 @@ a{color:var(--cool)}
     </div>
     <div class="file"><label for="vo">Voiceover audio for export (mp3/wav, optional)</label><input type="file" id="vo" accept="audio/*"></div>
     <div class="file"><label for="music">Background music (optional, plays at 15%)</label><input type="file" id="music" accept="audio/*"></div>
-    <p class="note">On claude.ai, the preview narrates with Claude voices; elsewhere it uses your browser's voices (★ = natural-sounding). Exported video can't capture either voice, so for a voiced export, upload a voiceover: your own recording or one made in a TTS tool. Scenes stretch to fit it. Pace speeds up captions, cuts and narration together.</p>
+    <p class="note" id="voiceNote"></p>
+    <p class="note">Uploading a voiceover replaces the narrator; scenes line up with its pauses. Pace speeds up captions, cuts and narration together.</p>
   </div>
   <div class="panel">
     <div class="monitor"><canvas id="stage" width="1280" height="720" aria-label="Video preview"></canvas></div>
@@ -138,6 +142,11 @@ a{color:var(--cool)}
     </div>
     <div class="prog" id="prog" hidden><i></i></div>
     <div class="status" id="status" role="status"></div>
+    <div class="warnbox" id="silentWarn" hidden role="alert">
+      <b>This video would have no sound.</b>
+      <span class="note">Pick a studio voice (website and phone version) or upload a voiceover file above, then export again.</span>
+      <div class="row"><button class="btn" id="silentCancel">Go back</button><button class="btn" id="silentGo">Export without sound</button></div>
+    </div>
     <div class="exportOut" id="exportOut" hidden>
       <div class="kh"><b id="outTitle">Your video is ready</b><span class="note" id="outInfo"></span></div>
       <video id="outVid" controls playsinline></video>
@@ -692,7 +701,7 @@ async function connectCloud(){if(!(window.claude&&window.claude.use))return;try{
   migrateShorts();const want=prefs().current;if(want&&LIB[want]&&want!==curId)openVideo(want);else renderLib();applyPrefs();setSync('Saved to your Claude account');}
   catch(e){setSync('Cloud save unavailable. Saving in this browser.',true);}}
 function migrateShorts(){if(prefs().shorts1)return;for(const [id,d] of Object.entries(LIB))if(isVid(id)&&d.format!=='short'){LIB[id]={...d,format:'short'};store.put(id,LIB[id]);}setPref('shorts1',true);if(curId&&LIB[curId])$('#format').value='short';setSize();}
-function applyPrefs(){const p=prefs();if(p.pace&&[...$('#rate').options].some(o=>o.value===p.pace))$('#rate').value=p.pace;if(p.voice&&[...$('#voice').options].some(o=>o.value===p.voice))$('#voice').value=p.voice;}
+function applyPrefs(){const p=prefs();{const q=p.quality||(matchMedia('(pointer:coarse)').matches?'720':'1080');if($('#quality').value!==q){$('#quality').value=q;setSize();}}if(p.pace&&[...$('#rate').options].some(o=>o.value===p.pace))$('#rate').value=p.pace;if(p.voice&&[...$('#voice').options].some(o=>o.value===p.voice))$('#voice').value=p.voice;}
 /* ---------- Minimum video length ---------- */
 const MIN_LEN=20;
 // With a voiceover, the ending card holds after the voice finishes; without one, every scene slows evenly.
@@ -732,7 +741,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy
   else{let old=null;try{old=localStorage.getItem('wil-script');}catch(e){}curId=newId();ta.value=old||SAMPLES[Object.keys(SAMPLES)[0]];LIB[curId]={title:titleOf(ta.value),script:ta.value,format:'short',status:'draft',created:Date.now(),updated:Date.now()};store.put(curId,LIB[curId]);LIB.prefs={...prefs(),current:curId};store.put('prefs',LIB.prefs);}}
 sel.onchange=()=>{if(sel.value)newVideo(SAMPLES[sel.value]);sel.value='';};
 let proj=parse(ta.value), cur=0, running=null;
-function setSize(){const s=$('#format').value==='short';stage.width=s?1080:1280;stage.height=s?1920:720;}
+function setSize(){const s=$('#format').value==='short',hi=$('#quality').value!=='720';stage.width=s?(hi?1080:720):(hi?1920:1280);stage.height=s?(hi?1920:1280):(hi?1080:720);}
+$('#quality').onchange=()=>{setSize();setPref('quality',$('#quality').value);refresh();};
 function chips(){const box=$('#sceneChips');box.innerHTML='';proj.scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=`${i+1} · ${s.kind} · ${(padToMin(proj.scenes.map(x=>x.dur),false)[i]).toFixed(0)}s`;b.onclick=()=>{if(!running){cur=i;still();chips();}};box.appendChild(b);});}
 function still(){drawFrame(ctx,stage.width,stage.height,1,proj,cur,proj.scenes[cur]?proj.scenes[cur].dur*.35:0);}
 function refresh(){proj=parse(ta.value);cur=Math.min(cur,proj.scenes.length-1);if(cur<0)cur=0;const tot=proj.scenes.reduce((a,s)=>a+s.dur,0);st.className='status';const shortTooLong=$('#format').value==='short'&&tot>180;const wc=proj.scenes.reduce((a,s)=>a+s.words.length,0);st.textContent=`${proj.scenes.length} scenes · about ${Math.round(Math.max(tot,MIN_LEN))} s · ${wc} words`+(tot<MIN_LEN&&proj.scenes.length?` · Short script: the video will be stretched to ${MIN_LEN} s. Add about ${Math.ceil((MIN_LEN-tot)*2.55*(+$('#rate').value||1.15))} words to fill it naturally.`:'')+(shortTooLong?` · Too long for a Short: about ${ts(tot)}, and Shorts can be at most 3:00. Cut about ${Math.ceil((tot-180)*2.55*(+$('#rate').value||1.15))} words, or switch Format to Long video.`:'');if(shortTooLong)st.className='status err';chips();if(!running)still();lastDurs=null;renderKit();}
@@ -744,27 +754,52 @@ $('#ideaSearch').oninput=renderIdeas;
 // voices: Claude voices when the page runs on claude.ai, browser voices otherwise
 const synth=window.speechSynthesis; let tts=null;
 const CV=[['buttery','Buttery · warm narrator'],['rounded','Rounded · deep, calm'],['airy','Airy · light, bright'],['glassy','Glassy · crisp']];
-function loadVoices(){const vsel=$('#voice'),keep=vsel.value;vsel.innerHTML='';if(tts){const g=document.createElement('optgroup');g.label='Claude voices (best)';CV.forEach(([v,l])=>g.appendChild(new Option(l,'c:'+v)));vsel.appendChild(g);}
+function loadVoices(){const vsel=$('#voice'),keep=vsel.value;vsel.innerHTML='';if(NAR&&NAR.ok){const g=document.createElement('optgroup');g.label='Studio voices (built into exports)';NAR.voices.forEach(v=>g.appendChild(new Option(v.label,'s:'+v.id)));vsel.appendChild(g);}if(tts){const g=document.createElement('optgroup');g.label='Claude voices (best)';CV.forEach(([v,l])=>g.appendChild(new Option(l,'c:'+v)));vsel.appendChild(g);}
   const vs=synth?synth.getVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>(/natural|neural|online|premium|enhanced|google/i.test(b.name))-(/natural|neural|online|premium|enhanced|google/i.test(a.name))):[];
   if(vs.length){const g=document.createElement('optgroup');g.label='Browser voices';vs.forEach((v,i)=>g.appendChild(new Option(v.name.replace(/Microsoft |Google /,'')+(/natural|neural|online/i.test(v.name)?' ★':''),'b:'+i)));vsel.appendChild(g);}
-  vsel._v=vs;const pv=(typeof LIB!=='undefined'&&LIB.prefs&&LIB.prefs.voice)||keep;if([...vsel.options].some(o=>o.value===pv))vsel.value=pv;if(!vsel.options.length)vsel.add(new Option('No voice available',''));}
+  vsel._v=vs;const pv=(typeof LIB!=='undefined'&&LIB.prefs&&LIB.prefs.voice&&!(NAR&&NAR.ok&&!/^s:/.test(LIB.prefs.voice)&&!LIB.prefs.voicePicked)?LIB.prefs.voice:null)||(NAR&&NAR.ok?'s:andrew':keep);if([...vsel.options].some(o=>o.value===pv))vsel.value=pv;if(!vsel.options.length)vsel.add(new Option('No voice available',''));}
 if(synth){synth.onvoiceschanged=loadVoices;}loadVoices();
 (window.claude&&window.claude.use?window.claude.use('tts').catch(()=>null):Promise.resolve(null)).then(t=>{if(t){tts=t;hookTts(t);loadVoices();}});
 $('#rate').onchange=()=>{setPref('pace',$('#rate').value);refresh();};
-$('#voice').onchange=()=>setPref('voice',$('#voice').value);
+$('#voice').onchange=()=>{setPref('voice',$('#voice').value);setPref('voicePicked',true);};
 function stopVoice(){try{synth&&synth.cancel();}catch(e){}try{tts&&tts.active()&&tts.stop().catch(()=>{});}catch(e){}}
 
-// One reading for the whole script: the voice is handed every scene at once (from the click),
-// so the next line is buffered while the current one plays. Scenes follow the voice, not a timer.
+// Claude voices (claude.ai only): the whole script is handed over at once so the next line is buffered while the current one plays.
 let voiceHook=null;
 function hookTts(t){t.onLine(e=>voiceHook&&voiceHook.line(+e.id));t.onPosition(e=>voiceHook&&voiceHook.pos(+e.id,e.ms));}
-function run({speak,durs,onDone,bg}){
+
+/* ---------- Audio engine: one AudioContext; studio narration from the website's /api/tts ---------- */
+let AC=null;const ac=()=>AC||(AC=new (window.AudioContext||window.webkitAudioContext)());
+function unlockAudio(){try{const a=ac();if(a.state!=='running')a.resume();}catch(e){}}
+var NAR={ok:false,voices:[],cache:new Map()};
+async function checkServer(){try{const r=await fetch('/api/tts',{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j&&j.ok){NAR.ok=true;NAR.voices=j.voices||[];loadVoices();applyPrefs();voiceNote();}}catch(e){}}
+function voiceNote(){const el=$('#voiceNote');if(!el)return;el.textContent=NAR.ok?'Studio voices are built into exported videos, with captions timed to every word. Claude and browser voices are for previewing only.':'Exported videos get sound from a voiceover file you upload. Automatic narration in exports works in the studio on your website (it has the studio voices); here, Claude and browser voices are preview only.';}
+function b64ToBuf(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
+const normW=x=>String(x).toLowerCase().replace(/[^a-z0-9]/g,'');
+// Matches the narrator's word timings back onto the script's words (punctuation and numbers can differ).
+function mapWords(words,bounds,dur){const out=new Array(words.length).fill(null);let j=0;
+  words.forEach((w,i)=>{const cw=normW(w);if(!cw)return;for(let k=j;k<Math.min(bounds.length,j+5);k++){const cb=normW(bounds[k].w);if(cb&&(cb===cw||cw.startsWith(cb)||cb.startsWith(cw))){out[i]=bounds[k].t;j=k+1;return;}}});
+  let last=0;for(let i=0;i<out.length;i++){if(out[i]==null){let n=i;while(n<out.length&&out[n]==null)n++;const end=n<out.length?out[n]:Math.max(last,dur*.95);for(let q=i;q<n;q++)out[q]=last+(end-last)*(q-i+1)/(n-i+1);i=n-1;}else last=out[i];}
+  for(let i=1;i<out.length;i++)if(out[i]<out[i-1])out[i]=out[i-1];return out;}
+async function getNarration(voice,pace){const texts=proj.scenes.map(s=>s.text),key=voice+'|'+pace+'|'+texts.join('\u0001');if(NAR.cache.has(key))return NAR.cache.get(key);
+  const r=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenes:texts,voice,pace})});
+  const j=await r.json().catch(()=>({error:'The narrator sent back something unreadable.'}));if(!r.ok||j.error)throw new Error(j.error||('Narrator error '+r.status));
+  const buffer=await ac().decodeAudioData(b64ToBuf(j.audio));
+  const tl={buffer,total:buffer.duration,scenes:j.scenes.map((s,i)=>({start:s.start,dur:Math.max(.6,s.dur),wt:mapWords(proj.scenes[i].words,s.words||[],s.dur)}))};
+  NAR.cache.set(key,tl);if(NAR.cache.size>6)NAR.cache.delete(NAR.cache.keys().next().value);return tl;}
+async function decodeFile(f){if(!f)return null;try{return await ac().decodeAudioData(await f.arrayBuffer());}catch(e){return null;}}
+let liveSrcs=[];function stopSrcs(){liveSrcs.forEach(s=>{try{s.stop();}catch(e){}});liveSrcs=[];}
+function playBuf(buf,at,outs,{loop=false,gain=1}={}){const a=ac(),src=a.createBufferSource(),g=a.createGain();src.buffer=buf;src.loop=loop;g.gain.value=gain;src.connect(g);outs.forEach(o=>g.connect(o));src.start(at);liveSrcs.push(src);return src;}
+
+function run({speak,durs,onDone,bg,tl,audioOut}){
   const sched=bg?(f=>setTimeout(()=>f(performance.now()),16)):requestAnimationFrame;runKind=bg?'t':'r';
-  const t0=performance.now();let si=0,sStart=t0,ended=false,bnd=null,lastDraw=0,posMs=0,posAt=0,waiting=false;durs=durs.slice();
-  const pace=+$('#rate').value, voice=$('#voice').value, n=proj.scenes.length, kKey='wil-k-'+voice+'-'+pace;let k=1;if(speak){try{k=+localStorage.getItem(kKey)||1;}catch(e){}for(let j=0;j<n;j++)durs[j]=proj.scenes[j].dur*k;}
+  const t0=performance.now();let si=0,sStart=t0,ended=false,bnd=null,lastDraw=0,posMs=0,posAt=0,waiting=false,aStart=0;durs=durs.slice();
+  const pace=+$('#rate').value, voice=$('#voice').value, n=proj.scenes.length, kKey='wil-k-'+voice+'-'+pace;let k=1;if(speak&&!tl){try{k=+localStorage.getItem(kKey)||1;}catch(e){}for(let j=0;j<n;j++)durs[j]=proj.scenes[j].dur*k;}
   function goTo(i,now){if(i===si||i>=n)return;if(i>0&&(mode==='claude'||mode==='browser')){const actual=(now-sStart)/1000;if(actual>.5){const r=actual/proj.scenes[si].dur;k=k*.3+r*.7;durs[si]=actual;if(speak){try{localStorage.setItem(kKey,String(k));}catch(e){}}}for(let j=i;j<n;j++)durs[j]=proj.scenes[j].dur*k;}si=i;sStart=now;posMs=0;posAt=now;bnd=null;}
   let mode='timer';
-  if(speak&&voice.startsWith('c:')&&tts){mode='claude';waiting=true;
+  if(tl){mode='audio';const a=ac();aStart=a.currentTime+.1;playBuf(tl.buffer,aStart,audioOut?[a.destination,audioOut]:[a.destination]);
+    durs=tl.scenes.map(s=>s.dur);const tot=Math.max(tl.total,MIN_LEN);durs[n-1]=Math.max(durs[n-1],tot-tl.scenes[n-1].start);}
+  else if(speak&&voice.startsWith('c:')&&tts){mode='claude';waiting=true;
     voiceHook={line:i=>{waiting=false;goTo(i,performance.now());},pos:(i,ms)=>{if(i===si){posMs=ms;posAt=performance.now();}}};
     tts.speak(proj.scenes.map((s,i)=>({text:s.text.slice(0,2000),id:String(i)})),{voice:voice.slice(2),rate:Math.min(1.5,pace),language:'en'})
       .then(()=>{ended=true;})
@@ -772,35 +807,42 @@ function run({speak,durs,onDone,bg}){
   }else if(speak&&synth&&voice.startsWith('b:')){mode='browser';waiting=true;synth.cancel();const vs=$('#voice')._v,bv=vs&&vs[+voice.slice(2)];
     proj.scenes.forEach((s,i)=>{const u=new SpeechSynthesisUtterance(s.text);if(bv)u.voice=bv;u.rate=pace;u.onstart=()=>{waiting=false;goTo(i,performance.now());};u.onboundary=e=>{if(i!==si||(e.name&&e.name!=='word'))return;let wi=0;while(wi+1<s.wpos.length&&s.wpos[wi+1]<=e.charIndex)wi++;bnd={wi,at:performance.now()};};if(i===n-1)u.onend=()=>{ended=true;};synth.speak(u);});}
   if(mode==='timer')durs=padToMin(durs,false);
+  const total=()=>durs.reduce((a,b)=>a+b,0);
   function tick(now){
     if(!running)return;
-    if(ended&&(now-t0)/1000<MIN_LEN&&mode!=='hold'){ended=false;mode='hold';durs[si]=Math.max(durs[si],(now-sStart)/1000+MIN_LEN-(now-t0)/1000);}
+    if(ended&&(now-t0)/1000<MIN_LEN&&mode!=='hold'&&mode!=='audio'){ended=false;mode='hold';durs[si]=Math.max(durs[si],(now-sStart)/1000+MIN_LEN-(now-t0)/1000);}
     if(mode==='hold'&&(now-sStart)/1000>=durs[si])ended=true;
     if(ended){stopRun();onDone&&onDone();return;}
     running=sched(tick);
     if(now-lastDraw<31)return; lastDraw=now; window.__wil&&(window.__wil.frames=(window.__wil.frames||0)+1); // ~30 fps keeps the CPU free for audio
-    let sceneT;
-    if(mode==='claude'){sceneT=waiting?0:(posAt>sStart?(posMs+Math.min(now-posAt,300))/1000:(now-sStart)/1000);
+    let sceneT,sp=null,el=(now-t0)/1000;
+    if(mode==='audio'){el=Math.max(0,ac().currentTime-aStart);let q=si;while(q+1<n&&el>=tl.scenes[q+1].start)q++;if(q!==si){si=q;sStart=now;}sceneT=el-tl.scenes[si].start;
+      const wt=tl.scenes[si].wt,s=proj.scenes[si],d=durs[si];if(wt.length&&sceneT>=wt[0]){let wi=0;while(wi+1<wt.length&&wt[wi+1]<=sceneT)wi++;const a0=wi?s.cum[wi-1]*d:0,b0=s.cum[wi]*d,nx=wi+1<wt.length?wt[wi+1]:Math.min(tl.scenes[si].dur,wt[wi]+.6);sp=a0+(b0-a0)*Math.min(.98,(sceneT-wt[wi])/Math.max(.12,nx-wt[wi]));}else sp=0;
+      if(el>=total()+.15){ended=true;return;}}
+    else if(mode==='claude'){sceneT=waiting?0:(posAt>sStart?(posMs+Math.min(now-posAt,300))/1000:(now-sStart)/1000);
       if(!waiting&&sceneT>durs[si]*2.5+2)goTo(si+1,now);} // safety net if the voice stalls
-    else{sceneT=(now-sStart)/1000;if(mode==='timer'&&sceneT>durs[si]){if(si+1>=n){const el=(now-t0)/1000;if(el<MIN_LEN){durs[si]+=MIN_LEN-el;}else{ended=true;return;}}else{goTo(si+1,now);sceneT=0;}}}
+    else{sceneT=(now-sStart)/1000;if(mode==='timer'&&sceneT>durs[si]){if(si+1>=n){if(el<MIN_LEN){durs[si]+=MIN_LEN-el;}else{ended=true;return;}}else{goTo(si+1,now);sceneT=0;}}}
     if(waiting){st.className='status';st.textContent='Starting narrator…';}
     if((mode==='claude'||mode==='browser')&&!waiting&&sceneT>durs[si]*.95)durs[si]=sceneT/.95; // voice slower than guessed: stretch, never run ahead
-    let sp=null;if(bnd){const s=proj.scenes[si],d=durs[si],a=bnd.wi?s.cum[bnd.wi-1]*d:0,b=s.cum[bnd.wi]*d;sp=a+Math.min((now-bnd.at)/1000,(b-a)*.9);}
+    if(bnd){const s=proj.scenes[si],d=durs[si],a=bnd.wi?s.cum[bnd.wi-1]*d:0,b=s.cum[bnd.wi]*d;sp=a+Math.min((now-bnd.at)/1000,(b-a)*.9);}
     cur=si;const scaled={...proj,scenes:proj.scenes.map((x,j)=>({...x,dur:durs[j],sp:j===si?sp:null}))};
-    drawFrame(ctx,stage.width,stage.height,(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));
-    if(!waiting&&!/err/.test(st.className)){const tot=durs.reduce((a,b)=>a+b,0),el=(now-t0)/1000;st.textContent=(bg?'Recording… ':'')+`Scene ${si+1} of ${n} · ${el.toFixed(0)} / ${tot.toFixed(0)} s`+(bg?' · keep this tab open':'');if(bg)$('#prog i').style.width=Math.min(100,el/tot*100)+'%';}
+    drawFrame(ctx,stage.width,stage.height,mode==='audio'?el:(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));
+    if(!waiting&&!/err/.test(st.className)){const tot=total();st.textContent=(bg?'Recording… ':'')+`Scene ${si+1} of ${n} · ${el.toFixed(0)} / ${tot.toFixed(0)} s`+(bg?' · keep this tab open':'');if(bg)$('#prog i').style.width=Math.min(100,el/tot*100)+'%';}
   }
   running=sched(tick);
 }
 let runKind='r';
-function stopRun(){if(running){runKind==='t'?clearTimeout(running):cancelAnimationFrame(running);}$('#prog').hidden=true;running=null;voiceHook=null;stopVoice();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
-$('#play').onclick=()=>{refresh();if(!proj.scenes.length)return;$('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;run({speak:true,durs:proj.scenes.map(s=>s.dur)});};
+function stopRun(){if(running){runKind==='t'?clearTimeout(running):cancelAnimationFrame(running);}$('#prog').hidden=true;running=null;voiceHook=null;stopVoice();stopSrcs();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
+function busy(on){$('#stop').disabled=!on;$('#play').disabled=$('#export').disabled=on;}
+$('#play').onclick=async()=>{unlockAudio();refresh();if(!proj.scenes.length)return;busy(true);const v=$('#voice').value;let tl=null;
+  if(v.startsWith('s:')&&NAR.ok){st.className='status';st.textContent='Recording the narrator… (a few seconds)';try{tl=await getNarration(v.slice(2),+$('#rate').value);}catch(e){st.className='status err';st.textContent='Narrator unavailable: '+e.message;busy(false);return;}}
+  run({speak:true,durs:proj.scenes.map(s=>s.dur),tl});};
 $('#stop').onclick=()=>{stopRun();if(recorder&&recorder.state==='recording')recorder.stop();refresh();};
 
 // export
 let recorder=null;
-// Finds the pauses in the voiceover and puts each scene change on the pause closest to where it should fall.
-async function alignVoice(file,scenes){try{const ac=new (window.AudioContext||window.webkitAudioContext)(),buf=await ac.decodeAudioData(await file.arrayBuffer());ac.close();
+// Finds the pauses in an uploaded voiceover and puts each scene change on the pause closest to where it should fall.
+async function alignVoice(file,scenes){try{const buf=await decodeFile(file);if(!buf)return null;
   const d=buf.getChannelData(0),sr=buf.sampleRate,win=Math.floor(sr*.02),n=Math.floor(d.length/win),rms=new Float32Array(n);let mx=0;
   for(let i=0;i<n;i++){let a=0;for(let j=i*win;j<(i+1)*win;j++)a+=d[j]*d[j];rms[i]=Math.sqrt(a/win);if(rms[i]>mx)mx=rms[i];}
   const thr=mx*.07,T=i=>i*.02;let first=0,last=n-1;while(first<n&&rms[first]<thr)first++;while(last>0&&rms[last]<thr)last--;if(last<=first)return null;
@@ -810,39 +852,49 @@ async function alignVoice(file,scenes){try{const ac=new (window.AudioContext||wi
     for(const g of gaps){if(g.mid<=prev+.5)continue;const dist=Math.abs(g.mid-tgt);if(dist>avg*.6)continue;const sc=g.len*3-dist;if(sc>bs){bs=sc;best=g;}}
     const cut=best?best.mid:tgt;cuts.push(cut);prev=cut;}
   const edges=[0,...cuts,buf.duration];return edges.slice(1).map((e,i)=>Math.max(.5,e-edges[i]));}catch(e){return null;}}
-function audioDur(file){return new Promise(r=>{if(!file)return r(0);const a=new Audio(URL.createObjectURL(file));a.onloadedmetadata=()=>r(a.duration||0);a.onerror=()=>r(0);});}
 let dlP=null;const getDl=()=>dlP||(dlP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null));
 async function saveBlob(blob,name){const dl=await getDl();
   if(dl){try{const r=await dl.save({filename:name,data:blob});st.className='status';st.textContent=r&&r.status==='delivered'?'Sent '+name:'Saved '+name+' to your downloads.';return true;}
-    catch(e){const c=e&&e.code;st.className='status err';st.textContent=c==='declined'?'Save cancelled. Press Download video to try again.':c==='rate_limited'?'A save prompt is already open. Finish it, or wait a moment and press Download video.':'This view can’t save files ('+(c||'error')+'). Open the studio in Chrome on claude.ai, or right-click the video below and choose “Save video as”.';return false;}}
-  if(window.top!==window){st.className='status err';st.textContent='This view blocks downloads. Right-click the video below and choose “Save video as”, or open the studio from your website.';}
+    catch(e){const c=e&&e.code;st.className='status err';st.textContent=c==='declined'?'Save cancelled. Press Download video to try again.':c==='rate_limited'?'A save prompt is already open. Finish it, or wait a moment and press Download video.':'This view can’t save files ('+(c||'error')+'). Open the studio in Chrome on claude.ai, or long-press the video below and save it.';return false;}}
+  if(window.top!==window){st.className='status err';st.textContent='This view blocks downloads. Long-press or right-click the video below to save it, or open the studio from your website.';}
+  // phones: the share sheet is the most reliable way to save a video to the camera roll
+  if(navigator.canShare&&matchMedia('(pointer:coarse)').matches){try{const f=new File([blob],name,{type:blob.type});if(navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});st.className='status';st.textContent='Shared '+name+'. Choose “Save video” to keep it in your photos.';return true;}}catch(e){if(e&&e.name==='AbortError'){st.className='status';st.textContent='Share closed. Press Download video to try again.';return false;}}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);if(window.top===window){st.className='status';st.textContent='Downloaded '+name+'. Check your Downloads folder.';}return true;}
 let lastExport=null;
 $('#dlAgain').onclick=()=>{if(lastExport)saveBlob(lastExport.blob,lastExport.name);};
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&recorder&&recorder.state==='recording'){st.className='status err';st.textContent='Recording keeps going, but switching tabs can make it choppy. Stay on this tab until it finishes.';}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&recorder&&recorder.state==='recording'){st.className='status err';st.textContent='Recording keeps going, but switching apps or tabs can make it choppy. Stay on this screen until it finishes.';}});
+let silentOK=false;
+$('#silentGo').onclick=()=>{silentOK=true;$('#silentWarn').hidden=true;$('#export').click();};
+$('#silentCancel').onclick=()=>{$('#silentWarn').hidden=true;};
 $('#export').onclick=async()=>{
-  refresh();if(!proj.scenes.length)return;
-  if(!stage.captureStream||!window.MediaRecorder){st.className='status err';st.textContent='This browser can’t record video. Use Chrome, Edge or Firefox on a computer.';return;}
-  const vo=$('#vo').files[0], mu=$('#music').files[0];
-  let durs=proj.scenes.map(s=>s.dur);
-  if(vo){st.className='status';st.textContent='Lining scenes up with your voiceover…';const al=await alignVoice(vo,proj.scenes);if(al)durs=al;else{const vd=await audioDur(vo);if(vd>1){const sum=durs.reduce((a,b)=>a+b,0);durs=durs.map(d=>d*vd/sum);}}}
-  durs=padToMin(durs,!!vo);
-  const stream=stage.captureStream(30);let actx=null,els=[];
-  if(vo||mu){actx=new AudioContext();const dest=actx.createMediaStreamDestination();
-    for(const [f,vol] of [[vo,1],[mu,.15]]){if(!f)continue;const el=new Audio(URL.createObjectURL(f));el.loop=f===mu;const src=actx.createMediaElementSource(el);const g=actx.createGain();g.gain.value=vol;src.connect(g).connect(dest);els.push(el);}
-    dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));}
-  const mime=['video/mp4;codecs=avc1.42E01F,mp4a.40.2','video/mp4;codecs=avc1.42E01F,opus','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';const ext=/mp4/.test(mime)?'mp4':'webm';
+  unlockAudio();refresh();if(!proj.scenes.length)return;
+  if(!stage.captureStream||!window.MediaRecorder){st.className='status err';st.textContent='This browser can’t record video. Use Chrome on Android or a computer, or Safari 15+ on iPhone.';return;}
+  const vo=$('#vo').files[0], mu=$('#music').files[0], v=$('#voice').value, pace=+$('#rate').value, useNar=!vo&&v.startsWith('s:')&&NAR.ok;
+  if(!vo&&!useNar&&!silentOK){$('#silentWarn').hidden=false;$('#silentWarn').scrollIntoView({block:'nearest',behavior:'smooth'});return;}
+  silentOK=false;busy(true);let tl=null,durs=proj.scenes.map(s=>s.dur),voBuf=null;
+  try{
+    if(useNar){st.className='status';st.textContent='Recording the narrator… (a few seconds)';tl=await getNarration(v.slice(2),pace);}
+    if(vo){st.className='status';st.textContent='Lining scenes up with your voiceover…';voBuf=await decodeFile(vo);if(!voBuf)throw new Error('That voiceover file can’t be read. Try an MP3, M4A or WAV.');const al=await alignVoice(vo,proj.scenes);if(al)durs=al;else{const sum=durs.reduce((a,b)=>a+b,0);durs=durs.map(d=>d*voBuf.duration/sum);}durs=padToMin(durs,true);}
+    else if(!tl)durs=padToMin(durs,false);
+  }catch(e){st.className='status err';st.textContent=(useNar?'Narrator unavailable: ':'')+e.message;busy(false);return;}
+  const muBuf=await decodeFile(mu);
+  const a=ac(),dest=a.createMediaStreamDestination(),stream=stage.captureStream(30),hasAudio=!!(tl||voBuf||muBuf);
+  if(hasAudio)dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
+  const mime=(hasAudio?['video/mp4;codecs=avc1.42E01F,mp4a.40.2','video/mp4;codecs=avc1,mp4a','video/mp4;codecs=avc1.42E01F,opus','video/mp4;codecs=avc3,opus','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']:['video/mp4;codecs=avc1.42E01F','video/mp4','video/webm;codecs=vp9','video/webm']).find(m=>MediaRecorder.isTypeSupported(m))||'';const ext=/mp4/.test(mime)?'mp4':'webm';
   $('#exportOut').hidden=true;$('#prog').hidden=false;$('#prog i').style.width='0';
-  const chunks=[];recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:($('#format').value==='short'?9e6:6e6)}:{});
+  const chunks=[];recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:(stage.height>=1920||stage.width>=1920?9e6:5e6),audioBitsPerSecond:160000}:{});
   recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
-  const expDurs=durs.slice();recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;lastDurs=expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');$('#prog').hidden=true;const blob=new Blob(chunks,{type:ext==='mp4'?'video/mp4':'video/webm'});
+  let expDurs=durs.slice();const total=tl?Math.max(tl.total,MIN_LEN):expDurs.reduce((x,y)=>x+y,0);
+  recorder.onstop=()=>{stopSrcs();if(!chunks.length)return;lastDurs=tl?tl.scenes.map((s,i)=>i<tl.scenes.length-1?tl.scenes[i+1].start-s.start:Math.max(s.dur,total-s.start)):expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');$('#prog').hidden=true;const blob=new Blob(chunks,{type:ext==='mp4'?'video/mp4':'video/webm'});
     const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.'+ext;
-    lastExport={blob,name};const ov=$('#outVid');if(ov.src)URL.revokeObjectURL(ov.src);ov.src=URL.createObjectURL(blob);$('#outInfo').textContent=`${name} · ${(blob.size/1e6).toFixed(1)} MB · ${ts(expDurs.reduce((a,b)=>a+b,0))}`;$('#exportOut').hidden=false;
+    lastExport={blob,name};const ov=$('#outVid');if(ov.src)URL.revokeObjectURL(ov.src);ov.src=URL.createObjectURL(blob);$('#outInfo').textContent=`${name} · ${(blob.size/1e6).toFixed(1)} MB · ${ts(total)} · ${hasAudio?'with sound':'silent'}`;$('#exportOut').hidden=false;
     st.className='status';st.textContent='Video ready. Saving…';saveBlob(blob,name);};
-  recorder.onerror=e=>{$('#prog').hidden=true;st.className='status err';st.textContent='Recording failed ('+((e.error&&e.error.name)||'error')+'). Try again in Chrome or Edge.';stopRun();};
-  recorder.start(500);els.forEach(e=>e.play());
-  $('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;
-  run({speak:false,durs,bg:true,onDone:()=>recorder.state==='recording'&&recorder.stop()});
+  recorder.onerror=e=>{$('#prog').hidden=true;st.className='status err';st.textContent='Recording failed ('+((e.error&&e.error.name)||'error')+'). Try again in Chrome.';stopRun();};
+  recorder.start(250);const at=a.currentTime+.1;
+  if(voBuf)playBuf(voBuf,at,[a.destination,dest]);
+  if(muBuf)playBuf(muBuf,at,[a.destination,dest],{loop:true,gain:.15});
+  if(hasAudio){const bed=a.createBuffer(1,a.sampleRate,a.sampleRate),d=bed.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*.0004;playBuf(bed,at,[dest],{loop:true});} // inaudible bed keeps the sound track running to the last frame
+  run({speak:false,durs,bg:true,tl,audioOut:dest,onDone:()=>recorder.state==='recording'&&recorder.stop()});
 };
 
 /* ---------- channel kit ---------- */
@@ -874,7 +926,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.t
 
 window.__wil={alignVoice,get proj(){return proj;}};
 (function headerMark(){const c=$('#mark').getContext('2d');c.clearRect(0,0,88,88);drawMark(c,30,40,26,0);})();
-migrateShorts();setSize();applyPrefs();refresh();renderLib();connectCloud();
+migrateShorts();setSize();applyPrefs();refresh();renderLib();connectCloud();voiceNote();checkServer();
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(!running)still();});
 })();
 </script>
