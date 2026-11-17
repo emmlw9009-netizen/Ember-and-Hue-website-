@@ -70,6 +70,10 @@ h3{font:700 16px var(--display);margin:0}
 .vact select{width:auto}
 .libhead{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .wide{grid-column:1/-1}
+.prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s linear}
+.exportOut{display:grid;gap:10px;border:1px solid var(--accent);border-radius:12px;padding:12px;background:var(--bg)}
+.exportOut video{width:100%;max-height:50vh;border-radius:8px;background:#000}
 .kitgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
 .kitgrid>div{display:grid;gap:8px;align-content:start;min-width:0}
 .kitgrid ol{margin:0;padding-left:20px;display:grid;gap:4px}
@@ -129,11 +133,17 @@ a{color:var(--cool)}
     <div class="row">
       <button class="btn primary" id="play">▶ Preview with voice</button>
       <button class="btn" id="stop" disabled>■ Stop</button>
-      <button class="btn" id="export">● Export video (.webm)</button>
+      <button class="btn primary" id="export">● Export whole video</button>
       <button class="btn" id="thumb">Make thumbnail</button>
     </div>
+    <div class="prog" id="prog" hidden><i></i></div>
     <div class="status" id="status" role="status"></div>
-    <p class="note">Export plays the whole video in real time and then saves a .webm file. YouTube accepts .webm uploads directly.</p>
+    <div class="exportOut" id="exportOut" hidden>
+      <div class="kh"><b id="outTitle">Your video is ready</b><span class="note" id="outInfo"></span></div>
+      <video id="outVid" controls playsinline></video>
+      <div class="row"><button class="btn primary" id="dlAgain">⬇ Download video</button><span class="note" id="outHelp">Press Download if the save prompt didn't appear or you closed it.</span></div>
+    </div>
+    <p class="note">Export records the whole video in real time, start to finish, then offers the file to save. Keep this tab open and visible while it records.</p>
   </div>
   <div class="panel wide" id="upkit">
     <div class="kh"><h2>Upload kit</h2><span class="note" id="kLen"></span></div>
@@ -636,7 +646,8 @@ function stopVoice(){try{synth&&synth.cancel();}catch(e){}try{tts&&tts.active()&
 // so the next line is buffered while the current one plays. Scenes follow the voice, not a timer.
 let voiceHook=null;
 function hookTts(t){t.onLine(e=>voiceHook&&voiceHook.line(+e.id));t.onPosition(e=>voiceHook&&voiceHook.pos(+e.id,e.ms));}
-function run({speak,durs,onDone}){
+function run({speak,durs,onDone,bg}){
+  const sched=bg?(f=>setTimeout(()=>f(performance.now()),16)):requestAnimationFrame;runKind=bg?'t':'r';
   const t0=performance.now();let si=0,sStart=t0,ended=false,bnd=null,lastDraw=0,posMs=0,posAt=0,waiting=false;durs=durs.slice();
   const pace=+$('#rate').value, voice=$('#voice').value, n=proj.scenes.length, kKey='wil-k-'+voice+'-'+pace;let k=1;if(speak){try{k=+localStorage.getItem(kKey)||1;}catch(e){}for(let j=0;j<n;j++)durs[j]=proj.scenes[j].dur*k;}
   function goTo(i,now){if(i===si||i>=n)return;if(i>0&&(mode==='claude'||mode==='browser')){const actual=(now-sStart)/1000;if(actual>.5){const r=actual/proj.scenes[si].dur;k=k*.3+r*.7;durs[si]=actual;if(speak){try{localStorage.setItem(kKey,String(k));}catch(e){}}}for(let j=i;j<n;j++)durs[j]=proj.scenes[j].dur*k;}si=i;sStart=now;posMs=0;posAt=now;bnd=null;}
@@ -654,7 +665,7 @@ function run({speak,durs,onDone}){
     if(ended&&(now-t0)/1000<MIN_LEN&&mode!=='hold'){ended=false;mode='hold';durs[si]=Math.max(durs[si],(now-sStart)/1000+MIN_LEN-(now-t0)/1000);}
     if(mode==='hold'&&(now-sStart)/1000>=durs[si])ended=true;
     if(ended){stopRun();onDone&&onDone();return;}
-    running=requestAnimationFrame(tick);
+    running=sched(tick);
     if(now-lastDraw<31)return; lastDraw=now; // ~30 fps keeps the CPU free for audio
     let sceneT;
     if(mode==='claude'){sceneT=waiting?0:(posAt>sStart?(posMs+Math.min(now-posAt,300))/1000:(now-sStart)/1000);
@@ -665,11 +676,12 @@ function run({speak,durs,onDone}){
     let sp=null;if(bnd){const s=proj.scenes[si],d=durs[si],a=bnd.wi?s.cum[bnd.wi-1]*d:0,b=s.cum[bnd.wi]*d;sp=a+Math.min((now-bnd.at)/1000,(b-a)*.9);}
     cur=si;const scaled={...proj,scenes:proj.scenes.map((x,j)=>({...x,dur:durs[j],sp:j===si?sp:null}))};
     drawFrame(ctx,stage.width,stage.height,(now-t0)/1000,scaled,si,Math.min(sceneT,durs[si]));
-    if(!waiting&&!/err/.test(st.className)){const tot=durs.reduce((a,b)=>a+b,0);st.textContent=`Scene ${si+1} of ${n} · ${((now-t0)/1000).toFixed(0)} / ${tot.toFixed(0)} s`;}
+    if(!waiting&&!/err/.test(st.className)){const tot=durs.reduce((a,b)=>a+b,0),el=(now-t0)/1000;st.textContent=(bg?'Recording… ':'')+`Scene ${si+1} of ${n} · ${el.toFixed(0)} / ${tot.toFixed(0)} s`+(bg?' · keep this tab open':'');if(bg)$('#prog i').style.width=Math.min(100,el/tot*100)+'%';}
   }
-  running=requestAnimationFrame(tick);
+  running=sched(tick);
 }
-function stopRun(){if(running)cancelAnimationFrame(running);running=null;voiceHook=null;stopVoice();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
+let runKind='r';
+function stopRun(){if(running){runKind==='t'?clearTimeout(running):cancelAnimationFrame(running);}$('#prog').hidden=true;running=null;voiceHook=null;stopVoice();$('#stop').disabled=true;['#play','#export'].forEach(s=>$(s).disabled=false);chips();}
 $('#play').onclick=()=>{refresh();if(!proj.scenes.length)return;$('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;run({speak:true,durs:proj.scenes.map(s=>s.dur)});};
 $('#stop').onclick=()=>{stopRun();if(recorder&&recorder.state==='recording')recorder.stop();refresh();};
 
@@ -688,8 +700,14 @@ async function alignVoice(file,scenes){try{const ac=new (window.AudioContext||wi
   const edges=[0,...cuts,buf.duration];return edges.slice(1).map((e,i)=>Math.max(.5,e-edges[i]));}catch(e){return null;}}
 function audioDur(file){return new Promise(r=>{if(!file)return r(0);const a=new Audio(URL.createObjectURL(file));a.onloadedmetadata=()=>r(a.duration||0);a.onerror=()=>r(0);});}
 let dlP=null;const getDl=()=>dlP||(dlP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null));
-async function saveBlob(blob,name){const dl=await getDl();if(dl){try{await dl.save({filename:name,data:blob});st.className='status';st.textContent='Saved '+name;}catch(e){st.className='status err';st.textContent=e&&e.code==='declined'?'Save cancelled.':'Couldn\u2019t save the file here ('+(e&&e.code||'error')+'). Open the studio from your website to download.';}return;}
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
+async function saveBlob(blob,name){const dl=await getDl();
+  if(dl){try{const r=await dl.save({filename:name,data:blob});st.className='status';st.textContent=r&&r.status==='delivered'?'Sent '+name:'Saved '+name+' to your downloads.';return true;}
+    catch(e){const c=e&&e.code;st.className='status err';st.textContent=c==='declined'?'Save cancelled. Press Download video to try again.':c==='rate_limited'?'A save prompt is already open. Finish it, or wait a moment and press Download video.':'This view can’t save files ('+(c||'error')+'). Open the studio in Chrome on claude.ai, or right-click the video below and choose “Save video as”.';return false;}}
+  if(window.top!==window){st.className='status err';st.textContent='This view blocks downloads. Right-click the video below and choose “Save video as”, or open the studio from your website.';}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);if(window.top===window){st.className='status';st.textContent='Downloaded '+name+'. Check your Downloads folder.';}return true;}
+let lastExport=null;
+$('#dlAgain').onclick=()=>{if(lastExport)saveBlob(lastExport.blob,lastExport.name);};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&recorder&&recorder.state==='recording'){st.className='status err';st.textContent='Recording keeps going, but switching tabs can make it choppy. Stay on this tab until it finishes.';}});
 $('#export').onclick=async()=>{
   refresh();if(!proj.scenes.length)return;
   if(!stage.captureStream||!window.MediaRecorder){st.className='status err';st.textContent='This browser can’t record video. Use Chrome, Edge or Firefox on a computer.';return;}
@@ -701,15 +719,18 @@ $('#export').onclick=async()=>{
   if(vo||mu){actx=new AudioContext();const dest=actx.createMediaStreamDestination();
     for(const [f,vol] of [[vo,1],[mu,.15]]){if(!f)continue;const el=new Audio(URL.createObjectURL(f));el.loop=f===mu;const src=actx.createMediaElementSource(el);const g=actx.createGain();g.gain.value=vol;src.connect(g).connect(dest);els.push(el);}
     dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));}
-  const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  const mime=['video/mp4;codecs=avc1.42E01F,mp4a.40.2','video/mp4;codecs=avc1.42E01F,opus','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';const ext=/mp4/.test(mime)?'mp4':'webm';
+  $('#exportOut').hidden=true;$('#prog').hidden=false;$('#prog i').style.width='0';
   const chunks=[];recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:6e6}:{});
   recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
-  const expDurs=durs.slice();recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;lastDurs=expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');const blob=new Blob(chunks,{type:'video/webm'});
-    const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.webm';
-    st.textContent=`Video ready (${(blob.size/1e6).toFixed(1)} MB). Saving…`;saveBlob(blob,name);};
+  const expDurs=durs.slice();recorder.onstop=()=>{els.forEach(e=>e.pause());actx&&actx.close();if(!chunks.length)return;lastDurs=expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');$('#prog').hidden=true;const blob=new Blob(chunks,{type:ext==='mp4'?'video/mp4':'video/webm'});
+    const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.'+ext;
+    lastExport={blob,name};const ov=$('#outVid');if(ov.src)URL.revokeObjectURL(ov.src);ov.src=URL.createObjectURL(blob);$('#outInfo').textContent=`${name} · ${(blob.size/1e6).toFixed(1)} MB · ${ts(expDurs.reduce((a,b)=>a+b,0))}`;$('#exportOut').hidden=false;
+    st.className='status';st.textContent='Video ready. Saving…';saveBlob(blob,name);};
+  recorder.onerror=e=>{$('#prog').hidden=true;st.className='status err';st.textContent='Recording failed ('+((e.error&&e.error.name)||'error')+'). Try again in Chrome or Edge.';stopRun();};
   recorder.start(500);els.forEach(e=>e.play());
   $('#stop').disabled=false;$('#play').disabled=$('#export').disabled=true;
-  run({speak:false,durs,onDone:()=>recorder.state==='recording'&&recorder.stop()});
+  run({speak:false,durs,bg:true,onDone:()=>recorder.state==='recording'&&recorder.stop()});
 };
 
 /* ---------- channel kit ---------- */
