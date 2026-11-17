@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Unravel Theory Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest" data-web-only>
+<link rel="apple-touch-icon" href="apple-touch-icon.png" data-web-only>
+<link rel="icon" href="icon-192.png" data-web-only>
+<meta name="theme-color" content="#0c0f17" data-web-only>
+<meta name="apple-mobile-web-app-capable" content="yes" data-web-only>
+<meta name="mobile-web-app-capable" content="yes" data-web-only>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" data-web-only>
+<meta name="apple-mobile-web-app-title" content="Unravel" data-web-only>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -30,14 +38,29 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .brand h1 span{color:var(--accent)}
 .mark{width:44px;height:44px;display:block}
 nav{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap}
+/* Phone: preview first, swipeable tabs, big thumb-reach action bar pinned to the bottom */
+@media (max-width:900px){
+  header{flex-direction:column;align-items:stretch}
+  nav{flex-wrap:nowrap;overflow-x:auto;border-radius:14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:none;padding:10px 14px}
+  .studio>.panel:nth-child(2){order:-1}
+  .row.actions{position:sticky;bottom:0;z-index:5;background:var(--panel);margin-inline:-18px;padding:10px 18px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .row.actions .btn{padding:14px 8px;font-size:15px;width:100%}
+  .actions #stop{order:3}.actions #thumb{order:4}
+  canvas#stage{max-height:62vh}
+  .btn,select,input[type=text]{min-height:44px}
+}
 nav button{background:none;border:0;color:var(--muted);font:600 13px var(--mono);padding:8px 14px;border-radius:999px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
 nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
 button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
 .studio{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;align-items:start}
-@media (max-width:900px){.studio{grid-template-columns:1fr}}
+@media (max-width:900px){.studio{grid-template-columns:minmax(0,1fr)}}
+.wrap>*,.studio>*{min-width:0}
+.monitor canvas{width:auto;max-width:100%}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px;min-width:0}
 label,.lbl{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-textarea{width:100%;min-height:360px;resize:vertical;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono)}
+textarea{width:100%;min-height:clamp(200px,40vh,360px);resize:vertical;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono)}
 select,input[type=text]{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:14px var(--body);width:100%}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
 .row>div{display:grid;gap:4px;flex:1 1 140px;min-width:0}
@@ -134,7 +157,7 @@ a{color:var(--cool)}
   <div class="panel">
     <div class="monitor"><canvas id="stage" width="1280" height="720" aria-label="Video preview"></canvas></div>
     <div class="scenes" id="sceneChips"></div>
-    <div class="row">
+    <div class="row actions">
       <button class="btn primary" id="play">▶ Preview with voice</button>
       <button class="btn" id="stop" disabled>■ Stop</button>
       <button class="btn primary" id="export">● Export whole video</button>
@@ -406,7 +429,7 @@ const PAL={galaxy:[[255,60,6],[275,55,18]],solar:[[235,55,6],[250,50,16]],pyrami
 function drawVisual(c,w,h,t,kind,st=9){
   const m=Math.min(w,h),cx=w/2,cy=h*(w>h?.42:.38),e=pop(st/.55),P=PAL[kind]||PAL.question,stg=i=>easeO((st-.1-i*.05)/.45);
   meshBG(c,w,h,t,P[0],P[1]);
-  if(BGWORD){c.save();c.font=`800 ${m*.36}px ${DISPLAY()}`;let bw=c.measureText(BGWORD).width,sc2=Math.min(1,w*1.25/bw);c.translate(cx+Math.sin(t*.15)*m*.05,cy);c.scale(sc2,sc2);c.textAlign='center';c.textBaseline='middle';c.lineWidth=m*.004/sc2;c.strokeStyle='rgba(255,255,255,.08)';c.strokeText(BGWORD,0,0);c.restore();}
+  if(BGWORD){c.save();c.font=`800 ${m*.36}px ${DISPLAY()}`;let bw=c.measureText(BGWORD).width,sc2=Math.min(1,w*1.25/bw);c.translate(cx+Math.sin(t*.15)*m*.05,cy);c.scale(sc2,sc2);c.textAlign='center';c.textBaseline='middle';c.lineWidth=m*.004/sc2;c.strokeStyle='rgba(255,255,255,.06)';c.strokeText(BGWORD,0,0);c.restore();}
   const acc=hsl(P[1][0]+30,90,70,.09);
   switch(kind){
   case 'space':{stars(c,w,h,t);burst(c,cx,cy,m*1.1,t,acc);glow(c,cx,cy,m*.45,'rgba(255,160,90,.35)');
@@ -910,7 +933,7 @@ async function saveBlob(blob,name){const dl=await getDl();
 let lastExport=null;
 $('#dlAgain').onclick=()=>{if(lastExport)saveBlob(lastExport.blob,lastExport.name);};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&recorder&&recorder.state==='recording'){st.className='status err';st.textContent='Recording keeps going, but switching apps or tabs can make it choppy. Stay on this screen until it finishes.';}});
-let silentOK=false;
+let silentOK=false,wakeLock=null;
 $('#silentGo').onclick=()=>{silentOK=true;$('#silentWarn').hidden=true;$('#export').click();};
 $('#silentCancel').onclick=()=>{$('#silentWarn').hidden=true;};
 $('#export').onclick=async()=>{
@@ -932,11 +955,12 @@ $('#export').onclick=async()=>{
   const chunks=[];recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:(stage.height>=1920||stage.width>=1920?9e6:5e6),audioBitsPerSecond:160000}:{});
   recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
   let expDurs=durs.slice();const total=tl?Math.max(tl.total,MIN_LEN):expDurs.reduce((x,y)=>x+y,0);
-  recorder.onstop=()=>{stopSrcs();if(!chunks.length)return;lastDurs=tl?tl.scenes.map((s,i)=>i<tl.scenes.length-1?tl.scenes[i+1].start-s.start:Math.max(s.dur,total-s.start)):expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');$('#prog').hidden=true;const blob=new Blob(chunks,{type:ext==='mp4'?'video/mp4':'video/webm'});
+  recorder.onstop=()=>{stopSrcs();try{wakeLock&&wakeLock.release();}catch(e){}wakeLock=null;if(!chunks.length)return;lastDurs=tl?tl.scenes.map((s,i)=>i<tl.scenes.length-1?tl.scenes[i+1].start-s.start:Math.max(s.dur,total-s.start)):expDurs;renderKit();if(LIB[curId]&&(LIB[curId].status||'draft')==='draft')setStatus(curId,'recorded');$('#prog').hidden=true;const blob=new Blob(chunks,{type:ext==='mp4'?'video/mp4':'video/webm'});
     const name=proj.title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+($('#format').value==='short'?'-short':'')+'.'+ext;
     lastExport={blob,name};const ov=$('#outVid');if(ov.src)URL.revokeObjectURL(ov.src);ov.src=URL.createObjectURL(blob);$('#outInfo').textContent=`${name} · ${(blob.size/1e6).toFixed(1)} MB · ${ts(total)} · ${hasAudio?'with sound':'silent'}`;$('#exportOut').hidden=false;
     st.className='status';st.textContent='Video ready. Saving…';saveBlob(blob,name);};
   recorder.onerror=e=>{$('#prog').hidden=true;st.className='status err';st.textContent='Recording failed ('+((e.error&&e.error.name)||'error')+'). Try again in Chrome.';stopRun();};
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(l=>{wakeLock=l;}).catch(()=>{});}catch(e){}
   recorder.start(250);const at=a.currentTime+.1;
   if(voBuf)playBuf(voBuf,at,[a.destination,dest]);
   if(muBuf)playBuf(muBuf,at,[a.destination,dest],{loop:true,gain:.15});
@@ -971,7 +995,7 @@ $('#copyDesc').onclick=async()=>{try{await navigator.clipboard.writeText($('#des
 function tab(n){document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===n));['studio','lib','ideas','kit','play'].forEach(k=>$('#tab-'+k).hidden=k!==n);if(n==='ideas')renderIdeas();if(n==='kit'){avatar();banner();thumb();}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 
-window.__wil={alignVoice,get proj(){return proj;}};
+window.__wil={alignVoice,drawMark,get proj(){return proj;}};
 (function headerMark(){const c=$('#mark').getContext('2d');c.clearRect(0,0,88,88);drawMark(c,30,40,26,0);})();
 migrateShorts();setSize();applyPrefs();refresh();renderLib();connectCloud();voiceNote();checkServer();
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(!running)still();});
