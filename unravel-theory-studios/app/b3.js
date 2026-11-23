@@ -6,7 +6,44 @@ function kick(oc, out, t, amp) { const o = oc.createOscillator(), g = oc.createG
 let noiseCache = null;
 function noiseBuf(oc, secs) { if (noiseCache && noiseCache.sampleRate === oc.sampleRate && noiseCache.duration >= secs) return noiseCache; const b = oc.createBuffer(1, Math.ceil(oc.sampleRate * secs), oc.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; noiseCache = b; return b; }
 function whoosh(oc, out, t, amp) { const s = oc.createBufferSource(); s.buffer = noiseBuf(oc, 0.6); const f = oc.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3500, t + 0.45); const g = oc.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.3); g.gain.linearRampToValueAtTime(0, t + 0.55); s.connect(f).connect(g).connect(out); s.start(t); }
+/* Comedy SFX, all synthesized (no samples, nothing copyrighted). */
+const SFX = {
+  pop(oc, out, t, a = 0.5) { const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.05); g.gain.setValueAtTime(a * 0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09); o.connect(g).connect(out); o.start(t); o.stop(t + 0.1); },
+  boom(oc, out, t, a = 0.9) { const o = oc.createOscillator(), g = oc.createGain(), ws = oc.createWaveShaper(); const c = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; c[i] = Math.tanh(3 * x); } ws.curve = c;
+    o.type = "sine"; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.6); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + 1.1); o.connect(ws).connect(g).connect(out); o.start(t); o.stop(t + 1.15);
+    const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.6); const lp = oc.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900; const ng = oc.createGain(); ng.gain.setValueAtTime(a * 0.5, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.25); n.connect(lp).connect(ng).connect(out); n.start(t); n.stop(t + 0.3); },
+  boing(oc, out, t, a = 0.45) { const o = oc.createOscillator(), g = oc.createGain(), l = oc.createOscillator(), lg = oc.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(420, t + 0.35);
+    l.frequency.value = 22; lg.gain.setValueAtTime(60, t); lg.gain.exponentialRampToValueAtTime(1, t + 0.5); l.connect(lg).connect(o.frequency); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.55); o.connect(g).connect(out); o.start(t); l.start(t); o.stop(t + 0.6); l.stop(t + 0.6); },
+  scratch(oc, out, t, a = 0.5) { const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.6); const bp = oc.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 6; bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(2600, t + 0.12); bp.frequency.exponentialRampToValueAtTime(300, t + 0.3);
+    const g = oc.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.02); g.gain.linearRampToValueAtTime(a * 0.8, t + 0.25); g.gain.linearRampToValueAtTime(0, t + 0.32); n.connect(bp).connect(g).connect(out); n.start(t); n.stop(t + 0.35); },
+  ding(oc, out, t, a = 0.35) { [1, 2.76, 5.4].forEach((m, i) => { const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.value = 1320 * m; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a / (i + 1), t + 0.005); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.4 / (i + 1)); o.connect(g).connect(out); o.start(t); o.stop(t + 1.5); }); },
+  crickets(oc, out, t, a = 0.18, dur = 1.2) { for (let k = 0; k < dur / 0.42; k++) for (let j = 0; j < 3; j++) { const tt = t + k * 0.42 + j * 0.05, o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.value = 4300; g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(a, tt + 0.008); g.gain.linearRampToValueAtTime(0, tt + 0.035); o.connect(g).connect(out); o.start(tt); o.stop(tt + 0.04); } },
+  whoosh(oc, out, t, a = 0.12) { whoosh(oc, out, t, a); },
+  slide(oc, out, t, a = 0.35) { const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(160, t + 0.45); g.gain.setValueAtTime(a, t); g.gain.linearRampToValueAtTime(0, t + 0.5); o.connect(g).connect(out); o.start(t); o.stop(t + 0.52); }
+};
+const SFX_NAMES = ["none", "pop", "boom", "boing", "scratch", "ding", "crickets", "whoosh", "slide"];
+/* Default comedy SFX from the faces, when the writer didn't pick one. */
+function sfxFor(s, prev) {
+  if (s.sfx && SFX_NAMES.includes(s.sfx)) return s.sfx;
+  const f = s.speaker === "tack" ? s.tf : s.lf, other = s.speaker === "tack" ? s.lf : s.tf;
+  if (f === "shocked" || f === "terrified" || other === "shocked") return "boom";
+  if (f === "dizzy" || f === "laughing") return "boing";
+  if (s.speaker === "tack") return "pop";
+  return "none";
+}
+/* Bouncy comedy bed for Ledger & Tack: staccato bass, plucks, light snap. */
+function comedyMusic(oc, out, total, p) {
+  const bpm = 118 * p.look.tempo, beat = 60 / bpm, tr = p.look.key;
+  const prog = [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]];
+  for (let t = 0, bar = 0; t < total + 0.5; t += beat * 4, bar++) {
+    const ch = prog[bar % 4].map(n => n + tr);
+    [0, 1.5, 2, 3].forEach((b, k) => { const tt = t + b * beat, o = oc.createOscillator(), g = oc.createGain(); o.type = "triangle"; o.frequency.value = mtof(ch[0] - 12 + (k === 2 ? 7 : 0)); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.22, tt + 0.008); g.gain.exponentialRampToValueAtTime(0.001, tt + beat * 0.45); o.connect(g).connect(out); o.start(tt); o.stop(tt + beat * 0.5); });
+    [0.5, 1, 2.5, 3.5].forEach((b, k) => { const tt = t + b * beat, o = oc.createOscillator(), g = oc.createGain(); o.type = "square"; o.frequency.value = mtof(ch[(k + bar) % 3] + 12); const lp = oc.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200; g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.035, tt + 0.004); g.gain.exponentialRampToValueAtTime(0.0005, tt + 0.16); o.connect(lp).connect(g).connect(out); o.start(tt); o.stop(tt + 0.18); });
+    [1, 3].forEach(b => { const tt = t + b * beat, n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.6); const hp = oc.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2500; const g = oc.createGain(); g.gain.setValueAtTime(0.09, tt); g.gain.exponentialRampToValueAtTime(0.001, tt + 0.07); n.connect(hp).connect(g).connect(out); n.start(tt); n.stop(tt + 0.08); });
+  }
+}
 function music(oc, out, total, p) {
+  if (p.duo) return comedyMusic(oc, out, total, p);
   const look = p.look, dark = p.mode === "story" || p.mode === "lstory", long = p.kind === "long", tr = look.key;
   const bpm = (dark ? 66 : long ? 84 : 104) * look.tempo, beat = 60 / bpm, bar = beat * 4, len = dark || long ? bar * 2 : bar;
   const progs = dark ? [[[57, 60, 64], [53, 57, 60], [48, 52, 55], [52, 56, 59]], [[57, 60, 64], [55, 59, 62], [53, 57, 60], [52, 55, 59]]]
@@ -29,12 +66,23 @@ async function mixAudio(p, clips) {
   const oc = new OfflineAudioContext(CHN, Math.ceil((total + 0.8) * SR), SR);
   const comp = oc.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.005; comp.release.value = 0.2; comp.connect(oc.destination);
   const vbus = oc.createGain(); vbus.gain.value = 1.35; vbus.connect(comp);
-  clips.forEach((clip, i) => { const seg = p.timeline.segs[i]; const b = oc.createBuffer(1, clip.length, 24000); b.copyToChannel(clip, 0); const s = oc.createBufferSource(); s.buffer = b; s.connect(vbus); s.start(seg.vStart); });
-  const mv = (p.mode === "story" || p.mode === "lstory") ? 0.5 : long ? 0.34 : 0.42;
-  const mbus = oc.createGain(); mbus.gain.setValueAtTime(0, 0); mbus.gain.linearRampToValueAtTime(mv, 0.8); mbus.gain.setValueAtTime(mv, Math.max(1, total - 0.6)); mbus.gain.linearRampToValueAtTime(0, total + 0.6); mbus.connect(comp);
+  /* Voice polish: clean low end, presence for clarity on phone speakers, a little warmth. */
+  const hp = oc.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 85; const pres = oc.createBiquadFilter(); pres.type = "peaking"; pres.frequency.value = 3200; pres.Q.value = 0.9; pres.gain.value = 3.5;
+  const warm = oc.createBiquadFilter(); warm.type = "lowshelf"; warm.frequency.value = 220; warm.gain.value = 1.5; const vcomp = oc.createDynamicsCompressor(); vcomp.threshold.value = -22; vcomp.ratio.value = 4; vcomp.attack.value = 0.003; vcomp.release.value = 0.12;
+  hp.connect(warm).connect(pres).connect(vcomp).connect(vbus);
+  clips.forEach((clip, i) => { const seg = p.timeline.segs[i]; const b = oc.createBuffer(1, clip.length, 24000); b.copyToChannel(clip, 0); const s = oc.createBufferSource(); s.buffer = b; s.connect(hp); s.start(seg.vStart); });
+  const mv = p.duo ? (long ? 0.3 : 0.36) : (p.mode === "story" || p.mode === "lstory") ? 0.5 : long ? 0.34 : 0.42;
+  const mbus = oc.createGain(); mbus.gain.setValueAtTime(0, 0); mbus.gain.linearRampToValueAtTime(mv, p.duo ? 0.2 : 0.8);
+  if (p.duo) { const lo = mv * 0.5; p.timeline.segs.forEach(sg => { mbus.gain.setTargetAtTime(lo, Math.max(0.21, sg.vStart - 0.05), 0.04); mbus.gain.setTargetAtTime(mv, sg.vEnd + 0.02, 0.12); }); }
+  mbus.gain.setValueAtTime(mv, Math.max(1, total - 0.6)); mbus.gain.linearRampToValueAtTime(0, total + 0.6); mbus.connect(comp);
   music(oc, mbus, total, p);
   const sfx = oc.createGain(); sfx.connect(comp);
-  p.timeline.segs.forEach((s, i) => { if (i && (!long || s.s.chStart)) whoosh(oc, sfx, Math.max(0, s.start - 0.3), long ? 0.06 : (p.mode === "story" ? 0.05 : 0.08)); });
+  if (p.duo) {
+    p.timeline.segs.forEach((sg, i) => { const k = sfxFor(sg.s, p.timeline.segs[i - 1] && p.timeline.segs[i - 1].s);
+      if (k === "crickets") SFX.crickets(oc, sfx, Math.max(0, sg.vStart - (sg.beat || 0.6) + 0.05), 0.16, Math.max(0.5, (sg.beat || 0.6) - 0.05));
+      else if (k !== "none" && SFX[k]) SFX[k](oc, sfx, Math.max(0, sg.vStart - (k === "boom" || k === "scratch" ? 0.06 : 0.02)));
+      if (long && sg.s.chStart && i) whoosh(oc, sfx, Math.max(0, sg.start - 0.3), 0.08); });
+  } else p.timeline.segs.forEach((s, i) => { if (i && (!long || s.s.chStart)) whoosh(oc, sfx, Math.max(0, s.start - 0.3), long ? 0.06 : (p.mode === "story" ? 0.05 : 0.08)); });
   return oc.startRendering();
 }
 
@@ -183,12 +231,14 @@ function capStyle(p) {
 function drawCaption(p, seg, t) {
   if (p.cap === "none") return;
   const st = capStyle(p); const ws = words(p.adult ? maskStrong(seg.s.narration) : seg.s.narration); if (!ws.length) return;
+  if (p.duo) { const tk = seg.s.speaker === "tack"; if (st.box) { if (tk) st.fill = "#FFD25A"; } else { st.fill = tk ? "#FFD25A" : "#FFFFFF"; st.hi = tk ? "#FFFFFF" : (p.look && p.look.hi) || "#F7E36A"; }
+    if (p.kind !== "long") { const lay = hostLayout(seg, t); st.y = lay === "two" ? 0.5 : 0.33; } }
   const a0 = seg.vStart, dur = Math.max(0.3, seg.vEnd - a0); const wt = ws.map(w => w.length + 3), tot = wt.reduce((x, y) => x + y, 0);
   let acc = 0, act = ws.length - 1, wS = a0; const loc = t - a0;
   if (loc < 0) act = 0; else for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (loc < acc / tot * dur) { act = i; wS = a0 + s0; break; } }
   if (p.cap === "sub" && (t > seg.vEnd + 0.25 || t < a0 - 0.1)) return;
   const c0 = Math.floor(act / st.chunk) * st.chunk;
-  ctx.font = st.font; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; const sp = ctx.measureText(" ").width;
+  ctx.font = st.font; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; const sp = ctx.measureText(" ").width + (p.cap === "pop" ? 12 : 0);
   const items = ws.slice(c0, c0 + st.chunk).map((w, j) => { const tx = st.up ? w.toUpperCase() : w; return { tx, i: c0 + j, w: ctx.measureText(tx).width + sp }; });
   const lines = wrapW(items, Math.min(CW * 0.82, st.maxW || 9999)); const y0 = CH * st.y - (lines.length - 1) * st.lh / 2;
   lines.forEach((ln, li) => {
@@ -244,8 +294,15 @@ function drawChapterCard(p, t) {
 }
 const TRANS = { fade: 0.45, dip: 0.6, whip: 0.24, zoom: 0.26, punch: 0, flash: 0, none: 0 };
 let lastScene = -1;
+function shakeAt(p, t) {
+  if (!p.duo || !p.timeline) return null; const sg = p.timeline.segs.find(x => t >= x.vStart - 0.05 && t < x.vStart + 0.4); if (!sg) return null;
+  const s = sg.s, k = sfxFor(s), f = s.speaker === "tack" ? s.tf : s.lf; if (!(k === "boom" || k === "scratch" || f === "shocked" || f === "terrified")) return null;
+  const u = clamp((t - sg.vStart + 0.05) / 0.45, 0, 1), a = (1 - u) * (ORI === "h" ? 16 : 22);
+  return { x: Math.sin(t * 93) * a, y: Math.cos(t * 71) * a * 0.8 };
+}
 function drawFrame(p, t) {
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+  const sh = shakeAt(p, t);
+  ctx.setTransform(1, 0, 0, 1, sh ? sh.x : 0, sh ? sh.y : 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#07060a"; ctx.fillRect(0, 0, CW, CH);
   const tl = p.timeline, shots = tl.shots;
   let i = shots.findIndex(s => t < s.t1); if (i < 0) i = shots.length - 1;
@@ -267,29 +324,39 @@ function drawFrame(p, t) {
   grade(p, t);
   drawHosts(p, seg, t);
   if (cur.inFlash && t - cur.t0 < 0.12) { ctx.fillStyle = `rgba(255,255,255,${0.55 * (1 - (t - cur.t0) / 0.12)})`; ctx.fillRect(0, 0, CW, CH); }
-  if (!(p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T)) drawCaption(p, seg, t);
+  if (p.duo || !(p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T)) drawCaption(p, seg, t);
   drawEmphasis(p, seg, t);
   drawHook(p, t);
   drawChapterCard(p, t);
 }
+function envOf(c) { const step = 800, n = Math.ceil(c.length / step), e = new Float32Array(n); let mx = 1e-6;
+  for (let k = 0; k < n; k++) { let q = 0; const a = k * step, b = Math.min(c.length, a + step); for (let i = a; i < b; i++) q += c[i] * c[i]; e[k] = Math.sqrt(q / Math.max(1, b - a)); if (e[k] > mx) mx = e[k]; }
+  for (let k = 0; k < n; k++) e[k] /= mx; return e; }
 function buildTimeline(p, clips) {
-  const long = p.kind === "long", gap = MODES[p.mode].gap; let t = long ? 0.6 : 0.25; const segs = [];
-  p.scenes.forEach((s, i) => { if (long && s.chStart && i) t += 0.9; if (long && i === 0) t += 3.2; const d = clips[i].length / 24000; segs.push({ s, i, vStart: t, vEnd: t + d, start: 0, end: 0 }); t += d + gap; });
+  const long = p.kind === "long", duo = !!p.duo, gap = duo ? (long ? 0.14 : 0.06) : MODES[p.mode].gap; let t = long ? 0.6 : duo ? 0.08 : 0.25; const segs = [];
+  p.scenes.forEach((s, i) => {
+    if (long && s.chStart && i) t += 0.9; if (long && i === 0) t += 3.2;
+    const prev = p.scenes[i - 1], d = clips[i].length / 24000;
+    /* The comedy beat: Ledger stares in silence after a dumb question before he answers. */
+    const beat = duo && i > 0 && (s.beat === true || (prev && prev.speaker === "tack" && s.speaker !== "tack" && s.lf === "deadpan")) ? 0.6 : 0;
+    t += beat;
+    const layout = !duo ? "" : s.speaker === "tack" ? "tack" : beat ? "react" : "two";
+    segs.push({ s, i, vStart: t, vEnd: t + d, start: 0, end: 0, beat, layout, env: duo ? envOf(clips[i]) : null }); t += d + gap; });
   const total = t + (long ? 1.6 : 0.6);
-  segs.forEach((sg, i) => { sg.start = i === 0 ? 0 : (segs[i - 1].vEnd + sg.vStart) / 2; });
+  segs.forEach((sg, i) => { sg.start = i === 0 ? 0 : sg.beat ? segs[i - 1].vEnd + 0.04 : (segs[i - 1].vEnd + sg.vStart) / 2; });
   segs.forEach((sg, i) => { sg.end = i < segs.length - 1 ? segs[i + 1].start : total; });
-  const dark = darkMode(p), cyc = long ? ["fade", "fade", "fade"] : dark ? ["fade", "fade", "dip"] : TSETS[(p.look && p.look.tset) || 0];
+  const dark = darkMode(p), cyc = duo ? ["punch", "whip", "punch", "zoom", "punch", "flash"] : long ? ["fade", "fade", "fade"] : dark ? ["fade", "fade", "dip"] : TSETS[(p.look && p.look.tset) || 0];
   const shots = [];
   segs.forEach((sg, i) => {
     const d = sg.end - sg.start, m = sg.s.motion;
-    const n = long ? clamp(Math.round(d / 3.6), 1, 4) : (d > 5.4 ? 3 : d > 2.7 ? 2 : 1);
+    const n = duo ? (d > (long ? 5 : 3.4) ? 2 : 1) : long ? clamp(Math.round(d / 3.6), 1, 4) : (d > 5.4 ? 3 : d > 2.7 ? 2 : 1);
     const base = ["wide", "close", "medium", "close"], order = n === 1 ? ["wide"] : (i % 2 ? base.slice(0, n).reverse() : base.slice(0, n));
     for (let j = 0; j < n; j++) {
       const pan = m === "pan-left" ? -1 : m === "pan-right" ? 1 : ((i + j) % 2 ? 1 : -1) * 0.6;
       const dir = m === "zoom-out" ? -1 : m === "zoom-in" ? 1 : ((i + j) % 2 ? 1 : -1);
       const nextScene = segs[i + 1];
-      const trans = j < n - 1 ? (dark || long ? "fade" : "punch") : (!nextScene ? "none" : long && nextScene.s.chStart ? "dip" : cyc[i % cyc.length]);
-      shots.push({ calm: long, sid: aid(sg.s), si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
+      const trans = j < n - 1 ? (duo ? "punch" : dark || long ? "fade" : "punch") : (!nextScene ? "none" : long && nextScene.s.chStart ? "dip" : cyc[i % cyc.length]);
+      shots.push({ calm: long && !duo, sid: aid(sg.s), si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
     }
   });
   shots.forEach((s, k) => { const prev = shots[k - 1]; if (prev && prev.trans === "punch") s.inPunch = true; if (prev && prev.trans === "flash") s.inFlash = true; });

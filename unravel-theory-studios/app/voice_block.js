@@ -1,4 +1,6 @@
 const KB = "./kokoro/";
+/* HD voice: Kokoro-82M fp16 (cleaner than q8, same speed on wasm), shipped as 14 parts. */
+const VKEY = "kokoro-fp16-v1", MODEL_BYTES = 163234740, MODEL_PARTS = 14;
 const HF = "huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/";
 const realFetch = window.fetch.bind(window);
 let ttsP = null, model = null, wasmBlob = null;
@@ -36,21 +38,32 @@ function installShims() {
 function loadVoice(onProgress = () => {}) {
   if (ttsP) return ttsP;
   ttsP = (async () => {
-    let cached = await idb.get("kokoro-q8-v1");
+    let cached = await idb.get(VKEY);
     if (cached && cached.model && cached.wasm) { model = cached.model; wasmBlob = cached.wasm; onProgress(1, true); }
     else {
-      const TOTAL = 92361116 + 21596019; let got = 0;
+      idb.del("kokoro-q8-v1");
+      const TOTAL = MODEL_BYTES + 21596019; let got = 0;
       const on = b => { got += b; onProgress(Math.min(1, got / TOTAL)); };
-      [model, wasmBlob] = await Promise.all([fetchParts("m", 8, on), fetchParts("w", 2, on)]);
-      if (model.size !== 92361116) throw new Error("The voice model didn't download completely. Try again.");
-      idb.put("kokoro-q8-v1", { model, wasm: wasmBlob });
+      [model, wasmBlob] = await Promise.all([fetchParts("f", MODEL_PARTS, on), fetchParts("w", 2, on)]);
+      if (model.size !== MODEL_BYTES) throw new Error("The voice model didn't download completely. Try again.");
+      idb.put(VKEY, { model, wasm: wasmBlob });
     }
     installShims();
     const mod = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js");
-    return await mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "q8", device: "wasm" });
+    return await mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "fp16", device: "wasm" });
   })();
   ttsP.catch(() => { ttsP = null; });
   return ttsP;
 }
-function warmVoice() { idb.get("kokoro-q8-v1").then(c => { if (c && c.model) loadVoice().catch(() => {}); }); }
-async function speak(tts, text, voice, speed) { const a = await tts.generate(text, { voice, speed }); return a.audio; }
+function warmVoice() { idb.get(VKEY).then(c => { if (c && c.model) loadVoice().catch(() => {}); }); }
+/* Kokoro pads every line with silence; trimming it is the single biggest pacing win. */
+function trimSilence(a, padIn = 0.03, padOut = 0.06) {
+  const th = 0.012, n = a.length; let i0 = 0, i1 = n - 1;
+  while (i0 < n && Math.abs(a[i0]) < th) i0++;
+  while (i1 > i0 && Math.abs(a[i1]) < th) i1--;
+  if (i0 >= i1) return a;
+  return a.slice(Math.max(0, i0 - Math.round(padIn * 24000)), Math.min(n, i1 + Math.round(padOut * 24000)));
+}
+/* Cartoon voice: resample so the voice is higher and quicker (like speeding up tape). */
+function pitchUp(a, r) { if (!r || r === 1) return a; const n = Math.floor(a.length / r), o = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, k = Math.floor(x), f = x - k; o[i] = a[k] * (1 - f) + (a[k + 1] || 0) * f; } return o; }
+async function speak(tts, text, voice, speed, opts = {}) { const a = await tts.generate(text, { voice, speed }); return pitchUp(trimSilence(a.audio), opts.pitch || 1); }

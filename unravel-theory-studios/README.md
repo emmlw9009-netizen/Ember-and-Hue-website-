@@ -68,3 +68,11 @@ The "18+ Adult mode" button on the Ledger & Tack tab switches the hosts to grown
 - On-screen captions star out the f-word; the voice still says it.
 - The upload kit adds a checklist: audience "not made for kids", clean title and thumbnail.
 - Test: `app/tests/e2e8.js adult`.
+
+## Funnier, faster Ledger & Tack (added Nov 23, 2026)
+
+- **HD voice**: Kokoro-82M fp16 (from the npm package `kokoro-fp16-shards`, re-split into `kokoro/f0.wasm`–`f13.wasm` for the artifact) replaces the q8 model. Same speed on wasm, cleaner sound; the first video downloads about 185 MB once. Model shards aren't in git (too large); rebuild them with `npm pack kokoro-fp16-shards`, concatenate the parts, and split into 12,000,000-byte pieces.
+- **Delivery**: Kokoro's built-in silence is trimmed from every line; Ledger speaks quick and dry; Tack is pitched up ~17% for a cartoon voice. Voice chain: high-pass, warmth, presence boost, compression. "Hear Ledger & Tack talk" plays a sample exchange.
+- **Edit**: 0.06 s between lines, a 0.6 s silent deadpan "beat" before Ledger answers a dumb question (cut to a Ledger close-up on a comic burst), Tack close-ups over a "Tack's theory" cutaway gag, punch cuts and whips, lip-sync from the audio, screen shake on shocks, captions colored by speaker.
+- **Sound**: synthesized comedy SFX chosen by the writer (boom, record scratch, boing, crickets, ding, slide, pop) and a bouncy music bed that ducks under the dialogue.
+- **Writing**: rewritten comedy rules (cold open on a joke, a laugh every 2–3 lines, specific > generic, rule of three, reversal, callback, Tack lands the last line) plus a second "writers' room" punch-up pass on every Short and every long-form chapter. New 20-second Short length.

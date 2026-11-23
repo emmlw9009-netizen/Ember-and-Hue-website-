@@ -116,25 +116,48 @@ ADULT MODE (for an 18+ comedy audience, but still fully advertiser-friendly on Y
 }
 function duoRules(p) {
   if (!isDuo(p)) return "";
-  const faces = HOST.FACE_NAMES.join(", ");
+  const faces = HOST.FACE_NAMES.join(", "), long = p.kind === "long";
   return `
-THE HOSTS (this video is a two-hander, like a classic comedy double act):
-- LEDGER: tall, glasses, red tie. The patient explainer and straight man. Sharp, warm, a little dry. He carries every fact.
-- TACK: short, huge mustard cap. The curious one who asks the questions viewers are secretly thinking, but in a dumb, funny, oddly specific way ("So can I eat it?", "Is the moon a sun that gave up?"). Never mean, never stupid about everything: his logic is strange but internally consistent.
-Rules for the dynamic:
-- Every scene has "speaker": "ledger" or "tack". Ledger has about three lines for every Tack line. Never two Tack lines in a row.
-- Tack lines are 2 to 9 words and their "visual" is "" (the picture stays on the previous shot). Ledger lines carry the visuals.
-- Each Tack question must set up the next fact: his wrong guess is the doorway into the real answer, so the jokes move the explanation forward instead of stopping it.
-- Escalate Ledger's patience over the video (rule of three): first answer kind, second answer tighter, third time a deadpan beat.
-- Exactly once, Tack is accidentally right, and Ledger has to admit it. That reversal is the biggest laugh.
-- Tack gets the final line: a funny button that reframes the whole topic in one breath.
-- Facts stay true. The comedy comes from Tack's questions and Ledger's reactions, never from wrong information.
-- "ledgerFace" and "tackFace" on every scene: each one of ${faces}. Faces react to what was just said (Ledger: explain, proud, deadpan, smug, shocked; Tack: confused, shocked, terrified, dizzy, nervous, laughing, smug when he was right).
-- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".${adultRules(p)}`;
+THE HOSTS. This is a fast cartoon comedy double act, written like a sitcom cold open, not a lecture:
+- LEDGER: tall, glasses, red tie. The straight man. Smart, dry, quick, slowly losing his patience. Underreacts. Short sentences. Sometimes one word ("No." "Why." "Sit down.").
+- TACK: short, giant mustard cap. Confident and wrong. Asks the question the viewer is secretly thinking, but takes it somewhere absurdly specific ("So if I eat enough carrots, can I see through walls?"). His logic is stupid but internally consistent, and he commits to it 100%.
+HOW TO MAKE IT ACTUALLY FUNNY:
+- Open on a joke or a shocking fact, never a greeting. The first line must hook in under 2 seconds.
+- A laugh every 2 or 3 lines. Every Tack line is a joke; at least every other Ledger line has a dry tag, a comeback or a deadpan reaction on top of the fact.
+- Specific beats generic: odd numbers, weird concrete images, petty details ("a raccoon with a law degree" is funnier than "an animal").
+- Misdirection: set up an expectation, then swerve. Escalate Tack's theories (rule of three: plausible, weird, unhinged).
+- Tack's wrong guess is always the doorway into the real answer, so jokes move the explanation forward.
+- Ledger's patience drops over the video: kind, then tight, then a silent deadpan stare before he answers (mark that line "beat": true).
+- Exactly once, Tack is accidentally right and Ledger has to admit it (Ledger face "shocked", sfx "scratch"). That reversal is the biggest laugh.
+- Use a callback: the last line calls back to an earlier joke. Tack gets the final line.
+- Write for the ear: ${long ? "Ledger lines 6 to 22 words" : "Ledger lines 4 to 13 words"}, Tack lines 2 to 9 words. Interruptions are good ("Wait—"). Use "?!", "!" and "..." so the voices act it out. No stage directions in narration.
+- Facts stay true and checkable. The comedy comes from the characters, never from wrong information.
+FIELDS on every scene:
+- "speaker": "ledger" or "tack". Ledger has about two lines for every Tack line. Never two Tack lines in a row.
+- "ledgerFace" and "tackFace": each one of ${faces}. Faces react to what was just said (the listener reacts too).
+- "sfx": one of ${SFX_NAMES.join(", ")}. Comedy timing only: boom for a shocking reveal, scratch for the reversal, boing for a dumb idea, crickets before a deadpan answer, ding when someone is right, slide for a fail, pop for a quick question. "none" on most lines; never the same sfx twice in a row.
+- "beat": true only on the line where Ledger stares in silence before answering (about once per ${long ? "chapter" : "video"}).
+- "visual": for Ledger lines, the evidence that explains the fact. For about half of Tack's lines, his ridiculous theory drawn LITERALLY as a cutaway gag (e.g. "a carrot wearing X-ray goggles looking through a brick wall"); for his other lines, "" to stay on the previous picture.
+- Scene JSON keys: "speaker", "ledgerFace", "tackFace", "sfx", "beat", "narration", "visual", "motion", "fx", "emphasis".${adultRules(p)}`;
+}
+function punchUpPrompt(p, scenes, context) {
+  return `You are the punch-up writer on an animated comedy show. Rewrite this ${p.kind === "long" ? "scene" : "script"} for "Ledger & Tack" to be MUCH funnier and tighter, the way a writers' room punches up a draft. Topic: ${p.topic}
+${context || ""}
+${duoRules(p)}
+Punch-up checklist (apply all):
+- Cut every word that isn't a fact or a joke. Shorter lines hit harder.
+- Replace any generic joke with a more specific, surprising one. Make Tack's theories dumber and more committed; make Ledger drier.
+- Make sure there's a laugh every 2 or 3 lines, one reversal where Tack is accidentally right, a callback, and Tack lands the final line.
+- Keep every fact true. Keep roughly the same number of lines (you may add up to 2 or cut up to 2) and keep the order of the information.
+- Keep "visual" descriptions concrete; keep the Case File evidence style for Ledger's visuals.
+${GUARD}
+Draft (JSON):
+${JSON.stringify(scenes.map(s => ({ speaker: s.speaker, ledgerFace: s.lf, tackFace: s.tf, sfx: s.sfx || "none", beat: !!s.beat, narration: s.narration, visual: s.visual, emphasis: s.emphasis || "" })))}
+Reply with ONLY JSON: {"scenes":[{"speaker":"ledger","ledgerFace":"explain","tackFace":"confused","sfx":"none","beat":false,"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
 }
 function scriptPrompt(p, extra = "") {
   const story = p.mode === "story", wps = story ? 2.5 : 2.75, L = p.length;
-  const tw = Math.round(L * wps), n0 = Math.max(4, Math.round(L / 3.4)), n1 = Math.max(5, Math.round(L / 2.6));
+  const tw = Math.round(L * wps), n0 = Math.max(4, Math.round(L / (isDuo(p) ? 2.6 : 3.4))), n1 = Math.max(5, Math.round(L / (isDuo(p) ? 1.8 : 2.6)));
   const rules = story ? `- Scene 1 opens in the middle of the most tense moment. No setup, no greetings.
 - Short punchy sentences, one tense, vivid sensory detail. Escalate every 2 scenes. Land a twist in the final 20%.
 - End on a cliffhanger or chilling final line that makes people comment or come back for the next part.
@@ -148,7 +171,7 @@ Topic: ${p.topic}
 ${extra}
 ${rules}
 ${GUARD}${duoRules(p)}
-- About ${tw} words of narration in total. Use ${n0} to ${n1} scenes. Each scene is ONE short sentence or phrase (5 to 13 words) with its own illustration, so the picture changes every 2 to 3 seconds.
+- About ${tw} words of narration in total. Use ${n0} to ${n1} scenes. ${isDuo(p) ? "Each scene is ONE line of dialogue." : "Each scene is ONE short sentence or phrase (5 to 13 words) with its own illustration, so the picture changes every 2 to 3 seconds."}
 - Write numbers as words when spoken, no symbols or emojis in narration.
 - ${SCENE_FIELDS}
 - "emphasis": ${story ? "always empty" : "1 to 3 words to slam on screen (a key number, word or punchline) on about one scene in three, otherwise empty"}.
@@ -157,7 +180,7 @@ ${GUARD}${duoRules(p)}
 - "summary": two sentences on what happened, and "cliffhanger": the open question it ends on (for series continuity).
 
 Reply with ONLY JSON:
-{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused",' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
+{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused","sfx":"none","beat":false,' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
 }
 function outlinePrompt(p) {
   const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
@@ -187,19 +210,19 @@ All chapters (for continuity): ${o.chapters.map((c, i) => (i + 1) + ". " + c.tit
 This chapter: "${o.chapters[ci].title}" — ${o.chapters[ci].beats}
 ${o.character ? "Recurring character: " + o.character : ""}
 ${GUARD}${duoRules(p)}
-- About ${w} words of narration in ${ns} scenes. Each scene is 1 to 3 sentences (12 to 35 words) and gets its own illustration.
+- About ${w} words of narration in ${isDuo(p) ? Math.round(ns * 2.2) : ns} scenes. ${isDuo(p) ? "Each scene is ONE line of dialogue between Ledger and Tack." : "Each scene is 1 to 3 sentences (12 to 35 words) and gets its own illustration."}
 ${ci === 0 ? "- Scene 1 narration starts with the cold-open hook, word for word.\n" : ""}- ${ci < n - 1 ? "End the chapter on a line that pulls viewers into the next chapter." : "Land the payoff of the hook" + (p.mode === "doc" ? " and end with one memorable closing line." : " with the twist, then a final haunting line.")}
 - Write numbers as words when spoken. No symbols or emojis in narration.
 - ${SCENE_FIELDS_LONG}
 - "visual" must fit the channel's house style: one clear focal subject, calm composition, no spectacle for its own sake.
 - "emphasis": a 1 to 3 word on-screen stamp for at most one scene in this chapter (a key date, number or term), otherwise empty.
-Reply with ONLY JSON: {"scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused",' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
+Reply with ONLY JSON: {"scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused","sfx":"none","beat":false,' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
 }
 function svgPrompt(p, sc, i) {
   const H = p.kind === "long", W = H ? 1920 : 1080, Hh = H ? 1080 : 1920;
   const prev = p.scenes[i - 1], next = p.scenes[i + 1];
   return `You are a top illustrator for animated YouTube channels. Draw ONE full-bleed ${H ? "horizontal 16:9" : "vertical 9:16"} illustration as an SVG, built in depth layers so it can be animated with parallax.
-Shot ${i + 1} of ${p.scenes.length}: ${sc.visual}
+${isDuo(p) && sc.speaker === "tack" ? "This shot is TACK'S THEORY: a silly cutaway gag showing his wrong idea literally, played completely straight like serious evidence (that is what makes it funny). Same Case File paper style. " : ""}Shot ${i + 1} of ${p.scenes.length}: ${sc.visual}
 Narration over this shot: "${sc.narration}"
 ${prev ? "Previous shot (continuity): " + prev.visual : ""}
 ${next ? "Next shot: " + next.visual : ""}

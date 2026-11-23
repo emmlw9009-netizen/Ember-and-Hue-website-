@@ -35,7 +35,7 @@ function projDoc(p) {
   if (!p.createdAt) p.createdAt = Date.now();
   const d = { id: p.id, createdAt: p.createdAt, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
     chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
-    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, adult: !!p.adult, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "", sfx: s.sfx || "", beat: !!s.beat, gag: !!s.gag })), duo: !!p.duo, adult: !!p.adult, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
   if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
   return d;
 }
@@ -143,7 +143,7 @@ function renderDuo() {
   document.body.classList.toggle("adult", !!S.dadult);
   $("#dfShort").setAttribute("aria-pressed", String(S.dfmt !== "long")); $("#dfLong").setAttribute("aria-pressed", String(S.dfmt === "long"));
   $("#dNiches").replaceChildren(...DUO_NICHES.map(n => h("button", { class: "chip", "aria-pressed": String(n === S.dniche), onclick: () => { S.dniche = n; saveSettings(); renderDuo(); loadDIdeas(true); } }, n)));
-  const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
+  const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[20, "20 seconds (snappiest)"], [30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
   fill($("#dLen"), lens.map(([v, l]) => [String(v), l]), String(L ? S.dllen : S.dlen));
   fill($("#dVoice"), VOICES, S.dvoice); fill($("#dTack"), VOICES, S.tackVoice); $("#dCapSet").hidden = L; $("#dCap").value = S.dcap;
   drawDuoHero(); renderDIdeas(); updateGo();
@@ -188,6 +188,20 @@ $("#dVoice").onchange = e => { S.dvoice = e.target.value; saveSettings(); };
 $("#dTack").onchange = e => { S.tackVoice = e.target.value; saveSettings(); };
 $("#dCap").onchange = e => { S.dcap = e.target.value; saveSettings(); };
 $("#dLVPrev").onclick = () => playSample(S.dvoice); $("#dTVPrev").onclick = () => playSample(S.tackVoice);
+/* Hear the real duo voices (HD model, Tack pitched up), the way they sound in videos. */
+$("#dHear").onclick = async e => {
+  const btn = e.currentTarget; if (btn.dataset.busy) return; btn.dataset.busy = "1"; const keep = btn.textContent; btn.textContent = "Loading the HD voices…";
+  const lines = S.dadult ? [["tack", "Wait. So my rent is just... a dragon tax?!"], ["ledger", "Unfortunately? Yes. A very organized dragon."]] : [["tack", "Wait. So onions are just... sad?!"], ["ledger", "No. They're chemically attacking your face."]];
+  try {
+    const tts = await loadVoice((f, c) => { if (!c) btn.textContent = "Downloading the HD voice once · " + Math.round(f * 100) + "%"; });
+    btn.textContent = "Recording…"; const P2 = { duo: true, voice: S.dvoice, tackVoice: S.tackVoice, mode: "explainer" };
+    const clips = []; for (const [sp, tx] of lines) clips.push(await cpuLock(() => speakLine(tts, P2, { speaker: sp, narration: tx })));
+    const a = getAC(); await a.resume(); let t = a.currentTime + 0.05;
+    clips.forEach((c, i) => { const b = a.createBuffer(1, c.length, 24000); b.copyToChannel(c, 0); const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(t); t += c.length / 24000 + (i === 0 ? 0.55 : 0.06); });
+    btn.textContent = "Playing…"; await sleep((t - a.currentTime) * 1000);
+  } catch (err) { toast("The voices couldn't start here: " + ((err && err.message) || err)); }
+  btn.textContent = keep; delete btn.dataset.busy;
+};
 $("#dOwn").addEventListener("input", () => { if ($("#dOwn").value.trim() && dPicks.length >= 3) dPicks.pop(); renderDIdeas(); updateGo(); });
 $("#dMore").onclick = () => loadDIdeas(true);
 $("#dPick3").onclick = () => { for (const i of dIdeas) { if (dPicks.length >= 3) break; if (!dPicks.some(x => x.title === i.title)) dPicks.push(i); } renderDIdeas(); updateGo(); warmVoice(); };
@@ -407,11 +421,21 @@ function enforceLanguage(P) {
 function parseScenes(arr, P, ch) {
   const duo = isDuo(P), FN = HOST.FACE_NAMES, face = (v, d) => FN.includes(v) ? v : d;
   const out = arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0,
-    ...(duo ? { speaker: s.speaker === "tack" ? "tack" : "ledger", lf: face(s.ledgerFace, "explain"), tf: face(s.tackFace, "confused") } : {}) }));
-  if (duo) out.forEach((s, k) => { if (s.speaker === "tack" && k > 0) { s.artOf = out[k - 1].artOf || out[k - 1].id; s.visual = ""; s.emphasis = ""; } });
+    ...(duo ? { speaker: s.speaker === "tack" ? "tack" : "ledger", lf: face(s.ledgerFace, "explain"), tf: face(s.tackFace, "confused"), sfx: SFX_NAMES.includes(s.sfx) ? s.sfx : "", beat: s.beat === true, gag: s.speaker === "tack" && !!String(s.visual || "").trim() } : {}) }));
+  if (duo) out.forEach((s, k) => { if (s.speaker === "tack") { s.emphasis = ""; if (!s.gag && k > 0) { s.artOf = out[k - 1].artOf || out[k - 1].id; s.visual = ""; } } });
   return out;
 }
 const goodPal = (a, dark) => { const p = (Array.isArray(a) ? a : []).filter(c => /^#[0-9a-f]{3,8}$/i.test(c)).slice(0, 5); return p.length >= 3 ? p : dark ? ["#07070d", "#1b1630", "#3d2f5c", "#b06a3b", "#f4c27a"] : ["#0d1030", "#2337a8", "#4f8cff", "#ffb547", "#fff3d6"]; };
+/* Second pass: a "writers' room" punch-up of the draft. Falls back to the draft if anything goes wrong. */
+async function punchUp(P, scenes, ch, context) {
+  try {
+    const r = await askJSON(punchUpPrompt(P, scenes, context), "complex");
+    if (!r || !Array.isArray(r.scenes) || r.scenes.length < Math.max(3, scenes.length * 0.6)) return scenes;
+    const out = parseScenes(r.scenes, P, ch);
+    if (out.length && out[0].speaker === "tack" && !out[0].gag && !out[0].artOf) { out[0].gag = true; out[0].visual = out[0].visual || out[0].narration; }
+    return out.length ? out : scenes;
+  } catch (e) { if (e && (e.code === "not_granted" || e.code === "unavailable")) throw e; return scenes; }
+}
 async function writeScript(job) {
   const P = job.p, st = job.stage;
   if (P.kind === "long") {
@@ -426,11 +450,13 @@ async function writeScript(job) {
     const parts = await Promise.all(o.chapters.map((c, ci) => artSlot(job.idx, async () => {
       let r = null; for (let a = 0; a < 2 && !r; a++) { try { r = await askJSON(chapterPrompt(P, o, ci)); if (!r || !Array.isArray(r.scenes) || !r.scenes.length) r = null; } catch (e) { if (e && (e.code === "not_granted" || e.code === "unavailable")) throw e; } }
       if (!r) throw { code: "invalid_json" };
-      done++; st("script", null, "Chapter " + done + " of " + o.chapters.length + " written", 0.15 + 0.85 * done / o.chapters.length);
-      return parseScenes(r.scenes, P, ci);
+      let sc = parseScenes(r.scenes, P, ci);
+      if (isDuo(P)) sc = await punchUp(P, sc, ci, "This is chapter " + (ci + 1) + " of " + o.chapters.length + ": " + o.chapters[ci].title + ". " + (ci === 0 ? "Its first line is the cold open: " + o.hook : ""));
+      done++; st("script", null, "Chapter " + done + " of " + o.chapters.length + " written" + (isDuo(P) ? " and punched up" : ""), 0.15 + 0.85 * done / o.chapters.length);
+      return sc;
     })));
     P.scenes = parts.flat();
-    P.scenes.forEach((s, k) => { if (s.speaker === "tack" && !s.artOf && k > 0) { s.artOf = P.scenes[k - 1].artOf || P.scenes[k - 1].id; s.visual = ""; } });
+    P.scenes.forEach((s, k) => { if (s.speaker === "tack" && !s.gag && !s.artOf && k > 0) { s.artOf = P.scenes[k - 1].artOf || P.scenes[k - 1].id; s.visual = ""; } });
   } else {
     st("script", "active", P.seriesId ? "Picking up from the last cliffhanger…" : "Writing the script…");
     let extra = "";
@@ -443,10 +469,20 @@ ${(se.episodes || []).length ? "Open by picking up directly from the last cliffh
     if (!r || !Array.isArray(r.scenes) || !r.scenes.length) throw { code: "invalid_json" };
     P.title = String(r.title || P.topic); P.character = P.seriesId ? P.character : String(r.character || "");
     P.palette = P.duo ? CASE_PAL.slice() : P.seriesId && P.palette && P.palette.length ? P.palette : goodPal(r.palette, darkMode(P));
-    P.scenes = parseScenes(r.scenes, P, null); P.summary = String(r.summary || ""); P.cliffhanger = String(r.cliffhanger || "");
+    P.scenes = parseScenes(r.scenes, P, null);
+    if (isDuo(P)) { st("script", null, "Punching up the jokes…", 0.6); P.scenes = await punchUp(P, P.scenes, null, ""); }
+    P.summary = String(r.summary || ""); P.cliffhanger = String(r.cliffhanger || "");
     P.kit = { titles: (r.titles || []).map(String).slice(0, 3), description: String(r.description || ""), hashtags: String(r.hashtags || "#shorts"), pinned: String(r.pinnedComment || "") };
     if (P.seriesId) P.kit.titles = P.kit.titles.map(t => t.includes("Part") ? t : t + " (Part " + P.episode + ")");
   }
+}
+/* Delivery: Ledger is quick and dry; Tack is a pitched-up cartoon. Unravel videos keep one narrator. */
+const DUO_V = { ledgerSpeed: 1.1, tackSpeed: 1.02, tackPitch: 1.17 };
+function speakLine(tts, P, sc) {
+  if (!P.duo) return speak(tts, sc.narration, P.voice, MODES[P.mode].speed);
+  const tk = sc.speaker === "tack", hot = /[!?]$/.test(sc.narration.trim()) ? 1.04 : 1;
+  return tk ? speak(tts, sc.narration, P.tackVoice || "am_puck", DUO_V.tackSpeed * hot, { pitch: DUO_V.tackPitch })
+            : speak(tts, sc.narration, P.voice, DUO_V.ledgerSpeed);
 }
 async function runJob(job) {
   const P = job.p, st = job.stage, ori = P.kind === "long" ? "h" : "v";
@@ -458,7 +494,7 @@ async function runJob(job) {
       st("voice", "active", "Recording the voiceover…", 0);
       const tts = await cpuLock(() => loadVoice((f, c) => st("voice", null, c ? "Voice loaded" : "Downloading the voice once · " + Math.round(f * 100) + "%", f * 0.5)));
       const clips = [];
-      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); const tk = P.scenes[i].speaker === "tack"; clips.push(await cpuLock(() => speak(tts, P.scenes[i].narration, tk ? (P.tackVoice || "am_puck") : P.voice, MODES[P.mode].speed * (tk ? 1.12 : 1)))); }
+      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); const sc = P.scenes[i]; clips.push(await cpuLock(() => speakLine(tts, P, sc))); }
       st("voice", "done"); return clips;
     })();
     const artJob = (async () => {
@@ -543,7 +579,7 @@ function showResult() {
   $("#kit").replaceChildren(h("h3", { text: "Upload kit" }),
     ...(k.titles || []).map((t, i) => kitRow(i ? "" : "Title options", t)),
     kitRow("Description", (k.description || "") + (k.hashtags ? "\n\n" + k.hashtags : "")), kitRow("Pinned comment", k.pinned || ""),
-    P.adult ? h("p", { class: "note adultnote", text: "Adult mode upload checklist: set the audience to \"No, it's not made for kids\". Keep the title, thumbnail and description clean (the kit above already is). On-screen captions star out the f-word; the voice still says it, which YouTube allows for full ads at this frequency. Don't add an age restriction unless YouTube asks for one." }) : null,
+    ...(P.adult ? [h("p", { class: "note adultnote", text: "Adult mode upload checklist: set the audience to \"No, it's not made for kids\". Keep the title, thumbnail and description clean (the kit above already is). On-screen captions star out the f-word; the voice still says it, which YouTube allows for full ads at this frequency. Don't add an age restriction unless YouTube asks for one." })] : []),
     h("p", { class: "note", text: long ? "Chapters are already timestamped in the description. Upload the thumbnail as a custom thumbnail. These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage." : "These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage. YouTube says the label alone doesn't change reach." }));
   renderLines();
 }
@@ -766,5 +802,5 @@ renderShorts(); renderLong(); renderDuo(); fillNs(); renderSeries(); renderLib()
 go(location.hash.slice(1) || "duo");
 initSync();
 sampler().then(s => { if (!s) { $("#sNote").textContent = AI_ERR.unavailable; $("#sNote").className = "note err"; } else { loadDIdeas(); loadSIdeas(); if (!lIdeas.length) loadLIdeas(); } });
-idb.get("kokoro-q8-v1").then(c => { if (c && c.model) $("#voiceNote").textContent = "The voice is downloaded and runs on this device."; });
+idb.get(VKEY).then(c => { if (c && c.model) $("#voiceNote").textContent = "The voice is downloaded and runs on this device."; });
 })();

@@ -369,6 +369,7 @@ details.edit summary{cursor:pointer;font-weight:600}
         <div class="set"><label for="dTack">Tack's voice</label><div class="vrow"><select id="dTack"></select><button class="pm" id="dTVPrev" aria-label="Hear Tack's voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
         <div class="set" id="dCapSet"><label for="dCap">Captions</label><select id="dCap"><option value="pop">Bold pop</option><option value="clean">Clean</option></select></div>
       </div>
+      <button class="btn" id="dHear" style="margin-top:12px">▶ Hear Ledger &amp; Tack talk</button>
       <div class="housecard"><span class="sw" style="background:#231B12"></span><span class="sw" style="background:#6B4A2B"></span><span class="sw" style="background:#A8794A"></span><span class="sw" style="background:#C8281E"></span><span class="sw" style="background:#F2EEE4"></span><p>Locked Case File palette: ink, walnut, cork, evidence red, paper. Tack's voice plays a little faster so the two sound different.</p></div>
     </div>
   </section>
@@ -396,7 +397,7 @@ details.edit summary{cursor:pointer;font-weight:600}
         <div class="set"><label for="sCap">Captions</label><select id="sCap"><option value="pop">Bold pop</option><option value="story">Cinematic</option><option value="clean">Clean</option></select></div>
       </div>
       <details class="vgal" id="sVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="sVList"></div></details>
-      <p class="note" id="voiceNote">The voice runs on your device. The first video downloads it once (about 110 MB).</p>
+      <p class="note" id="voiceNote">The voice runs on your device. The first video downloads the HD voice once (about 185 MB).</p>
     </div>
   </section>
 
@@ -592,25 +593,48 @@ ADULT MODE (for an 18+ comedy audience, but still fully advertiser-friendly on Y
 }
 function duoRules(p) {
   if (!isDuo(p)) return "";
-  const faces = HOST.FACE_NAMES.join(", ");
+  const faces = HOST.FACE_NAMES.join(", "), long = p.kind === "long";
   return `
-THE HOSTS (this video is a two-hander, like a classic comedy double act):
-- LEDGER: tall, glasses, red tie. The patient explainer and straight man. Sharp, warm, a little dry. He carries every fact.
-- TACK: short, huge mustard cap. The curious one who asks the questions viewers are secretly thinking, but in a dumb, funny, oddly specific way ("So can I eat it?", "Is the moon a sun that gave up?"). Never mean, never stupid about everything: his logic is strange but internally consistent.
-Rules for the dynamic:
-- Every scene has "speaker": "ledger" or "tack". Ledger has about three lines for every Tack line. Never two Tack lines in a row.
-- Tack lines are 2 to 9 words and their "visual" is "" (the picture stays on the previous shot). Ledger lines carry the visuals.
-- Each Tack question must set up the next fact: his wrong guess is the doorway into the real answer, so the jokes move the explanation forward instead of stopping it.
-- Escalate Ledger's patience over the video (rule of three): first answer kind, second answer tighter, third time a deadpan beat.
-- Exactly once, Tack is accidentally right, and Ledger has to admit it. That reversal is the biggest laugh.
-- Tack gets the final line: a funny button that reframes the whole topic in one breath.
-- Facts stay true. The comedy comes from Tack's questions and Ledger's reactions, never from wrong information.
-- "ledgerFace" and "tackFace" on every scene: each one of ${faces}. Faces react to what was just said (Ledger: explain, proud, deadpan, smug, shocked; Tack: confused, shocked, terrified, dizzy, nervous, laughing, smug when he was right).
-- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".${adultRules(p)}`;
+THE HOSTS. This is a fast cartoon comedy double act, written like a sitcom cold open, not a lecture:
+- LEDGER: tall, glasses, red tie. The straight man. Smart, dry, quick, slowly losing his patience. Underreacts. Short sentences. Sometimes one word ("No." "Why." "Sit down.").
+- TACK: short, giant mustard cap. Confident and wrong. Asks the question the viewer is secretly thinking, but takes it somewhere absurdly specific ("So if I eat enough carrots, can I see through walls?"). His logic is stupid but internally consistent, and he commits to it 100%.
+HOW TO MAKE IT ACTUALLY FUNNY:
+- Open on a joke or a shocking fact, never a greeting. The first line must hook in under 2 seconds.
+- A laugh every 2 or 3 lines. Every Tack line is a joke; at least every other Ledger line has a dry tag, a comeback or a deadpan reaction on top of the fact.
+- Specific beats generic: odd numbers, weird concrete images, petty details ("a raccoon with a law degree" is funnier than "an animal").
+- Misdirection: set up an expectation, then swerve. Escalate Tack's theories (rule of three: plausible, weird, unhinged).
+- Tack's wrong guess is always the doorway into the real answer, so jokes move the explanation forward.
+- Ledger's patience drops over the video: kind, then tight, then a silent deadpan stare before he answers (mark that line "beat": true).
+- Exactly once, Tack is accidentally right and Ledger has to admit it (Ledger face "shocked", sfx "scratch"). That reversal is the biggest laugh.
+- Use a callback: the last line calls back to an earlier joke. Tack gets the final line.
+- Write for the ear: ${long ? "Ledger lines 6 to 22 words" : "Ledger lines 4 to 13 words"}, Tack lines 2 to 9 words. Interruptions are good ("Wait—"). Use "?!", "!" and "..." so the voices act it out. No stage directions in narration.
+- Facts stay true and checkable. The comedy comes from the characters, never from wrong information.
+FIELDS on every scene:
+- "speaker": "ledger" or "tack". Ledger has about two lines for every Tack line. Never two Tack lines in a row.
+- "ledgerFace" and "tackFace": each one of ${faces}. Faces react to what was just said (the listener reacts too).
+- "sfx": one of ${SFX_NAMES.join(", ")}. Comedy timing only: boom for a shocking reveal, scratch for the reversal, boing for a dumb idea, crickets before a deadpan answer, ding when someone is right, slide for a fail, pop for a quick question. "none" on most lines; never the same sfx twice in a row.
+- "beat": true only on the line where Ledger stares in silence before answering (about once per ${long ? "chapter" : "video"}).
+- "visual": for Ledger lines, the evidence that explains the fact. For about half of Tack's lines, his ridiculous theory drawn LITERALLY as a cutaway gag (e.g. "a carrot wearing X-ray goggles looking through a brick wall"); for his other lines, "" to stay on the previous picture.
+- Scene JSON keys: "speaker", "ledgerFace", "tackFace", "sfx", "beat", "narration", "visual", "motion", "fx", "emphasis".${adultRules(p)}`;
+}
+function punchUpPrompt(p, scenes, context) {
+  return `You are the punch-up writer on an animated comedy show. Rewrite this ${p.kind === "long" ? "scene" : "script"} for "Ledger & Tack" to be MUCH funnier and tighter, the way a writers' room punches up a draft. Topic: ${p.topic}
+${context || ""}
+${duoRules(p)}
+Punch-up checklist (apply all):
+- Cut every word that isn't a fact or a joke. Shorter lines hit harder.
+- Replace any generic joke with a more specific, surprising one. Make Tack's theories dumber and more committed; make Ledger drier.
+- Make sure there's a laugh every 2 or 3 lines, one reversal where Tack is accidentally right, a callback, and Tack lands the final line.
+- Keep every fact true. Keep roughly the same number of lines (you may add up to 2 or cut up to 2) and keep the order of the information.
+- Keep "visual" descriptions concrete; keep the Case File evidence style for Ledger's visuals.
+${GUARD}
+Draft (JSON):
+${JSON.stringify(scenes.map(s => ({ speaker: s.speaker, ledgerFace: s.lf, tackFace: s.tf, sfx: s.sfx || "none", beat: !!s.beat, narration: s.narration, visual: s.visual, emphasis: s.emphasis || "" })))}
+Reply with ONLY JSON: {"scenes":[{"speaker":"ledger","ledgerFace":"explain","tackFace":"confused","sfx":"none","beat":false,"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
 }
 function scriptPrompt(p, extra = "") {
   const story = p.mode === "story", wps = story ? 2.5 : 2.75, L = p.length;
-  const tw = Math.round(L * wps), n0 = Math.max(4, Math.round(L / 3.4)), n1 = Math.max(5, Math.round(L / 2.6));
+  const tw = Math.round(L * wps), n0 = Math.max(4, Math.round(L / (isDuo(p) ? 2.6 : 3.4))), n1 = Math.max(5, Math.round(L / (isDuo(p) ? 1.8 : 2.6)));
   const rules = story ? `- Scene 1 opens in the middle of the most tense moment. No setup, no greetings.
 - Short punchy sentences, one tense, vivid sensory detail. Escalate every 2 scenes. Land a twist in the final 20%.
 - End on a cliffhanger or chilling final line that makes people comment or come back for the next part.
@@ -624,7 +648,7 @@ Topic: ${p.topic}
 ${extra}
 ${rules}
 ${GUARD}${duoRules(p)}
-- About ${tw} words of narration in total. Use ${n0} to ${n1} scenes. Each scene is ONE short sentence or phrase (5 to 13 words) with its own illustration, so the picture changes every 2 to 3 seconds.
+- About ${tw} words of narration in total. Use ${n0} to ${n1} scenes. ${isDuo(p) ? "Each scene is ONE line of dialogue." : "Each scene is ONE short sentence or phrase (5 to 13 words) with its own illustration, so the picture changes every 2 to 3 seconds."}
 - Write numbers as words when spoken, no symbols or emojis in narration.
 - ${SCENE_FIELDS}
 - "emphasis": ${story ? "always empty" : "1 to 3 words to slam on screen (a key number, word or punchline) on about one scene in three, otherwise empty"}.
@@ -633,7 +657,7 @@ ${GUARD}${duoRules(p)}
 - "summary": two sentences on what happened, and "cliffhanger": the open question it ends on (for series continuity).
 
 Reply with ONLY JSON:
-{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused",' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
+{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused","sfx":"none","beat":false,' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
 }
 function outlinePrompt(p) {
   const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
@@ -663,19 +687,19 @@ All chapters (for continuity): ${o.chapters.map((c, i) => (i + 1) + ". " + c.tit
 This chapter: "${o.chapters[ci].title}" — ${o.chapters[ci].beats}
 ${o.character ? "Recurring character: " + o.character : ""}
 ${GUARD}${duoRules(p)}
-- About ${w} words of narration in ${ns} scenes. Each scene is 1 to 3 sentences (12 to 35 words) and gets its own illustration.
+- About ${w} words of narration in ${isDuo(p) ? Math.round(ns * 2.2) : ns} scenes. ${isDuo(p) ? "Each scene is ONE line of dialogue between Ledger and Tack." : "Each scene is 1 to 3 sentences (12 to 35 words) and gets its own illustration."}
 ${ci === 0 ? "- Scene 1 narration starts with the cold-open hook, word for word.\n" : ""}- ${ci < n - 1 ? "End the chapter on a line that pulls viewers into the next chapter." : "Land the payoff of the hook" + (p.mode === "doc" ? " and end with one memorable closing line." : " with the twist, then a final haunting line.")}
 - Write numbers as words when spoken. No symbols or emojis in narration.
 - ${SCENE_FIELDS_LONG}
 - "visual" must fit the channel's house style: one clear focal subject, calm composition, no spectacle for its own sake.
 - "emphasis": a 1 to 3 word on-screen stamp for at most one scene in this chapter (a key date, number or term), otherwise empty.
-Reply with ONLY JSON: {"scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused",' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
+Reply with ONLY JSON: {"scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused","sfx":"none","beat":false,' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
 }
 function svgPrompt(p, sc, i) {
   const H = p.kind === "long", W = H ? 1920 : 1080, Hh = H ? 1080 : 1920;
   const prev = p.scenes[i - 1], next = p.scenes[i + 1];
   return `You are a top illustrator for animated YouTube channels. Draw ONE full-bleed ${H ? "horizontal 16:9" : "vertical 9:16"} illustration as an SVG, built in depth layers so it can be animated with parallax.
-Shot ${i + 1} of ${p.scenes.length}: ${sc.visual}
+${isDuo(p) && sc.speaker === "tack" ? "This shot is TACK'S THEORY: a silly cutaway gag showing his wrong idea literally, played completely straight like serious evidence (that is what makes it funny). Same Case File paper style. " : ""}Shot ${i + 1} of ${p.scenes.length}: ${sc.visual}
 Narration over this shot: "${sc.narration}"
 ${prev ? "Previous shot (continuity): " + prev.visual : ""}
 ${next ? "Next shot: " + next.visual : ""}
@@ -700,6 +724,8 @@ Reply with only the SVG code.`;
 }
 /* ================= Voice engine (Kokoro, runs in the browser) ================= */
 const KB = "./kokoro/";
+/* HD voice: Kokoro-82M fp16 (cleaner than q8, same speed on wasm), shipped as 14 parts. */
+const VKEY = "kokoro-fp16-v1", MODEL_BYTES = 163234740, MODEL_PARTS = 14;
 const HF = "huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/";
 const realFetch = window.fetch.bind(window);
 let ttsP = null, model = null, wasmBlob = null;
@@ -737,24 +763,35 @@ function installShims() {
 function loadVoice(onProgress = () => {}) {
   if (ttsP) return ttsP;
   ttsP = (async () => {
-    let cached = await idb.get("kokoro-q8-v1");
+    let cached = await idb.get(VKEY);
     if (cached && cached.model && cached.wasm) { model = cached.model; wasmBlob = cached.wasm; onProgress(1, true); }
     else {
-      const TOTAL = 92361116 + 21596019; let got = 0;
+      idb.del("kokoro-q8-v1");
+      const TOTAL = MODEL_BYTES + 21596019; let got = 0;
       const on = b => { got += b; onProgress(Math.min(1, got / TOTAL)); };
-      [model, wasmBlob] = await Promise.all([fetchParts("m", 8, on), fetchParts("w", 2, on)]);
-      if (model.size !== 92361116) throw new Error("The voice model didn't download completely. Try again.");
-      idb.put("kokoro-q8-v1", { model, wasm: wasmBlob });
+      [model, wasmBlob] = await Promise.all([fetchParts("f", MODEL_PARTS, on), fetchParts("w", 2, on)]);
+      if (model.size !== MODEL_BYTES) throw new Error("The voice model didn't download completely. Try again.");
+      idb.put(VKEY, { model, wasm: wasmBlob });
     }
     installShims();
     const mod = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js");
-    return await mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "q8", device: "wasm" });
+    return await mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "fp16", device: "wasm" });
   })();
   ttsP.catch(() => { ttsP = null; });
   return ttsP;
 }
-function warmVoice() { idb.get("kokoro-q8-v1").then(c => { if (c && c.model) loadVoice().catch(() => {}); }); }
-async function speak(tts, text, voice, speed) { const a = await tts.generate(text, { voice, speed }); return a.audio; }
+function warmVoice() { idb.get(VKEY).then(c => { if (c && c.model) loadVoice().catch(() => {}); }); }
+/* Kokoro pads every line with silence; trimming it is the single biggest pacing win. */
+function trimSilence(a, padIn = 0.03, padOut = 0.06) {
+  const th = 0.012, n = a.length; let i0 = 0, i1 = n - 1;
+  while (i0 < n && Math.abs(a[i0]) < th) i0++;
+  while (i1 > i0 && Math.abs(a[i1]) < th) i1--;
+  if (i0 >= i1) return a;
+  return a.slice(Math.max(0, i0 - Math.round(padIn * 24000)), Math.min(n, i1 + Math.round(padOut * 24000)));
+}
+/* Cartoon voice: resample so the voice is higher and quicker (like speeding up tape). */
+function pitchUp(a, r) { if (!r || r === 1) return a; const n = Math.floor(a.length / r), o = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, k = Math.floor(x), f = x - k; o[i] = a[k] * (1 - f) + (a[k + 1] || 0) * f; } return o; }
+async function speak(tts, text, voice, speed, opts = {}) { const a = await tts.generate(text, { voice, speed }); return pitchUp(trimSilence(a.audio), opts.pitch || 1); }
 
 /* ================= Audio: music + sfx + mix ================= */
 let ac = null; function getAC() { if (!ac) { const A = window.AudioContext || window.webkitAudioContext; ac = new A(); } return ac; }
@@ -763,7 +800,44 @@ function kick(oc, out, t, amp) { const o = oc.createOscillator(), g = oc.createG
 let noiseCache = null;
 function noiseBuf(oc, secs) { if (noiseCache && noiseCache.sampleRate === oc.sampleRate && noiseCache.duration >= secs) return noiseCache; const b = oc.createBuffer(1, Math.ceil(oc.sampleRate * secs), oc.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; noiseCache = b; return b; }
 function whoosh(oc, out, t, amp) { const s = oc.createBufferSource(); s.buffer = noiseBuf(oc, 0.6); const f = oc.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3500, t + 0.45); const g = oc.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.3); g.gain.linearRampToValueAtTime(0, t + 0.55); s.connect(f).connect(g).connect(out); s.start(t); }
+/* Comedy SFX, all synthesized (no samples, nothing copyrighted). */
+const SFX = {
+  pop(oc, out, t, a = 0.5) { const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.05); g.gain.setValueAtTime(a * 0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09); o.connect(g).connect(out); o.start(t); o.stop(t + 0.1); },
+  boom(oc, out, t, a = 0.9) { const o = oc.createOscillator(), g = oc.createGain(), ws = oc.createWaveShaper(); const c = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; c[i] = Math.tanh(3 * x); } ws.curve = c;
+    o.type = "sine"; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.6); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + 1.1); o.connect(ws).connect(g).connect(out); o.start(t); o.stop(t + 1.15);
+    const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.6); const lp = oc.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900; const ng = oc.createGain(); ng.gain.setValueAtTime(a * 0.5, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.25); n.connect(lp).connect(ng).connect(out); n.start(t); n.stop(t + 0.3); },
+  boing(oc, out, t, a = 0.45) { const o = oc.createOscillator(), g = oc.createGain(), l = oc.createOscillator(), lg = oc.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(420, t + 0.35);
+    l.frequency.value = 22; lg.gain.setValueAtTime(60, t); lg.gain.exponentialRampToValueAtTime(1, t + 0.5); l.connect(lg).connect(o.frequency); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.55); o.connect(g).connect(out); o.start(t); l.start(t); o.stop(t + 0.6); l.stop(t + 0.6); },
+  scratch(oc, out, t, a = 0.5) { const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.6); const bp = oc.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 6; bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(2600, t + 0.12); bp.frequency.exponentialRampToValueAtTime(300, t + 0.3);
+    const g = oc.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.02); g.gain.linearRampToValueAtTime(a * 0.8, t + 0.25); g.gain.linearRampToValueAtTime(0, t + 0.32); n.connect(bp).connect(g).connect(out); n.start(t); n.stop(t + 0.35); },
+  ding(oc, out, t, a = 0.35) { [1, 2.76, 5.4].forEach((m, i) => { const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.value = 1320 * m; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a / (i + 1), t + 0.005); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.4 / (i + 1)); o.connect(g).connect(out); o.start(t); o.stop(t + 1.5); }); },
+  crickets(oc, out, t, a = 0.18, dur = 1.2) { for (let k = 0; k < dur / 0.42; k++) for (let j = 0; j < 3; j++) { const tt = t + k * 0.42 + j * 0.05, o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.value = 4300; g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(a, tt + 0.008); g.gain.linearRampToValueAtTime(0, tt + 0.035); o.connect(g).connect(out); o.start(tt); o.stop(tt + 0.04); } },
+  whoosh(oc, out, t, a = 0.12) { whoosh(oc, out, t, a); },
+  slide(oc, out, t, a = 0.35) { const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(160, t + 0.45); g.gain.setValueAtTime(a, t); g.gain.linearRampToValueAtTime(0, t + 0.5); o.connect(g).connect(out); o.start(t); o.stop(t + 0.52); }
+};
+const SFX_NAMES = ["none", "pop", "boom", "boing", "scratch", "ding", "crickets", "whoosh", "slide"];
+/* Default comedy SFX from the faces, when the writer didn't pick one. */
+function sfxFor(s, prev) {
+  if (s.sfx && SFX_NAMES.includes(s.sfx)) return s.sfx;
+  const f = s.speaker === "tack" ? s.tf : s.lf, other = s.speaker === "tack" ? s.lf : s.tf;
+  if (f === "shocked" || f === "terrified" || other === "shocked") return "boom";
+  if (f === "dizzy" || f === "laughing") return "boing";
+  if (s.speaker === "tack") return "pop";
+  return "none";
+}
+/* Bouncy comedy bed for Ledger & Tack: staccato bass, plucks, light snap. */
+function comedyMusic(oc, out, total, p) {
+  const bpm = 118 * p.look.tempo, beat = 60 / bpm, tr = p.look.key;
+  const prog = [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]];
+  for (let t = 0, bar = 0; t < total + 0.5; t += beat * 4, bar++) {
+    const ch = prog[bar % 4].map(n => n + tr);
+    [0, 1.5, 2, 3].forEach((b, k) => { const tt = t + b * beat, o = oc.createOscillator(), g = oc.createGain(); o.type = "triangle"; o.frequency.value = mtof(ch[0] - 12 + (k === 2 ? 7 : 0)); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.22, tt + 0.008); g.gain.exponentialRampToValueAtTime(0.001, tt + beat * 0.45); o.connect(g).connect(out); o.start(tt); o.stop(tt + beat * 0.5); });
+    [0.5, 1, 2.5, 3.5].forEach((b, k) => { const tt = t + b * beat, o = oc.createOscillator(), g = oc.createGain(); o.type = "square"; o.frequency.value = mtof(ch[(k + bar) % 3] + 12); const lp = oc.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200; g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.035, tt + 0.004); g.gain.exponentialRampToValueAtTime(0.0005, tt + 0.16); o.connect(lp).connect(g).connect(out); o.start(tt); o.stop(tt + 0.18); });
+    [1, 3].forEach(b => { const tt = t + b * beat, n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.6); const hp = oc.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2500; const g = oc.createGain(); g.gain.setValueAtTime(0.09, tt); g.gain.exponentialRampToValueAtTime(0.001, tt + 0.07); n.connect(hp).connect(g).connect(out); n.start(tt); n.stop(tt + 0.08); });
+  }
+}
 function music(oc, out, total, p) {
+  if (p.duo) return comedyMusic(oc, out, total, p);
   const look = p.look, dark = p.mode === "story" || p.mode === "lstory", long = p.kind === "long", tr = look.key;
   const bpm = (dark ? 66 : long ? 84 : 104) * look.tempo, beat = 60 / bpm, bar = beat * 4, len = dark || long ? bar * 2 : bar;
   const progs = dark ? [[[57, 60, 64], [53, 57, 60], [48, 52, 55], [52, 56, 59]], [[57, 60, 64], [55, 59, 62], [53, 57, 60], [52, 55, 59]]]
@@ -786,12 +860,23 @@ async function mixAudio(p, clips) {
   const oc = new OfflineAudioContext(CHN, Math.ceil((total + 0.8) * SR), SR);
   const comp = oc.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.005; comp.release.value = 0.2; comp.connect(oc.destination);
   const vbus = oc.createGain(); vbus.gain.value = 1.35; vbus.connect(comp);
-  clips.forEach((clip, i) => { const seg = p.timeline.segs[i]; const b = oc.createBuffer(1, clip.length, 24000); b.copyToChannel(clip, 0); const s = oc.createBufferSource(); s.buffer = b; s.connect(vbus); s.start(seg.vStart); });
-  const mv = (p.mode === "story" || p.mode === "lstory") ? 0.5 : long ? 0.34 : 0.42;
-  const mbus = oc.createGain(); mbus.gain.setValueAtTime(0, 0); mbus.gain.linearRampToValueAtTime(mv, 0.8); mbus.gain.setValueAtTime(mv, Math.max(1, total - 0.6)); mbus.gain.linearRampToValueAtTime(0, total + 0.6); mbus.connect(comp);
+  /* Voice polish: clean low end, presence for clarity on phone speakers, a little warmth. */
+  const hp = oc.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 85; const pres = oc.createBiquadFilter(); pres.type = "peaking"; pres.frequency.value = 3200; pres.Q.value = 0.9; pres.gain.value = 3.5;
+  const warm = oc.createBiquadFilter(); warm.type = "lowshelf"; warm.frequency.value = 220; warm.gain.value = 1.5; const vcomp = oc.createDynamicsCompressor(); vcomp.threshold.value = -22; vcomp.ratio.value = 4; vcomp.attack.value = 0.003; vcomp.release.value = 0.12;
+  hp.connect(warm).connect(pres).connect(vcomp).connect(vbus);
+  clips.forEach((clip, i) => { const seg = p.timeline.segs[i]; const b = oc.createBuffer(1, clip.length, 24000); b.copyToChannel(clip, 0); const s = oc.createBufferSource(); s.buffer = b; s.connect(hp); s.start(seg.vStart); });
+  const mv = p.duo ? (long ? 0.3 : 0.36) : (p.mode === "story" || p.mode === "lstory") ? 0.5 : long ? 0.34 : 0.42;
+  const mbus = oc.createGain(); mbus.gain.setValueAtTime(0, 0); mbus.gain.linearRampToValueAtTime(mv, p.duo ? 0.2 : 0.8);
+  if (p.duo) { const lo = mv * 0.5; p.timeline.segs.forEach(sg => { mbus.gain.setTargetAtTime(lo, Math.max(0.21, sg.vStart - 0.05), 0.04); mbus.gain.setTargetAtTime(mv, sg.vEnd + 0.02, 0.12); }); }
+  mbus.gain.setValueAtTime(mv, Math.max(1, total - 0.6)); mbus.gain.linearRampToValueAtTime(0, total + 0.6); mbus.connect(comp);
   music(oc, mbus, total, p);
   const sfx = oc.createGain(); sfx.connect(comp);
-  p.timeline.segs.forEach((s, i) => { if (i && (!long || s.s.chStart)) whoosh(oc, sfx, Math.max(0, s.start - 0.3), long ? 0.06 : (p.mode === "story" ? 0.05 : 0.08)); });
+  if (p.duo) {
+    p.timeline.segs.forEach((sg, i) => { const k = sfxFor(sg.s, p.timeline.segs[i - 1] && p.timeline.segs[i - 1].s);
+      if (k === "crickets") SFX.crickets(oc, sfx, Math.max(0, sg.vStart - (sg.beat || 0.6) + 0.05), 0.16, Math.max(0.5, (sg.beat || 0.6) - 0.05));
+      else if (k !== "none" && SFX[k]) SFX[k](oc, sfx, Math.max(0, sg.vStart - (k === "boom" || k === "scratch" ? 0.06 : 0.02)));
+      if (long && sg.s.chStart && i) whoosh(oc, sfx, Math.max(0, sg.start - 0.3), 0.08); });
+  } else p.timeline.segs.forEach((s, i) => { if (i && (!long || s.s.chStart)) whoosh(oc, sfx, Math.max(0, s.start - 0.3), long ? 0.06 : (p.mode === "story" ? 0.05 : 0.08)); });
   return oc.startRendering();
 }
 
@@ -940,12 +1025,14 @@ function capStyle(p) {
 function drawCaption(p, seg, t) {
   if (p.cap === "none") return;
   const st = capStyle(p); const ws = words(p.adult ? maskStrong(seg.s.narration) : seg.s.narration); if (!ws.length) return;
+  if (p.duo) { const tk = seg.s.speaker === "tack"; if (st.box) { if (tk) st.fill = "#FFD25A"; } else { st.fill = tk ? "#FFD25A" : "#FFFFFF"; st.hi = tk ? "#FFFFFF" : (p.look && p.look.hi) || "#F7E36A"; }
+    if (p.kind !== "long") { const lay = hostLayout(seg, t); st.y = lay === "two" ? 0.5 : 0.33; } }
   const a0 = seg.vStart, dur = Math.max(0.3, seg.vEnd - a0); const wt = ws.map(w => w.length + 3), tot = wt.reduce((x, y) => x + y, 0);
   let acc = 0, act = ws.length - 1, wS = a0; const loc = t - a0;
   if (loc < 0) act = 0; else for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (loc < acc / tot * dur) { act = i; wS = a0 + s0; break; } }
   if (p.cap === "sub" && (t > seg.vEnd + 0.25 || t < a0 - 0.1)) return;
   const c0 = Math.floor(act / st.chunk) * st.chunk;
-  ctx.font = st.font; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; const sp = ctx.measureText(" ").width;
+  ctx.font = st.font; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; const sp = ctx.measureText(" ").width + (p.cap === "pop" ? 12 : 0);
   const items = ws.slice(c0, c0 + st.chunk).map((w, j) => { const tx = st.up ? w.toUpperCase() : w; return { tx, i: c0 + j, w: ctx.measureText(tx).width + sp }; });
   const lines = wrapW(items, Math.min(CW * 0.82, st.maxW || 9999)); const y0 = CH * st.y - (lines.length - 1) * st.lh / 2;
   lines.forEach((ln, li) => {
@@ -1001,8 +1088,15 @@ function drawChapterCard(p, t) {
 }
 const TRANS = { fade: 0.45, dip: 0.6, whip: 0.24, zoom: 0.26, punch: 0, flash: 0, none: 0 };
 let lastScene = -1;
+function shakeAt(p, t) {
+  if (!p.duo || !p.timeline) return null; const sg = p.timeline.segs.find(x => t >= x.vStart - 0.05 && t < x.vStart + 0.4); if (!sg) return null;
+  const s = sg.s, k = sfxFor(s), f = s.speaker === "tack" ? s.tf : s.lf; if (!(k === "boom" || k === "scratch" || f === "shocked" || f === "terrified")) return null;
+  const u = clamp((t - sg.vStart + 0.05) / 0.45, 0, 1), a = (1 - u) * (ORI === "h" ? 16 : 22);
+  return { x: Math.sin(t * 93) * a, y: Math.cos(t * 71) * a * 0.8 };
+}
 function drawFrame(p, t) {
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+  const sh = shakeAt(p, t);
+  ctx.setTransform(1, 0, 0, 1, sh ? sh.x : 0, sh ? sh.y : 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#07060a"; ctx.fillRect(0, 0, CW, CH);
   const tl = p.timeline, shots = tl.shots;
   let i = shots.findIndex(s => t < s.t1); if (i < 0) i = shots.length - 1;
@@ -1024,29 +1118,39 @@ function drawFrame(p, t) {
   grade(p, t);
   drawHosts(p, seg, t);
   if (cur.inFlash && t - cur.t0 < 0.12) { ctx.fillStyle = `rgba(255,255,255,${0.55 * (1 - (t - cur.t0) / 0.12)})`; ctx.fillRect(0, 0, CW, CH); }
-  if (!(p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T)) drawCaption(p, seg, t);
+  if (p.duo || !(p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T)) drawCaption(p, seg, t);
   drawEmphasis(p, seg, t);
   drawHook(p, t);
   drawChapterCard(p, t);
 }
+function envOf(c) { const step = 800, n = Math.ceil(c.length / step), e = new Float32Array(n); let mx = 1e-6;
+  for (let k = 0; k < n; k++) { let q = 0; const a = k * step, b = Math.min(c.length, a + step); for (let i = a; i < b; i++) q += c[i] * c[i]; e[k] = Math.sqrt(q / Math.max(1, b - a)); if (e[k] > mx) mx = e[k]; }
+  for (let k = 0; k < n; k++) e[k] /= mx; return e; }
 function buildTimeline(p, clips) {
-  const long = p.kind === "long", gap = MODES[p.mode].gap; let t = long ? 0.6 : 0.25; const segs = [];
-  p.scenes.forEach((s, i) => { if (long && s.chStart && i) t += 0.9; if (long && i === 0) t += 3.2; const d = clips[i].length / 24000; segs.push({ s, i, vStart: t, vEnd: t + d, start: 0, end: 0 }); t += d + gap; });
+  const long = p.kind === "long", duo = !!p.duo, gap = duo ? (long ? 0.14 : 0.06) : MODES[p.mode].gap; let t = long ? 0.6 : duo ? 0.08 : 0.25; const segs = [];
+  p.scenes.forEach((s, i) => {
+    if (long && s.chStart && i) t += 0.9; if (long && i === 0) t += 3.2;
+    const prev = p.scenes[i - 1], d = clips[i].length / 24000;
+    /* The comedy beat: Ledger stares in silence after a dumb question before he answers. */
+    const beat = duo && i > 0 && (s.beat === true || (prev && prev.speaker === "tack" && s.speaker !== "tack" && s.lf === "deadpan")) ? 0.6 : 0;
+    t += beat;
+    const layout = !duo ? "" : s.speaker === "tack" ? "tack" : beat ? "react" : "two";
+    segs.push({ s, i, vStart: t, vEnd: t + d, start: 0, end: 0, beat, layout, env: duo ? envOf(clips[i]) : null }); t += d + gap; });
   const total = t + (long ? 1.6 : 0.6);
-  segs.forEach((sg, i) => { sg.start = i === 0 ? 0 : (segs[i - 1].vEnd + sg.vStart) / 2; });
+  segs.forEach((sg, i) => { sg.start = i === 0 ? 0 : sg.beat ? segs[i - 1].vEnd + 0.04 : (segs[i - 1].vEnd + sg.vStart) / 2; });
   segs.forEach((sg, i) => { sg.end = i < segs.length - 1 ? segs[i + 1].start : total; });
-  const dark = darkMode(p), cyc = long ? ["fade", "fade", "fade"] : dark ? ["fade", "fade", "dip"] : TSETS[(p.look && p.look.tset) || 0];
+  const dark = darkMode(p), cyc = duo ? ["punch", "whip", "punch", "zoom", "punch", "flash"] : long ? ["fade", "fade", "fade"] : dark ? ["fade", "fade", "dip"] : TSETS[(p.look && p.look.tset) || 0];
   const shots = [];
   segs.forEach((sg, i) => {
     const d = sg.end - sg.start, m = sg.s.motion;
-    const n = long ? clamp(Math.round(d / 3.6), 1, 4) : (d > 5.4 ? 3 : d > 2.7 ? 2 : 1);
+    const n = duo ? (d > (long ? 5 : 3.4) ? 2 : 1) : long ? clamp(Math.round(d / 3.6), 1, 4) : (d > 5.4 ? 3 : d > 2.7 ? 2 : 1);
     const base = ["wide", "close", "medium", "close"], order = n === 1 ? ["wide"] : (i % 2 ? base.slice(0, n).reverse() : base.slice(0, n));
     for (let j = 0; j < n; j++) {
       const pan = m === "pan-left" ? -1 : m === "pan-right" ? 1 : ((i + j) % 2 ? 1 : -1) * 0.6;
       const dir = m === "zoom-out" ? -1 : m === "zoom-in" ? 1 : ((i + j) % 2 ? 1 : -1);
       const nextScene = segs[i + 1];
-      const trans = j < n - 1 ? (dark || long ? "fade" : "punch") : (!nextScene ? "none" : long && nextScene.s.chStart ? "dip" : cyc[i % cyc.length]);
-      shots.push({ calm: long, sid: aid(sg.s), si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
+      const trans = j < n - 1 ? (duo ? "punch" : dark || long ? "fade" : "punch") : (!nextScene ? "none" : long && nextScene.s.chStart ? "dip" : cyc[i % cyc.length]);
+      shots.push({ calm: long && !duo, sid: aid(sg.s), si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
     }
   });
   shots.forEach((s, k) => { const prev = shots[k - 1]; if (prev && prev.trans === "punch") s.inPunch = true; if (prev && prev.trans === "flash") s.inFlash = true; });
@@ -1131,25 +1235,63 @@ const HOST = (() => {
   const FACE_NAMES = Object.keys(FACES);
   return { sprite, build, BOX, RS, FACE_NAMES };
 })();
+/* ---- Hosts on screen: vector-drawn every frame (crisp at any size), lip-synced to the audio ---- */
+const hostPaths = new Map();
+const hpath = d => { let q = hostPaths.get(d); if (!q) { q = new Path2D(d); if (hostPaths.size > 600) hostPaths.clear(); hostPaths.set(d, q); } return q; };
+function drawChar(who, face, pose, talk, hx, hy, S, sq, rot) {
+  ctx.save(); ctx.translate(hx, hy); if (rot) ctx.rotate(rot); ctx.scale(S, S * (sq || 1)); ctx.translate(-200, -180);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (const o of HOST.build(who, face, pose, talk)) { const q = hpath(o.d); if (o.ty) { ctx.save(); ctx.translate(0, o.ty); }
+    if (o.fill !== "none") { ctx.fillStyle = o.fill; ctx.fill(q); } if (o.stroke !== "none" && o.sw) { ctx.strokeStyle = o.stroke; ctx.lineWidth = o.sw; ctx.stroke(q); } if (o.ty) ctx.restore(); }
+  ctx.restore();
+}
+function ampAt(seg, t) { if (!seg.env || t < seg.vStart || t > seg.vEnd) return 0; return seg.env[Math.min(seg.env.length - 1, Math.max(0, Math.floor((t - seg.vStart) * 30)))] || 0; }
+function drawBurst(cx, cy, t, adult) {
+  const R = Math.hypot(CW, CH), n = 20, a0 = t * 0.25;
+  ctx.save(); ctx.fillStyle = adult ? "#2A0E0C" : "#E7C873"; ctx.globalAlpha = 0.92; ctx.fillRect(0, 0, CW, CH);
+  ctx.fillStyle = adult ? "#5A1A16" : "#F2EEE4"; ctx.globalAlpha = 0.9;
+  for (let i = 0; i < n; i += 2) { const a = a0 + i / n * Math.PI * 2, b = a0 + (i + 1) / n * Math.PI * 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.lineTo(cx + Math.cos(b) * R, cy + Math.sin(b) * R); ctx.closePath(); ctx.fill(); }
+  const v = ctx.createRadialGradient(cx, cy, Math.min(CW, CH) * 0.3, cx, cy, R * 0.6); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.35)"); ctx.globalAlpha = 1; ctx.fillStyle = v; ctx.fillRect(0, 0, CW, CH);
+  ctx.restore();
+}
+/* Layouts: "two" = both hosts over the art; "tack" = Tack close-up over his own cutaway gag; "react" = Ledger close-up on a comic burst (the deadpan beat). */
+function hostLayout(seg, t) { if (seg.layout === "react" && t < seg.vStart + Math.min(0.9, (seg.vEnd - seg.vStart) * 0.45)) return "react"; return seg.layout === "tack" ? "tack" : "two"; }
 function drawHosts(p, seg, t) {
   if (!p.duo) return;
-  const s = seg.s, sp = s.speaker === 'tack' ? 'tack' : 'ledger';
-  const speaking = t >= seg.vStart && t <= seg.vEnd;
-  const open = speaking && Math.floor(t * 8.5) % 2 === 0;
-  const lf = s.lf || (sp === 'ledger' ? 'explain' : 'deadpan'), tf = s.tf || (sp === 'tack' ? 'confused' : 'confused');
-  const lp = sp === 'ledger' ? (s.lp || 'explain') : (lf === 'deadpan' ? 'facepalm' : 'stand');
-  const tp = sp === 'tack' ? (s.tp || 'handUp') : (tf === 'shocked' || tf === 'terrified' ? 'armsUp' : tf === 'smug' ? 'shrug' : 'stand');
-  const H = ORI === 'h', S = H ? 0.78 : 1.02, base = CH - (H ? 10 : 20);
-  const draw = (who, face, pose, x, bob, crop) => {
-    const c = HOST.sprite(who, face, pose, who === sp && open), [bx, by, bw, bh] = HOST.BOX[who];
-    const w = bw * S, hh = bh * S; ctx.drawImage(c, x, base - hh + bob + crop * S, w, hh);
-  };
-  const bobL = sp === 'ledger' && speaking ? Math.sin(t * 9) * 5 : Math.sin(t * 1.6) * 2;
-  const bobT = sp === 'tack' && speaking ? Math.abs(Math.sin(t * 11)) * -10 : Math.sin(t * 1.9 + 1) * 2;
-  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
-  draw('ledger', lf, lp, H ? 0 : -40, bobL, H ? 170 : 300);
-  draw('tack', tf, tp, CW - HOST.BOX.tack[2] * S + (H ? 10 : 30), bobT, 0);
-  ctx.restore();
+  const s = seg.s, sp = s.speaker === "tack" ? "tack" : "ledger", H = ORI === "h";
+  const amp = ampAt(seg, t), talk = amp > 0.18, lay = hostLayout(seg, t);
+  const lf = s.lf || (sp === "ledger" ? "explain" : "deadpan"), tf = s.tf || "confused";
+  const lp = sp === "ledger" ? (s.lp || (lf === "deadpan" ? "facepalm" : lf === "shocked" ? "armsUp" : (seg.i % 3 === 1 ? "point" : "explain"))) : (lf === "deadpan" ? "facepalm" : "stand");
+  const tp = sp === "tack" ? (tf === "shocked" || tf === "terrified" ? "armsUp" : tf === "smug" || tf === "laughing" ? "shrug" : "handUp") : (tf === "shocked" || tf === "terrified" ? "armsUp" : tf === "smug" ? "shrug" : "stand");
+  const since = t - (lay === "react" ? seg.vStart - (seg.beat || 0) : seg.vStart), pop = since >= 0 && since < 0.16 ? 1 + 0.12 * Math.sin(since / 0.16 * Math.PI) : 1;
+  const bob = k => Math.sin(t * k) * 2;
+  if (lay === "react") {
+    const hx = H ? CW * 0.5 : CW * 0.5, hy = H ? CH * 0.6 : CH * 0.62, S2 = (H ? 1.75 : 2.5) * pop;
+    drawBurst(hx, hy - (H ? 40 : 80), t, p.adult);
+    drawChar("ledger", lf, "stand", sp === "ledger" && talk, hx, hy + bob(1.4), S2, 1 + (sp === "ledger" ? amp * 0.03 : 0));
+    return;
+  }
+  if (lay === "tack") {
+    const hx = H ? CW * 0.79 : CW * 0.66, hy = H ? CH * 0.66 : CH * 0.74, S2 = (H ? 1.45 : 1.95) * pop;
+    ctx.save(); ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(hx, CH - 6, 260 * S2 / 2, 26, 0, 0, 7); ctx.fill(); ctx.restore();
+    drawChar("tack", tf, tp, talk, hx, hy - Math.abs(Math.sin(t * 11)) * 10 * Math.min(1, amp * 2), S2, 1 + amp * 0.05, Math.sin(t * 7) * 0.03 * Math.min(1, amp * 2));
+    if (!s.artOf) theoryTag(p, t - seg.vStart);
+    return;
+  }
+  const LS = H ? 0.95 : 1.32, TS = H ? 0.95 : 1.26;
+  const L = H ? { x: 215, y: 640 } : { x: 250, y: 1430 }, T = H ? { x: 1700, y: 828 } : { x: 832, y: 1588 };
+  const la = sp === "ledger" ? amp : 0, ta = sp === "tack" ? amp : 0;
+  ctx.save(); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(T.x, CH - 8, 120 * TS, 18, 0, 0, 7); ctx.fill(); ctx.restore();
+  drawChar("ledger", lf, lp, sp === "ledger" && talk, L.x, L.y + bob(1.6) - la * 8, LS * (sp === "ledger" ? pop : 1), 1 + la * 0.04);
+  drawChar("tack", tf, tp, sp === "tack" && talk, T.x, T.y + bob(1.9) - Math.abs(Math.sin(t * 11)) * 10 * Math.min(1, ta * 2), TS * (sp === "tack" ? pop : 1), 1 + ta * 0.05);
+}
+function theoryTag(p, u) {
+  if (u < -0.05) return; const a = Math.min(1, (u + 0.05) / 0.12), H = ORI === "h";
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(H ? 70 : 54, H ? 70 : 140); ctx.rotate(-0.05); ctx.scale(H ? 1.1 : 1.45, H ? 1.1 : 1.45);
+  ctx.font = "900 46px Archivo, 'Arial Black', sans-serif"; const txt = "TACK'S THEORY", w = ctx.measureText(txt).width + 48;
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(8, 10, w, 74); ctx.fillStyle = "#F2EEE4"; ctx.fillRect(0, 0, w, 74);
+  ctx.fillStyle = "#C8281E"; ctx.beginPath(); ctx.arc(w / 2, 4, 10, 0, 7); ctx.fill();
+  ctx.fillStyle = "#231B12"; ctx.textBaseline = "middle"; ctx.fillText(txt, 24, 40); ctx.restore();
 }
 
 /* ================= Storage (account sync when available, this device otherwise) ================= */
@@ -1188,7 +1330,7 @@ function projDoc(p) {
   if (!p.createdAt) p.createdAt = Date.now();
   const d = { id: p.id, createdAt: p.createdAt, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
     chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
-    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, adult: !!p.adult, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "", sfx: s.sfx || "", beat: !!s.beat, gag: !!s.gag })), duo: !!p.duo, adult: !!p.adult, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
   if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
   return d;
 }
@@ -1296,7 +1438,7 @@ function renderDuo() {
   document.body.classList.toggle("adult", !!S.dadult);
   $("#dfShort").setAttribute("aria-pressed", String(S.dfmt !== "long")); $("#dfLong").setAttribute("aria-pressed", String(S.dfmt === "long"));
   $("#dNiches").replaceChildren(...DUO_NICHES.map(n => h("button", { class: "chip", "aria-pressed": String(n === S.dniche), onclick: () => { S.dniche = n; saveSettings(); renderDuo(); loadDIdeas(true); } }, n)));
-  const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
+  const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[20, "20 seconds (snappiest)"], [30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
   fill($("#dLen"), lens.map(([v, l]) => [String(v), l]), String(L ? S.dllen : S.dlen));
   fill($("#dVoice"), VOICES, S.dvoice); fill($("#dTack"), VOICES, S.tackVoice); $("#dCapSet").hidden = L; $("#dCap").value = S.dcap;
   drawDuoHero(); renderDIdeas(); updateGo();
@@ -1341,6 +1483,20 @@ $("#dVoice").onchange = e => { S.dvoice = e.target.value; saveSettings(); };
 $("#dTack").onchange = e => { S.tackVoice = e.target.value; saveSettings(); };
 $("#dCap").onchange = e => { S.dcap = e.target.value; saveSettings(); };
 $("#dLVPrev").onclick = () => playSample(S.dvoice); $("#dTVPrev").onclick = () => playSample(S.tackVoice);
+/* Hear the real duo voices (HD model, Tack pitched up), the way they sound in videos. */
+$("#dHear").onclick = async e => {
+  const btn = e.currentTarget; if (btn.dataset.busy) return; btn.dataset.busy = "1"; const keep = btn.textContent; btn.textContent = "Loading the HD voices…";
+  const lines = S.dadult ? [["tack", "Wait. So my rent is just... a dragon tax?!"], ["ledger", "Unfortunately? Yes. A very organized dragon."]] : [["tack", "Wait. So onions are just... sad?!"], ["ledger", "No. They're chemically attacking your face."]];
+  try {
+    const tts = await loadVoice((f, c) => { if (!c) btn.textContent = "Downloading the HD voice once · " + Math.round(f * 100) + "%"; });
+    btn.textContent = "Recording…"; const P2 = { duo: true, voice: S.dvoice, tackVoice: S.tackVoice, mode: "explainer" };
+    const clips = []; for (const [sp, tx] of lines) clips.push(await cpuLock(() => speakLine(tts, P2, { speaker: sp, narration: tx })));
+    const a = getAC(); await a.resume(); let t = a.currentTime + 0.05;
+    clips.forEach((c, i) => { const b = a.createBuffer(1, c.length, 24000); b.copyToChannel(c, 0); const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination); src.start(t); t += c.length / 24000 + (i === 0 ? 0.55 : 0.06); });
+    btn.textContent = "Playing…"; await sleep((t - a.currentTime) * 1000);
+  } catch (err) { toast("The voices couldn't start here: " + ((err && err.message) || err)); }
+  btn.textContent = keep; delete btn.dataset.busy;
+};
 $("#dOwn").addEventListener("input", () => { if ($("#dOwn").value.trim() && dPicks.length >= 3) dPicks.pop(); renderDIdeas(); updateGo(); });
 $("#dMore").onclick = () => loadDIdeas(true);
 $("#dPick3").onclick = () => { for (const i of dIdeas) { if (dPicks.length >= 3) break; if (!dPicks.some(x => x.title === i.title)) dPicks.push(i); } renderDIdeas(); updateGo(); warmVoice(); };
@@ -1560,11 +1716,21 @@ function enforceLanguage(P) {
 function parseScenes(arr, P, ch) {
   const duo = isDuo(P), FN = HOST.FACE_NAMES, face = (v, d) => FN.includes(v) ? v : d;
   const out = arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0,
-    ...(duo ? { speaker: s.speaker === "tack" ? "tack" : "ledger", lf: face(s.ledgerFace, "explain"), tf: face(s.tackFace, "confused") } : {}) }));
-  if (duo) out.forEach((s, k) => { if (s.speaker === "tack" && k > 0) { s.artOf = out[k - 1].artOf || out[k - 1].id; s.visual = ""; s.emphasis = ""; } });
+    ...(duo ? { speaker: s.speaker === "tack" ? "tack" : "ledger", lf: face(s.ledgerFace, "explain"), tf: face(s.tackFace, "confused"), sfx: SFX_NAMES.includes(s.sfx) ? s.sfx : "", beat: s.beat === true, gag: s.speaker === "tack" && !!String(s.visual || "").trim() } : {}) }));
+  if (duo) out.forEach((s, k) => { if (s.speaker === "tack") { s.emphasis = ""; if (!s.gag && k > 0) { s.artOf = out[k - 1].artOf || out[k - 1].id; s.visual = ""; } } });
   return out;
 }
 const goodPal = (a, dark) => { const p = (Array.isArray(a) ? a : []).filter(c => /^#[0-9a-f]{3,8}$/i.test(c)).slice(0, 5); return p.length >= 3 ? p : dark ? ["#07070d", "#1b1630", "#3d2f5c", "#b06a3b", "#f4c27a"] : ["#0d1030", "#2337a8", "#4f8cff", "#ffb547", "#fff3d6"]; };
+/* Second pass: a "writers' room" punch-up of the draft. Falls back to the draft if anything goes wrong. */
+async function punchUp(P, scenes, ch, context) {
+  try {
+    const r = await askJSON(punchUpPrompt(P, scenes, context), "complex");
+    if (!r || !Array.isArray(r.scenes) || r.scenes.length < Math.max(3, scenes.length * 0.6)) return scenes;
+    const out = parseScenes(r.scenes, P, ch);
+    if (out.length && out[0].speaker === "tack" && !out[0].gag && !out[0].artOf) { out[0].gag = true; out[0].visual = out[0].visual || out[0].narration; }
+    return out.length ? out : scenes;
+  } catch (e) { if (e && (e.code === "not_granted" || e.code === "unavailable")) throw e; return scenes; }
+}
 async function writeScript(job) {
   const P = job.p, st = job.stage;
   if (P.kind === "long") {
@@ -1579,11 +1745,13 @@ async function writeScript(job) {
     const parts = await Promise.all(o.chapters.map((c, ci) => artSlot(job.idx, async () => {
       let r = null; for (let a = 0; a < 2 && !r; a++) { try { r = await askJSON(chapterPrompt(P, o, ci)); if (!r || !Array.isArray(r.scenes) || !r.scenes.length) r = null; } catch (e) { if (e && (e.code === "not_granted" || e.code === "unavailable")) throw e; } }
       if (!r) throw { code: "invalid_json" };
-      done++; st("script", null, "Chapter " + done + " of " + o.chapters.length + " written", 0.15 + 0.85 * done / o.chapters.length);
-      return parseScenes(r.scenes, P, ci);
+      let sc = parseScenes(r.scenes, P, ci);
+      if (isDuo(P)) sc = await punchUp(P, sc, ci, "This is chapter " + (ci + 1) + " of " + o.chapters.length + ": " + o.chapters[ci].title + ". " + (ci === 0 ? "Its first line is the cold open: " + o.hook : ""));
+      done++; st("script", null, "Chapter " + done + " of " + o.chapters.length + " written" + (isDuo(P) ? " and punched up" : ""), 0.15 + 0.85 * done / o.chapters.length);
+      return sc;
     })));
     P.scenes = parts.flat();
-    P.scenes.forEach((s, k) => { if (s.speaker === "tack" && !s.artOf && k > 0) { s.artOf = P.scenes[k - 1].artOf || P.scenes[k - 1].id; s.visual = ""; } });
+    P.scenes.forEach((s, k) => { if (s.speaker === "tack" && !s.gag && !s.artOf && k > 0) { s.artOf = P.scenes[k - 1].artOf || P.scenes[k - 1].id; s.visual = ""; } });
   } else {
     st("script", "active", P.seriesId ? "Picking up from the last cliffhanger…" : "Writing the script…");
     let extra = "";
@@ -1596,10 +1764,20 @@ ${(se.episodes || []).length ? "Open by picking up directly from the last cliffh
     if (!r || !Array.isArray(r.scenes) || !r.scenes.length) throw { code: "invalid_json" };
     P.title = String(r.title || P.topic); P.character = P.seriesId ? P.character : String(r.character || "");
     P.palette = P.duo ? CASE_PAL.slice() : P.seriesId && P.palette && P.palette.length ? P.palette : goodPal(r.palette, darkMode(P));
-    P.scenes = parseScenes(r.scenes, P, null); P.summary = String(r.summary || ""); P.cliffhanger = String(r.cliffhanger || "");
+    P.scenes = parseScenes(r.scenes, P, null);
+    if (isDuo(P)) { st("script", null, "Punching up the jokes…", 0.6); P.scenes = await punchUp(P, P.scenes, null, ""); }
+    P.summary = String(r.summary || ""); P.cliffhanger = String(r.cliffhanger || "");
     P.kit = { titles: (r.titles || []).map(String).slice(0, 3), description: String(r.description || ""), hashtags: String(r.hashtags || "#shorts"), pinned: String(r.pinnedComment || "") };
     if (P.seriesId) P.kit.titles = P.kit.titles.map(t => t.includes("Part") ? t : t + " (Part " + P.episode + ")");
   }
+}
+/* Delivery: Ledger is quick and dry; Tack is a pitched-up cartoon. Unravel videos keep one narrator. */
+const DUO_V = { ledgerSpeed: 1.1, tackSpeed: 1.02, tackPitch: 1.17 };
+function speakLine(tts, P, sc) {
+  if (!P.duo) return speak(tts, sc.narration, P.voice, MODES[P.mode].speed);
+  const tk = sc.speaker === "tack", hot = /[!?]$/.test(sc.narration.trim()) ? 1.04 : 1;
+  return tk ? speak(tts, sc.narration, P.tackVoice || "am_puck", DUO_V.tackSpeed * hot, { pitch: DUO_V.tackPitch })
+            : speak(tts, sc.narration, P.voice, DUO_V.ledgerSpeed);
 }
 async function runJob(job) {
   const P = job.p, st = job.stage, ori = P.kind === "long" ? "h" : "v";
@@ -1611,7 +1789,7 @@ async function runJob(job) {
       st("voice", "active", "Recording the voiceover…", 0);
       const tts = await cpuLock(() => loadVoice((f, c) => st("voice", null, c ? "Voice loaded" : "Downloading the voice once · " + Math.round(f * 100) + "%", f * 0.5)));
       const clips = [];
-      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); const tk = P.scenes[i].speaker === "tack"; clips.push(await cpuLock(() => speak(tts, P.scenes[i].narration, tk ? (P.tackVoice || "am_puck") : P.voice, MODES[P.mode].speed * (tk ? 1.12 : 1)))); }
+      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); const sc = P.scenes[i]; clips.push(await cpuLock(() => speakLine(tts, P, sc))); }
       st("voice", "done"); return clips;
     })();
     const artJob = (async () => {
@@ -1696,7 +1874,7 @@ function showResult() {
   $("#kit").replaceChildren(h("h3", { text: "Upload kit" }),
     ...(k.titles || []).map((t, i) => kitRow(i ? "" : "Title options", t)),
     kitRow("Description", (k.description || "") + (k.hashtags ? "\n\n" + k.hashtags : "")), kitRow("Pinned comment", k.pinned || ""),
-    P.adult ? h("p", { class: "note adultnote", text: "Adult mode upload checklist: set the audience to \"No, it's not made for kids\". Keep the title, thumbnail and description clean (the kit above already is). On-screen captions star out the f-word; the voice still says it, which YouTube allows for full ads at this frequency. Don't add an age restriction unless YouTube asks for one." }) : null,
+    ...(P.adult ? [h("p", { class: "note adultnote", text: "Adult mode upload checklist: set the audience to \"No, it's not made for kids\". Keep the title, thumbnail and description clean (the kit above already is). On-screen captions star out the f-word; the voice still says it, which YouTube allows for full ads at this frequency. Don't add an age restriction unless YouTube asks for one." })] : []),
     h("p", { class: "note", text: long ? "Chapters are already timestamped in the description. Upload the thumbnail as a custom thumbnail. These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage." : "These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage. YouTube says the label alone doesn't change reach." }));
   renderLines();
 }
@@ -1919,6 +2097,6 @@ renderShorts(); renderLong(); renderDuo(); fillNs(); renderSeries(); renderLib()
 go(location.hash.slice(1) || "duo");
 initSync();
 sampler().then(s => { if (!s) { $("#sNote").textContent = AI_ERR.unavailable; $("#sNote").className = "note err"; } else { loadDIdeas(); loadSIdeas(); if (!lIdeas.length) loadLIdeas(); } });
-idb.get("kokoro-q8-v1").then(c => { if (c && c.model) $("#voiceNote").textContent = "The voice is downloaded and runs on this device."; });
+idb.get(VKEY).then(c => { if (c && c.model) $("#voiceNote").textContent = "The voice is downloaded and runs on this device."; });
 })();
 </script>

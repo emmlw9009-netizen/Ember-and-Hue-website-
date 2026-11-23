@@ -50,23 +50,61 @@ const HOST = (() => {
   const FACE_NAMES = Object.keys(FACES);
   return { sprite, build, BOX, RS, FACE_NAMES };
 })();
+/* ---- Hosts on screen: vector-drawn every frame (crisp at any size), lip-synced to the audio ---- */
+const hostPaths = new Map();
+const hpath = d => { let q = hostPaths.get(d); if (!q) { q = new Path2D(d); if (hostPaths.size > 600) hostPaths.clear(); hostPaths.set(d, q); } return q; };
+function drawChar(who, face, pose, talk, hx, hy, S, sq, rot) {
+  ctx.save(); ctx.translate(hx, hy); if (rot) ctx.rotate(rot); ctx.scale(S, S * (sq || 1)); ctx.translate(-200, -180);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (const o of HOST.build(who, face, pose, talk)) { const q = hpath(o.d); if (o.ty) { ctx.save(); ctx.translate(0, o.ty); }
+    if (o.fill !== "none") { ctx.fillStyle = o.fill; ctx.fill(q); } if (o.stroke !== "none" && o.sw) { ctx.strokeStyle = o.stroke; ctx.lineWidth = o.sw; ctx.stroke(q); } if (o.ty) ctx.restore(); }
+  ctx.restore();
+}
+function ampAt(seg, t) { if (!seg.env || t < seg.vStart || t > seg.vEnd) return 0; return seg.env[Math.min(seg.env.length - 1, Math.max(0, Math.floor((t - seg.vStart) * 30)))] || 0; }
+function drawBurst(cx, cy, t, adult) {
+  const R = Math.hypot(CW, CH), n = 20, a0 = t * 0.25;
+  ctx.save(); ctx.fillStyle = adult ? "#2A0E0C" : "#E7C873"; ctx.globalAlpha = 0.92; ctx.fillRect(0, 0, CW, CH);
+  ctx.fillStyle = adult ? "#5A1A16" : "#F2EEE4"; ctx.globalAlpha = 0.9;
+  for (let i = 0; i < n; i += 2) { const a = a0 + i / n * Math.PI * 2, b = a0 + (i + 1) / n * Math.PI * 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.lineTo(cx + Math.cos(b) * R, cy + Math.sin(b) * R); ctx.closePath(); ctx.fill(); }
+  const v = ctx.createRadialGradient(cx, cy, Math.min(CW, CH) * 0.3, cx, cy, R * 0.6); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.35)"); ctx.globalAlpha = 1; ctx.fillStyle = v; ctx.fillRect(0, 0, CW, CH);
+  ctx.restore();
+}
+/* Layouts: "two" = both hosts over the art; "tack" = Tack close-up over his own cutaway gag; "react" = Ledger close-up on a comic burst (the deadpan beat). */
+function hostLayout(seg, t) { if (seg.layout === "react" && t < seg.vStart + Math.min(0.9, (seg.vEnd - seg.vStart) * 0.45)) return "react"; return seg.layout === "tack" ? "tack" : "two"; }
 function drawHosts(p, seg, t) {
   if (!p.duo) return;
-  const s = seg.s, sp = s.speaker === 'tack' ? 'tack' : 'ledger';
-  const speaking = t >= seg.vStart && t <= seg.vEnd;
-  const open = speaking && Math.floor(t * 8.5) % 2 === 0;
-  const lf = s.lf || (sp === 'ledger' ? 'explain' : 'deadpan'), tf = s.tf || (sp === 'tack' ? 'confused' : 'confused');
-  const lp = sp === 'ledger' ? (s.lp || 'explain') : (lf === 'deadpan' ? 'facepalm' : 'stand');
-  const tp = sp === 'tack' ? (s.tp || 'handUp') : (tf === 'shocked' || tf === 'terrified' ? 'armsUp' : tf === 'smug' ? 'shrug' : 'stand');
-  const H = ORI === 'h', S = H ? 0.78 : 1.02, base = CH - (H ? 10 : 20);
-  const draw = (who, face, pose, x, bob, crop) => {
-    const c = HOST.sprite(who, face, pose, who === sp && open), [bx, by, bw, bh] = HOST.BOX[who];
-    const w = bw * S, hh = bh * S; ctx.drawImage(c, x, base - hh + bob + crop * S, w, hh);
-  };
-  const bobL = sp === 'ledger' && speaking ? Math.sin(t * 9) * 5 : Math.sin(t * 1.6) * 2;
-  const bobT = sp === 'tack' && speaking ? Math.abs(Math.sin(t * 11)) * -10 : Math.sin(t * 1.9 + 1) * 2;
-  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
-  draw('ledger', lf, lp, H ? 0 : -40, bobL, H ? 170 : 300);
-  draw('tack', tf, tp, CW - HOST.BOX.tack[2] * S + (H ? 10 : 30), bobT, 0);
-  ctx.restore();
+  const s = seg.s, sp = s.speaker === "tack" ? "tack" : "ledger", H = ORI === "h";
+  const amp = ampAt(seg, t), talk = amp > 0.18, lay = hostLayout(seg, t);
+  const lf = s.lf || (sp === "ledger" ? "explain" : "deadpan"), tf = s.tf || "confused";
+  const lp = sp === "ledger" ? (s.lp || (lf === "deadpan" ? "facepalm" : lf === "shocked" ? "armsUp" : (seg.i % 3 === 1 ? "point" : "explain"))) : (lf === "deadpan" ? "facepalm" : "stand");
+  const tp = sp === "tack" ? (tf === "shocked" || tf === "terrified" ? "armsUp" : tf === "smug" || tf === "laughing" ? "shrug" : "handUp") : (tf === "shocked" || tf === "terrified" ? "armsUp" : tf === "smug" ? "shrug" : "stand");
+  const since = t - (lay === "react" ? seg.vStart - (seg.beat || 0) : seg.vStart), pop = since >= 0 && since < 0.16 ? 1 + 0.12 * Math.sin(since / 0.16 * Math.PI) : 1;
+  const bob = k => Math.sin(t * k) * 2;
+  if (lay === "react") {
+    const hx = H ? CW * 0.5 : CW * 0.5, hy = H ? CH * 0.6 : CH * 0.62, S2 = (H ? 1.75 : 2.5) * pop;
+    drawBurst(hx, hy - (H ? 40 : 80), t, p.adult);
+    drawChar("ledger", lf, "stand", sp === "ledger" && talk, hx, hy + bob(1.4), S2, 1 + (sp === "ledger" ? amp * 0.03 : 0));
+    return;
+  }
+  if (lay === "tack") {
+    const hx = H ? CW * 0.79 : CW * 0.66, hy = H ? CH * 0.66 : CH * 0.74, S2 = (H ? 1.45 : 1.95) * pop;
+    ctx.save(); ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(hx, CH - 6, 260 * S2 / 2, 26, 0, 0, 7); ctx.fill(); ctx.restore();
+    drawChar("tack", tf, tp, talk, hx, hy - Math.abs(Math.sin(t * 11)) * 10 * Math.min(1, amp * 2), S2, 1 + amp * 0.05, Math.sin(t * 7) * 0.03 * Math.min(1, amp * 2));
+    if (!s.artOf) theoryTag(p, t - seg.vStart);
+    return;
+  }
+  const LS = H ? 0.95 : 1.32, TS = H ? 0.95 : 1.26;
+  const L = H ? { x: 215, y: 640 } : { x: 250, y: 1430 }, T = H ? { x: 1700, y: 828 } : { x: 832, y: 1588 };
+  const la = sp === "ledger" ? amp : 0, ta = sp === "tack" ? amp : 0;
+  ctx.save(); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(T.x, CH - 8, 120 * TS, 18, 0, 0, 7); ctx.fill(); ctx.restore();
+  drawChar("ledger", lf, lp, sp === "ledger" && talk, L.x, L.y + bob(1.6) - la * 8, LS * (sp === "ledger" ? pop : 1), 1 + la * 0.04);
+  drawChar("tack", tf, tp, sp === "tack" && talk, T.x, T.y + bob(1.9) - Math.abs(Math.sin(t * 11)) * 10 * Math.min(1, ta * 2), TS * (sp === "tack" ? pop : 1), 1 + ta * 0.05);
+}
+function theoryTag(p, u) {
+  if (u < -0.05) return; const a = Math.min(1, (u + 0.05) / 0.12), H = ORI === "h";
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(H ? 70 : 54, H ? 70 : 140); ctx.rotate(-0.05); ctx.scale(H ? 1.1 : 1.45, H ? 1.1 : 1.45);
+  ctx.font = "900 46px Archivo, 'Arial Black', sans-serif"; const txt = "TACK'S THEORY", w = ctx.measureText(txt).width + 48;
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(8, 10, w, 74); ctx.fillStyle = "#F2EEE4"; ctx.fillRect(0, 0, w, 74);
+  ctx.fillStyle = "#C8281E"; ctx.beginPath(); ctx.arc(w / 2, 4, 10, 0, 7); ctx.fill();
+  ctx.fillStyle = "#231B12"; ctx.textBaseline = "middle"; ctx.fillText(txt, 24, 40); ctx.restore();
 }
