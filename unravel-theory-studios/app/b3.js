@@ -182,7 +182,7 @@ function capStyle(p) {
 }
 function drawCaption(p, seg, t) {
   if (p.cap === "none") return;
-  const st = capStyle(p); const ws = words(seg.s.narration); if (!ws.length) return;
+  const st = capStyle(p); const ws = words(p.adult ? maskStrong(seg.s.narration) : seg.s.narration); if (!ws.length) return;
   const a0 = seg.vStart, dur = Math.max(0.3, seg.vEnd - a0); const wt = ws.map(w => w.length + 3), tot = wt.reduce((x, y) => x + y, 0);
   let acc = 0, act = ws.length - 1, wS = a0; const loc = t - a0;
   if (loc < 0) act = 0; else for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (loc < acc / tot * dur) { act = i; wS = a0 + s0; break; } }
@@ -218,7 +218,7 @@ function stamp(text, u, y, bg, fg, size) {
 const HOOK_T = 2.4;
 function drawHook(p, t) { if (p.kind === "long" || p.mode !== "explainer" || t > HOOK_T || !p.scenes[0]) return; const c = (p.look && p.look.card) || CARDS[0]; stamp(p.title || p.scenes[0].narration, t / HOOK_T * 1.15 * (t > HOOK_T - 0.3 ? 1 : 0.7), 290, c[0], c[1], 64); }
 function drawEmphasis(p, seg, t) {
-  const e = seg.s.emphasis; if (!e || darkMode(p) || (p.kind !== "long" && t < HOOK_T + 0.1)) return;
+  const e = p.adult ? cleanKitText(seg.s.emphasis) : seg.s.emphasis; if (!e || darkMode(p) || (p.kind !== "long" && t < HOOK_T + 0.1)) return;
   if (p.kind === "long" && p.timeline.chapters && p.timeline.chapters.some(c => t >= c.t && t < c.t + 3.6)) return;
   const u = (t - seg.vStart) / 1.4; if (u < 0 || u > 1.15) return;
   const c = (p.look && p.look.card) || CARDS[1]; stamp(e, u, ORI === "h" ? 120 : 330, c[0], c[1], ORI === "h" ? 64 : 78);

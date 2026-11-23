@@ -13,6 +13,7 @@ const srv=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.
     const sc = (t,sp,lf,tf) => ({speaker:sp||"ledger", ledgerFace:lf||"explain", tackFace:tf||"confused", narration:t, visual:sp==="tack"?"":"x", motion:"zoom-in", fx:"fog", emphasis:""});
     sample.json = async (input) => { input=String(input); await new Promise(r=>setTimeout(r,200));
       if (input.includes('You pick topics for "Ledger & Tack"')) return [{title:"Why can't you tickle yourself?",tackQ:"Can I hire someone to tickle me?",angle:"Your brain predicts your own touch."},{title:"Why do onions make you cry?",tackQ:"Are onions sad?",angle:"A gas reacts with your eyes."},{title:"How do cats always land on their feet?",tackQ:"Do cats have gyroscopes?",angle:"The righting reflex."}];
+      if (input.includes('ADULT MODE (for an 18+')) return {title:"Why Rent Is Damn Expensive",palette:["#000","#111","#222","#333","#444"],character:"",scenes:[sc("Rent is high because everyone wants the same damn apartments."),sc("So landlords are just fucking dragons?","tack","deadpan","smug"),sc("Basically, yes. Dragons with a fucking spreadsheet."),sc("Supply is low, so prices go up like crazy.","ledger","proud","dizzy"),sc("Fuck. I'll live in a cave.","tack","shocked","laughing"),sc("Caves have rent too now. Holy shit.","ledger","deadpan","terrified")],titles:["Why rent is so fucking high","Landlords are dragons"],description:"Rent is damn high.",hashtags:"#shorts #rent",pinnedComment:"What the fuck is your rent?",summary:"s",cliffhanger:"c"};
       if (input.includes('Give 6 ideas')) return [{title:"Why can't you tickle yourself?",hook:"Try it.",angle:"a"},{title:"Pompeii, 24 hours before",hook:"You wake up.",angle:"b"},{title:"The bridge that sang",hook:"Listen.",angle:"c"}];
       if (input.includes('Suggest 5 topics')) return [{title:"The Lost City Under the Sand",angle:"How a sandstorm hid a city for 1,000 years."},{title:"The Year Without a Summer",angle:"1816 and the volcano that froze the world."}];
       if (input.includes('series bible')) return {name:"Platform Nine",logline:"A lion waits at an empty station every night.",character:"a huge amber-maned lion with a scar over the left eye and a brass collar",palette:["#07070d","#1b1630","#3d2f5c","#b06a3b","#f4c27a"],plan:["The First Night","The Collar","The Last Train","The Ticket","The Return"]};
@@ -24,16 +25,17 @@ const srv=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.
     window.claude = { use: async (nm) => nm === 'sample' ? sample : null };
   });
   const errs=[]; p.on('pageerror', e=>errs.push(e.message)); p.on('console', m=>{ if(m.type()==='error') errs.push(m.text()); }); p.errs=errs; return p; };
-  if (which==='duo' || which==='duolong' || which==='uts') {
-    const W = which==='duo'?420:1280, Hh = which==='duo'?880:900; const p=await mkPage(W,Hh);
+  if (which==='duo' || which==='duolong' || which==='uts' || which==='adult') {
+    const W = (which==='duo'||which==='adult')?420:1280, Hh = (which==='duo'||which==='adult')?880:900; const p=await mkPage(W,Hh);
     await p.goto('http://localhost:'+(process.env.PORT||8771)+'/test.html'+(which==='uts'?'#shorts':'')); await p.waitForTimeout(1500);
     if (which==='uts') { await p.click('#sIdeas .idea'); }
     else { if (which==='duolong') { await p.click('#dfLong'); await p.waitForTimeout(300); }
+      if (which==='adult') { await p.click('#dAdult'); await p.waitForTimeout(800); }
       await p.screenshot({path:'../lt-'+which+'-ui.png', fullPage:true}); await p.click('#dIdeas .idea'); }
     const goTxt = await p.textContent('#go'); await p.click('#go'); const t0=Date.now();
     await p.waitForSelector('#result:not([hidden])', {timeout: 600000}); await p.waitForTimeout(800);
     const info = await p.evaluate(()=>{ const v=document.getElementById('vid'); const lib=JSON.parse(localStorage.getItem('uts.lib2')||'[]'); const x=lib[0]||{};
-      return {dur:v.duration, w:v.videoWidth, h:v.videoHeight, lines:document.querySelectorAll('#lines .line').length, duo:x.duo, channel:x.channel, art:x.art, kind:x.kind, speakers:(x.scenes||[]).map(s=>s.speaker||'-').join(','), reuse:(x.scenes||[]).filter(s=>s.artOf).length, kit:document.getElementById('kit').innerText.slice(0,160)}; });
+      return {dur:v.duration, w:v.videoWidth, h:v.videoHeight, lines:document.querySelectorAll('#lines .line').length, duo:x.duo, channel:x.channel, art:x.art, kind:x.kind, speakers:(x.scenes||[]).map(s=>s.speaker||'-').join(','), adult:x.adult, title:x.title, narr:(x.scenes||[]).map(s=>s.narration).join(' | '), kitT:x.kit&&x.kit.titles, pinned:x.kit&&x.kit.pinned, reuse:(x.scenes||[]).filter(s=>s.artOf).length, kit:document.getElementById('kit').innerText.slice(0,160)}; });
     console.log(which, 'go="'+goTxt+'"', ((Date.now()-t0)/1000|0)+'s', JSON.stringify(info));
     const times = which==='duolong' ? [2, 6, 12, 20] : [1, 3.5, 6, 9, 12, 15.5];
     for (const tt of times) { await p.evaluate(async(tt)=>{ const v=document.getElementById('vid'); v.controls=false; v.pause(); v.currentTime=tt; await new Promise(r=>{v.onseeked=r; setTimeout(r,2000)}); }, tt); await (await p.$('#monitor')).screenshot({path:`../lt-${which}-${tt}.png`}); }

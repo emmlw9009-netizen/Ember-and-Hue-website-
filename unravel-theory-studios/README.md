@@ -58,3 +58,13 @@ A scheduled task ("Unravel Theory: daily trend scout", runs 11:17 UTC) researche
 - The library labels Ledger & Tack videos "L&T" and has a filter for them.
 - Channel art: `channels/ledger-and-tack/pfp.png` (800x800 profile picture) and `banner.png` (2560x1440; title and both hosts sit inside YouTube's 1546x423 safe area). Re-render with `node shot.js` in that folder after `npm i @fontsource/archivo-black @fontsource/special-elite @fontsource/courier-prime`.
 - Tests: `app/tests/e2e8.js duo | duolong | uts` (Ledger & Tack Short, Ledger & Tack episode, Unravel Short), plus `e2e4.js ui | long | series` and `e2e7.js nav`.
+
+## Adult mode for Ledger & Tack (added Nov 23, 2026)
+
+The "18+ Adult mode" button on the Ledger & Tack tab switches the hosts to grown-up, sarcastic comedy with swearing, built to stay monetizable under YouTube's advertiser-friendly rules (since July 2025, swearing in the video can earn full ads; titles and thumbnails must stay clean, and frequent strong swearing still limits ads):
+- The writer may swear freely with words like damn, hell, shit, but the f-word is capped at 2 per Short and about 1 per minute in episodes (max 6). The app enforces the cap after writing and swaps extras for "freaking"/"heck".
+- Slurs, sexual terms and group insults are always replaced. No sexual content, no jokes about real people or tragedies.
+- Titles, thumbnail text, chapter titles, description, hashtags and pinned comment are kept clean (swears starred, titles with an f-word dropped).
+- On-screen captions star out the f-word; the voice still says it.
+- The upload kit adds a checklist: audience "not made for kids", clean title and thumbnail.
+- Test: `app/tests/e2e8.js adult`.

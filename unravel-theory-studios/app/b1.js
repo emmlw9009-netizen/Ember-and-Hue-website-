@@ -94,6 +94,26 @@ const SCENE_FIELDS = `"visual": a cinematic shot for this moment: shot type (wid
 const SCENE_FIELDS_LONG = SCENE_FIELDS.replace("rain, snow, fog, embers, sparks, stars, rays, dust or none. Match the scene.", "dust, fog, rain, snow or none. Keep it subtle; use none for most scenes.");
 
 const isDuo = p => !!p.duo && (p.mode === "explainer" || p.mode === "doc");
+/* Adult mode: swearing that stays monetizable under YouTube's advertiser-friendly guidelines (July 2025 update):
+   strong profanity in the video can earn full ads, but not in titles/thumbnails/descriptions, and not at high frequency. */
+const STRONG_RE = /\b(mother)?f+u+c+k+\w*\b/gi;
+const BANNED_RE = /\b(c+u+n+t+s?|cocks?|puss(y|ies)|tits?|whores?|sluts?|f+a+g+\w*|retard\w*|n+i+g+\w*)\b/gi;
+const SWEAR_RE = /\b(sh[i1]t\w*|bullsh\w*|damn\w*|hell|crap\w*|ass(hole)?s?|bitch\w*|piss\w*|bastard\w*|dicks?|douche\w*|wtf)\b/gi;
+const strongCap = p => p.kind === "long" ? Math.min(6, Math.max(2, p.length)) : 2;
+const starWord = w => w.length <= 2 ? w : w[0] + "*".repeat(w.length - 2) + w[w.length - 1];
+const cleanKitText = s => String(s || "").replace(BANNED_RE, m => starWord(m)).replace(STRONG_RE, m => starWord(m)).replace(SWEAR_RE, m => starWord(m));
+const maskStrong = s => String(s || "").replace(BANNED_RE, m => starWord(m)).replace(STRONG_RE, m => starWord(m));
+function adultRules(p) {
+  if (!p.adult) return "";
+  const cap = strongCap(p);
+  return `
+ADULT MODE (for an 18+ comedy audience, but still fully advertiser-friendly on YouTube):
+- Tone: grown-up, sarcastic, a little unhinged. Ledger is a tired, deadpan genius who swears dryly when Tack breaks his brain. Tack is a chaos goblin with zero filter who asks wildly inappropriate-sounding but harmless questions.
+- Swearing is allowed in the narration and is part of the comedy: words like damn, hell, crap, ass, shit, bullshit, pissed are fine anywhere. Use the f-word at most ${cap} times in the whole ${p.kind === "long" ? "episode" : "Short"}, only as a punchline, never two lines in a row. Timing beats frequency.
+- Adult humor = relatable grown-up pain (rent, taxes, hangovers, bad dates, work, aging, group chats), absurd logic, roasting each other, and dark-but-not-cruel jokes.
+- NEVER: sexual content or sexual innuendo about body parts, slurs, insults aimed at any group (race, religion, gender, sexuality, disability), drug use shown as fun, violence or gore jokes, jokes about real people or tragedies, or anything aimed at kids. These are what kill monetization.
+- Titles, "titles", "description", "hashtags", "pinnedComment", "thumbText" and "emphasis" must contain NO swear words at all (they decide ad eligibility). Make the title funny with clean words instead.`;
+}
 function duoRules(p) {
   if (!isDuo(p)) return "";
   const faces = HOST.FACE_NAMES.join(", ");
@@ -110,7 +130,7 @@ Rules for the dynamic:
 - Tack gets the final line: a funny button that reframes the whole topic in one breath.
 - Facts stay true. The comedy comes from Tack's questions and Ledger's reactions, never from wrong information.
 - "ledgerFace" and "tackFace" on every scene: each one of ${faces}. Faces react to what was just said (Ledger: explain, proud, deadpan, smug, shocked; Tack: confused, shocked, terrified, dizzy, nervous, laughing, smug when he was right).
-- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".`;
+- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".${adultRules(p)}`;
 }
 function scriptPrompt(p, extra = "") {
   const story = p.mode === "story", wps = story ? 2.5 : 2.75, L = p.length;
@@ -141,7 +161,7 @@ Reply with ONLY JSON:
 }
 function outlinePrompt(p) {
   const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
-  if (isDuo(p)) return `You are the head writer of "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger (tall, patient explainer) and Tack (short, giant cap, asks dumb but funny questions). Plan a ${p.length}-minute horizontal episode.
+  if (isDuo(p)) return `You are the head writer of "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger (tall, patient explainer) and Tack (short, giant cap, asks dumb but funny questions). Plan a ${p.length}-minute horizontal episode.${p.adult ? "\nThis is an ADULT MODE episode: grown-up, sarcastic comedy with swearing in the dialogue, but the title, thumbText, description, hashtags and pinned comment must be completely clean, with no sexual content, slurs or group insults anywhere." : ""}
 Topic: ${p.topic}
 - Open with a cold-open line from Ledger that promises a payoff the episode truly delivers.
 - ${nch} chapters with short titles (2 to 5 words), each a step up in an escalating arc; the last chapter pays off the hook. Each chapter should contain one question Tack would naturally ask.

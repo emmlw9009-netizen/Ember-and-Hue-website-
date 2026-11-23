@@ -35,7 +35,7 @@ function projDoc(p) {
   if (!p.createdAt) p.createdAt = Date.now();
   const d = { id: p.id, createdAt: p.createdAt, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
     chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
-    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, adult: !!p.adult, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
   if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
   return d;
 }
@@ -138,6 +138,9 @@ function drawDuoHero() {
 }
 let dHeroI = 0; setInterval(() => { if (view === "duo" && !document.hidden) { dHeroI++; drawDuoHero(); } }, 2600);
 function renderDuo() {
+  const ab = $("#dAdult"); ab.setAttribute("aria-pressed", String(!!S.dadult)); ab.querySelector("b").textContent = S.dadult ? "Adult mode: ON" : "Adult mode: OFF";
+  ab.querySelector(".at span").textContent = S.dadult ? "Swearing and grown-up jokes, kept ad-safe. Tap to go clean." : "Tap for swearing and grown-up jokes that still earn ads.";
+  document.body.classList.toggle("adult", !!S.dadult);
   $("#dfShort").setAttribute("aria-pressed", String(S.dfmt !== "long")); $("#dfLong").setAttribute("aria-pressed", String(S.dfmt === "long"));
   $("#dNiches").replaceChildren(...DUO_NICHES.map(n => h("button", { class: "chip", "aria-pressed": String(n === S.dniche), onclick: () => { S.dniche = n; saveSettings(); renderDuo(); loadDIdeas(true); } }, n)));
   const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
@@ -161,11 +164,11 @@ function toggleDPick(i) {
 }
 async function loadDIdeas(force) {
   if (dBusy) return; const key = S.dfmt + "|" + S.dniche;
-  if (!force && dIdeas.length && LS.get("dIdeasKey", "") === key) { renderDIdeas(); return; }
+  if (!force && dIdeas.length && LS.get("dIdeasKey", "") === key + (S.dadult ? "|18" : "")) { renderDIdeas(); return; }
   dBusy = true; renderDIdeas(true); $("#dNote").textContent = ""; $("#dNote").className = "note";
   try {
     const avoid = force ? dIdeas.map(i => i.title).join("; ") : "";
-    const r = await askJSON(`You pick topics for "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger, a tall patient explainer, and Tack, a short guy in a giant cap who asks dumb but funny questions. Format: ${S.dfmt === "long" ? "a " + S.dllen + "-minute horizontal episode with chapters" : "a Short under a minute"}. Niche: ${S.dniche}.
+    const r = await askJSON(`You pick topics for "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger, a tall patient explainer, and Tack, a short guy in a giant cap who asks dumb but funny questions.${S.dadult ? " ADULT MODE: pick grown-up topics (rent, taxes, hangovers, coffee, sleep, dating apps, work, aging bodies, money) for an 18+ audience; Tack's question can be blunt and a little crude, but the title must be clean and nothing sexual, hateful or about real people." : ""} Format: ${S.dfmt === "long" ? "a " + S.dllen + "-minute horizontal episode with chapters" : "a Short under a minute"}. Niche: ${S.dniche}.
 Give 6 topics with a true, checkable, surprising answer that is easy to draw as paper evidence (pinned photos, diagrams, specimens). For each, write the dumb-but-funny question Tack would ask that leads straight into the real answer.
 ${GUARD}
 ${trendNote()}
@@ -173,10 +176,11 @@ ${avoid ? "Do not repeat: " + avoid : ""}
 Reply with ONLY a JSON array: [{"title":"short punchy title","tackQ":"Tack's question, 9 words max","angle":"the surprising true answer in one sentence"}]`, "quick");
     if (!Array.isArray(r) || !r.length) throw { code: "invalid_json" };
     dIdeas = r.filter(i => i && i.title).slice(0, 6).map(i => ({ title: String(i.title), tackQ: String(i.tackQ || ""), angle: String(i.angle || "") }));
-    dPicks = []; LS.set("dIdeas", dIdeas); LS.set("dIdeasKey", key);
+    dPicks = []; LS.set("dIdeas", dIdeas); LS.set("dIdeasKey", key + (S.dadult ? "|18" : ""));
   } catch (e) { $("#dNote").textContent = aiErr(e) + " You can also type your own topic."; $("#dNote").className = "note err"; }
   dBusy = false; renderDIdeas(); updateGo();
 }
+$("#dAdult").onclick = () => { S.dadult = !S.dadult; saveSettings(); dPicks = []; renderDuo(); loadDIdeas(true); toast(S.dadult ? "Adult mode on: swearing in the video, clean titles" : "Clean mode on"); };
 $("#dfShort").onclick = () => { if (S.dfmt === "short") return; S.dfmt = "short"; saveSettings(); renderDuo(); };
 $("#dfLong").onclick = () => { if (S.dfmt === "long") return; S.dfmt = "long"; saveSettings(); renderDuo(); };
 $("#dLen").onchange = e => { if (S.dfmt === "long") S.dllen = +e.target.value; else S.dlen = +e.target.value; saveSettings(); updateGo(); };
@@ -325,8 +329,8 @@ async function artSlot(pri, fn) {
 function newProject(spec) {
   const id = uid();
   if (spec.duo) return spec.kind === "long"
-    ? { id, kind: "long", mode: "doc", duo: true, channel: "lt", topic: spec.topic, length: S.dllen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: "sub", scenes: [], palette: CASE_PAL.slice(), kit: {} }
-    : { id, kind: "short", mode: "explainer", duo: true, channel: "lt", topic: spec.topic, length: S.dlen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: S.dcap, scenes: [], palette: CASE_PAL.slice(), kit: {} };
+    ? { id, kind: "long", mode: "doc", duo: true, adult: !!S.dadult, channel: "lt", topic: spec.topic, length: S.dllen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: "sub", scenes: [], palette: CASE_PAL.slice(), kit: {} }
+    : { id, kind: "short", mode: "explainer", duo: true, adult: !!S.dadult, channel: "lt", topic: spec.topic, length: S.dlen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: S.dcap, scenes: [], palette: CASE_PAL.slice(), kit: {} };
   if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
   if (spec.series) { const se = spec.series, n = (se.episodes || []).length + 1;
     return { id, kind: "short", mode: se.mode, topic: `Episode ${n} of the series "${se.name}"${se.plan && se.plan[n - 1] ? ": " + se.plan[n - 1] : ""}`, length: se.length, voice: se.voice, art: se.art, cap: se.mode === "story" ? "story" : "pop", character: se.character, palette: se.palette, seriesId: se.id, episode: n, scenes: [], kit: {} }; }
@@ -389,6 +393,17 @@ async function startBatch(specs) {
   $("#mkTitle").textContent = ok === n ? "All " + n + " are ready" : ok + " of " + n + " ready";
   $("#mkSub").replaceChildren(h("span", { text: ok ? "Open each one to watch it, save it and copy its upload kit. " : "" }), h("button", { class: "btn sm", text: "Make more", onclick: () => go(kind === "long" ? "long" : "shorts") }));
 }
+function enforceLanguage(P) {
+  if (!P.adult) return;
+  let n = 0; const cap = strongCap(P);
+  for (const s of P.scenes) {
+    s.narration = s.narration.replace(BANNED_RE, "freaking").replace(STRONG_RE, m => { if (++n <= cap) return m; const r = /^mother/i.test(m) ? "mother-trucker" : /ing$/i.test(m) ? "freaking" : "heck"; return /^[A-Z]/.test(m) ? r[0].toUpperCase() + r.slice(1) : r; });
+    s.emphasis = cleanKitText(s.emphasis);
+  }
+  P.title = cleanKitText(P.title); P.thumbText = cleanKitText(P.thumbText || "");
+  if (P.kit) { const tl = P.kit.titles || [], hard = t => { STRONG_RE.lastIndex = BANNED_RE.lastIndex = 0; return STRONG_RE.test(t) || BANNED_RE.test(t); }, ok = tl.filter(t => !hard(t)); P.kit.titles = (ok.length ? ok : [P.title]).map(cleanKitText); P.kit.description = cleanKitText(P.kit.description); P.kit.hashtags = cleanKitText(P.kit.hashtags); P.kit.pinned = cleanKitText(P.kit.pinned); }
+  if (P.chapters) P.chapters.forEach(c => c.title = cleanKitText(c.title));
+}
 function parseScenes(arr, P, ch) {
   const duo = isDuo(P), FN = HOST.FACE_NAMES, face = (v, d) => FN.includes(v) ? v : d;
   const out = arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0,
@@ -437,7 +452,7 @@ async function runJob(job) {
   const P = job.p, st = job.stage, ori = P.kind === "long" ? "h" : "v";
   job.status = "working";
   try {
-    if (!P.scenes.length) await writeScript(job);
+    if (!P.scenes.length) { await writeScript(job); enforceLanguage(P); }
     st("script", "done", P.scenes.length + " scenes written"); paintJob(job);
     const voiceJob = (async () => {
       st("voice", "active", "Recording the voiceover…", 0);
@@ -528,6 +543,7 @@ function showResult() {
   $("#kit").replaceChildren(h("h3", { text: "Upload kit" }),
     ...(k.titles || []).map((t, i) => kitRow(i ? "" : "Title options", t)),
     kitRow("Description", (k.description || "") + (k.hashtags ? "\n\n" + k.hashtags : "")), kitRow("Pinned comment", k.pinned || ""),
+    P.adult ? h("p", { class: "note adultnote", text: "Adult mode upload checklist: set the audience to \"No, it's not made for kids\". Keep the title, thumbnail and description clean (the kit above already is). On-screen captions star out the f-word; the voice still says it, which YouTube allows for full ads at this frequency. Don't add an age restriction unless YouTube asks for one." }) : null,
     h("p", { class: "note", text: long ? "Chapters are already timestamped in the description. Upload the thumbnail as a custom thumbnail. These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage." : "These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage. YouTube says the label alone doesn't change reach." }));
   renderLines();
 }
@@ -663,7 +679,7 @@ function renderLib() {
   if (!list.length) { box.replaceChildren(h("div", { class: "empty", text: "Finished videos appear here with their titles, descriptions and hashtags." })); return; }
   box.replaceChildren(...list.map(x => { const L = x.kind === "long"; return h("button", { class: "vid" + (L ? " h" : ""), onclick: () => { if (busyRun) { toast("Wait for the current videos to finish"); return; } openSaved(x); } },
     x.thumb ? h("img", { src: x.thumb, alt: "" }) : h("span", { class: "ph" }),
-    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (x.duo ? "L&T · " : "") + (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
+    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (x.duo ? (x.adult ? "L&T 18+ · " : "L&T · ") : "") + (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
 }
 
 

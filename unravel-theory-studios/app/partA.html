@@ -131,6 +131,12 @@ textarea.inp{resize:vertical;line-height:1.45}
 .goal .ghint{font-size:12px;color:var(--dim)}
 .goal .gbar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}.goal .gbar i{display:block;height:100%;background:var(--ok);transition:width .3s}
 @media (max-width:420px){.goal .slot{padding:9px 10px}.goal .slot b{font-size:13px}}
+.adultbtn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:1px solid var(--line2);background:var(--panel);color:var(--ink);border-radius:18px;padding:14px 16px;margin-bottom:18px;cursor:pointer;font:inherit}
+.adultbtn i{font-style:normal;font-family:var(--f-display);font-weight:800;font-size:18px;width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:50%;border:2px solid var(--dim);color:var(--muted)}
+.adultbtn .at{display:flex;flex-direction:column;gap:2px}.adultbtn b{font-size:16px}.adultbtn .at span{font-size:13px;color:var(--muted)}
+.adultbtn[aria-pressed="true"]{border-color:#C8281E;background:color-mix(in srgb,#C8281E 16%,var(--panel))}
+.adultbtn[aria-pressed="true"] i{background:#C8281E;border-color:#C8281E;color:#F2EEE4;transform:rotate(-8deg)}
+.note.adultnote{border-left:3px solid #C8281E;padding-left:10px}
 .duohead{display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;gap:12px}
 .duohead canvas{width:200px;height:auto;flex:none;background:#F2EEE4;border-radius:18px;box-shadow:0 0 0 1px var(--line2),0 10px 30px rgba(0,0,0,.35);transform:rotate(1.5deg)}
 @media (max-width:520px){.duohead canvas{width:120px}}
@@ -346,6 +352,7 @@ details.edit summary{cursor:pointer;font-weight:600}
   <section class="view" id="v-duo" hidden>
     <div class="vhead duohead"><div><span class="eyebrow">Channel 2 · hosted by two cartoons</span><h1>Ledger <em>&amp;</em> Tack</h1><p>Ledger explains it. Tack asks the dumb question. Every video is drawn in the Case File look: cork board, pinned evidence, red string.</p></div><canvas id="duoHero" width="320" height="220" aria-hidden="true"></canvas></div>
     <section class="goal" id="goalD" aria-label="Today's posting goal"></section>
+    <button class="adultbtn" id="dAdult" aria-pressed="false"><i aria-hidden="true">18+</i><span class="at"><b>Adult mode: OFF</b><span>Tap for swearing and grown-up jokes that still earn ads.</span></span></button>
     <div class="block"><div class="bh"><h2>Format</h2></div>
       <div class="formats"><button class="fmt" id="dfShort" aria-pressed="true"><b>Short</b><span>Vertical, under a minute, one question.</span></button><button class="fmt" id="dfLong" aria-pressed="false"><b>Episode</b><span>Horizontal, 3 to 8 minutes, with chapters.</span></button></div>
     </div>

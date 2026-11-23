@@ -131,6 +131,12 @@ textarea.inp{resize:vertical;line-height:1.45}
 .goal .ghint{font-size:12px;color:var(--dim)}
 .goal .gbar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}.goal .gbar i{display:block;height:100%;background:var(--ok);transition:width .3s}
 @media (max-width:420px){.goal .slot{padding:9px 10px}.goal .slot b{font-size:13px}}
+.adultbtn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:1px solid var(--line2);background:var(--panel);color:var(--ink);border-radius:18px;padding:14px 16px;margin-bottom:18px;cursor:pointer;font:inherit}
+.adultbtn i{font-style:normal;font-family:var(--f-display);font-weight:800;font-size:18px;width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:50%;border:2px solid var(--dim);color:var(--muted)}
+.adultbtn .at{display:flex;flex-direction:column;gap:2px}.adultbtn b{font-size:16px}.adultbtn .at span{font-size:13px;color:var(--muted)}
+.adultbtn[aria-pressed="true"]{border-color:#C8281E;background:color-mix(in srgb,#C8281E 16%,var(--panel))}
+.adultbtn[aria-pressed="true"] i{background:#C8281E;border-color:#C8281E;color:#F2EEE4;transform:rotate(-8deg)}
+.note.adultnote{border-left:3px solid #C8281E;padding-left:10px}
 .duohead{display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;gap:12px}
 .duohead canvas{width:200px;height:auto;flex:none;background:#F2EEE4;border-radius:18px;box-shadow:0 0 0 1px var(--line2),0 10px 30px rgba(0,0,0,.35);transform:rotate(1.5deg)}
 @media (max-width:520px){.duohead canvas{width:120px}}
@@ -346,6 +352,7 @@ details.edit summary{cursor:pointer;font-weight:600}
   <section class="view" id="v-duo" hidden>
     <div class="vhead duohead"><div><span class="eyebrow">Channel 2 · hosted by two cartoons</span><h1>Ledger <em>&amp;</em> Tack</h1><p>Ledger explains it. Tack asks the dumb question. Every video is drawn in the Case File look: cork board, pinned evidence, red string.</p></div><canvas id="duoHero" width="320" height="220" aria-hidden="true"></canvas></div>
     <section class="goal" id="goalD" aria-label="Today's posting goal"></section>
+    <button class="adultbtn" id="dAdult" aria-pressed="false"><i aria-hidden="true">18+</i><span class="at"><b>Adult mode: OFF</b><span>Tap for swearing and grown-up jokes that still earn ads.</span></span></button>
     <div class="block"><div class="bh"><h2>Format</h2></div>
       <div class="formats"><button class="fmt" id="dfShort" aria-pressed="true"><b>Short</b><span>Vertical, under a minute, one question.</span></button><button class="fmt" id="dfLong" aria-pressed="false"><b>Episode</b><span>Horizontal, 3 to 8 minutes, with chapters.</span></button></div>
     </div>
@@ -563,6 +570,26 @@ const SCENE_FIELDS = `"visual": a cinematic shot for this moment: shot type (wid
 const SCENE_FIELDS_LONG = SCENE_FIELDS.replace("rain, snow, fog, embers, sparks, stars, rays, dust or none. Match the scene.", "dust, fog, rain, snow or none. Keep it subtle; use none for most scenes.");
 
 const isDuo = p => !!p.duo && (p.mode === "explainer" || p.mode === "doc");
+/* Adult mode: swearing that stays monetizable under YouTube's advertiser-friendly guidelines (July 2025 update):
+   strong profanity in the video can earn full ads, but not in titles/thumbnails/descriptions, and not at high frequency. */
+const STRONG_RE = /\b(mother)?f+u+c+k+\w*\b/gi;
+const BANNED_RE = /\b(c+u+n+t+s?|cocks?|puss(y|ies)|tits?|whores?|sluts?|f+a+g+\w*|retard\w*|n+i+g+\w*)\b/gi;
+const SWEAR_RE = /\b(sh[i1]t\w*|bullsh\w*|damn\w*|hell|crap\w*|ass(hole)?s?|bitch\w*|piss\w*|bastard\w*|dicks?|douche\w*|wtf)\b/gi;
+const strongCap = p => p.kind === "long" ? Math.min(6, Math.max(2, p.length)) : 2;
+const starWord = w => w.length <= 2 ? w : w[0] + "*".repeat(w.length - 2) + w[w.length - 1];
+const cleanKitText = s => String(s || "").replace(BANNED_RE, m => starWord(m)).replace(STRONG_RE, m => starWord(m)).replace(SWEAR_RE, m => starWord(m));
+const maskStrong = s => String(s || "").replace(BANNED_RE, m => starWord(m)).replace(STRONG_RE, m => starWord(m));
+function adultRules(p) {
+  if (!p.adult) return "";
+  const cap = strongCap(p);
+  return `
+ADULT MODE (for an 18+ comedy audience, but still fully advertiser-friendly on YouTube):
+- Tone: grown-up, sarcastic, a little unhinged. Ledger is a tired, deadpan genius who swears dryly when Tack breaks his brain. Tack is a chaos goblin with zero filter who asks wildly inappropriate-sounding but harmless questions.
+- Swearing is allowed in the narration and is part of the comedy: words like damn, hell, crap, ass, shit, bullshit, pissed are fine anywhere. Use the f-word at most ${cap} times in the whole ${p.kind === "long" ? "episode" : "Short"}, only as a punchline, never two lines in a row. Timing beats frequency.
+- Adult humor = relatable grown-up pain (rent, taxes, hangovers, bad dates, work, aging, group chats), absurd logic, roasting each other, and dark-but-not-cruel jokes.
+- NEVER: sexual content or sexual innuendo about body parts, slurs, insults aimed at any group (race, religion, gender, sexuality, disability), drug use shown as fun, violence or gore jokes, jokes about real people or tragedies, or anything aimed at kids. These are what kill monetization.
+- Titles, "titles", "description", "hashtags", "pinnedComment", "thumbText" and "emphasis" must contain NO swear words at all (they decide ad eligibility). Make the title funny with clean words instead.`;
+}
 function duoRules(p) {
   if (!isDuo(p)) return "";
   const faces = HOST.FACE_NAMES.join(", ");
@@ -579,7 +606,7 @@ Rules for the dynamic:
 - Tack gets the final line: a funny button that reframes the whole topic in one breath.
 - Facts stay true. The comedy comes from Tack's questions and Ledger's reactions, never from wrong information.
 - "ledgerFace" and "tackFace" on every scene: each one of ${faces}. Faces react to what was just said (Ledger: explain, proud, deadpan, smug, shocked; Tack: confused, shocked, terrified, dizzy, nervous, laughing, smug when he was right).
-- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".`;
+- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".${adultRules(p)}`;
 }
 function scriptPrompt(p, extra = "") {
   const story = p.mode === "story", wps = story ? 2.5 : 2.75, L = p.length;
@@ -610,7 +637,7 @@ Reply with ONLY JSON:
 }
 function outlinePrompt(p) {
   const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
-  if (isDuo(p)) return `You are the head writer of "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger (tall, patient explainer) and Tack (short, giant cap, asks dumb but funny questions). Plan a ${p.length}-minute horizontal episode.
+  if (isDuo(p)) return `You are the head writer of "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger (tall, patient explainer) and Tack (short, giant cap, asks dumb but funny questions). Plan a ${p.length}-minute horizontal episode.${p.adult ? "\nThis is an ADULT MODE episode: grown-up, sarcastic comedy with swearing in the dialogue, but the title, thumbText, description, hashtags and pinned comment must be completely clean, with no sexual content, slurs or group insults anywhere." : ""}
 Topic: ${p.topic}
 - Open with a cold-open line from Ledger that promises a payoff the episode truly delivers.
 - ${nch} chapters with short titles (2 to 5 words), each a step up in an escalating arc; the last chapter pays off the hook. Each chapter should contain one question Tack would naturally ask.
@@ -912,7 +939,7 @@ function capStyle(p) {
 }
 function drawCaption(p, seg, t) {
   if (p.cap === "none") return;
-  const st = capStyle(p); const ws = words(seg.s.narration); if (!ws.length) return;
+  const st = capStyle(p); const ws = words(p.adult ? maskStrong(seg.s.narration) : seg.s.narration); if (!ws.length) return;
   const a0 = seg.vStart, dur = Math.max(0.3, seg.vEnd - a0); const wt = ws.map(w => w.length + 3), tot = wt.reduce((x, y) => x + y, 0);
   let acc = 0, act = ws.length - 1, wS = a0; const loc = t - a0;
   if (loc < 0) act = 0; else for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (loc < acc / tot * dur) { act = i; wS = a0 + s0; break; } }
@@ -948,7 +975,7 @@ function stamp(text, u, y, bg, fg, size) {
 const HOOK_T = 2.4;
 function drawHook(p, t) { if (p.kind === "long" || p.mode !== "explainer" || t > HOOK_T || !p.scenes[0]) return; const c = (p.look && p.look.card) || CARDS[0]; stamp(p.title || p.scenes[0].narration, t / HOOK_T * 1.15 * (t > HOOK_T - 0.3 ? 1 : 0.7), 290, c[0], c[1], 64); }
 function drawEmphasis(p, seg, t) {
-  const e = seg.s.emphasis; if (!e || darkMode(p) || (p.kind !== "long" && t < HOOK_T + 0.1)) return;
+  const e = p.adult ? cleanKitText(seg.s.emphasis) : seg.s.emphasis; if (!e || darkMode(p) || (p.kind !== "long" && t < HOOK_T + 0.1)) return;
   if (p.kind === "long" && p.timeline.chapters && p.timeline.chapters.some(c => t >= c.t && t < c.t + 3.6)) return;
   const u = (t - seg.vStart) / 1.4; if (u < 0 || u > 1.15) return;
   const c = (p.look && p.look.card) || CARDS[1]; stamp(e, u, ORI === "h" ? 120 : 330, c[0], c[1], ORI === "h" ? 64 : 78);
@@ -1161,7 +1188,7 @@ function projDoc(p) {
   if (!p.createdAt) p.createdAt = Date.now();
   const d = { id: p.id, createdAt: p.createdAt, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
     chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
-    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, adult: !!p.adult, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
   if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
   return d;
 }
@@ -1264,6 +1291,9 @@ function drawDuoHero() {
 }
 let dHeroI = 0; setInterval(() => { if (view === "duo" && !document.hidden) { dHeroI++; drawDuoHero(); } }, 2600);
 function renderDuo() {
+  const ab = $("#dAdult"); ab.setAttribute("aria-pressed", String(!!S.dadult)); ab.querySelector("b").textContent = S.dadult ? "Adult mode: ON" : "Adult mode: OFF";
+  ab.querySelector(".at span").textContent = S.dadult ? "Swearing and grown-up jokes, kept ad-safe. Tap to go clean." : "Tap for swearing and grown-up jokes that still earn ads.";
+  document.body.classList.toggle("adult", !!S.dadult);
   $("#dfShort").setAttribute("aria-pressed", String(S.dfmt !== "long")); $("#dfLong").setAttribute("aria-pressed", String(S.dfmt === "long"));
   $("#dNiches").replaceChildren(...DUO_NICHES.map(n => h("button", { class: "chip", "aria-pressed": String(n === S.dniche), onclick: () => { S.dniche = n; saveSettings(); renderDuo(); loadDIdeas(true); } }, n)));
   const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
@@ -1287,11 +1317,11 @@ function toggleDPick(i) {
 }
 async function loadDIdeas(force) {
   if (dBusy) return; const key = S.dfmt + "|" + S.dniche;
-  if (!force && dIdeas.length && LS.get("dIdeasKey", "") === key) { renderDIdeas(); return; }
+  if (!force && dIdeas.length && LS.get("dIdeasKey", "") === key + (S.dadult ? "|18" : "")) { renderDIdeas(); return; }
   dBusy = true; renderDIdeas(true); $("#dNote").textContent = ""; $("#dNote").className = "note";
   try {
     const avoid = force ? dIdeas.map(i => i.title).join("; ") : "";
-    const r = await askJSON(`You pick topics for "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger, a tall patient explainer, and Tack, a short guy in a giant cap who asks dumb but funny questions. Format: ${S.dfmt === "long" ? "a " + S.dllen + "-minute horizontal episode with chapters" : "a Short under a minute"}. Niche: ${S.dniche}.
+    const r = await askJSON(`You pick topics for "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger, a tall patient explainer, and Tack, a short guy in a giant cap who asks dumb but funny questions.${S.dadult ? " ADULT MODE: pick grown-up topics (rent, taxes, hangovers, coffee, sleep, dating apps, work, aging bodies, money) for an 18+ audience; Tack's question can be blunt and a little crude, but the title must be clean and nothing sexual, hateful or about real people." : ""} Format: ${S.dfmt === "long" ? "a " + S.dllen + "-minute horizontal episode with chapters" : "a Short under a minute"}. Niche: ${S.dniche}.
 Give 6 topics with a true, checkable, surprising answer that is easy to draw as paper evidence (pinned photos, diagrams, specimens). For each, write the dumb-but-funny question Tack would ask that leads straight into the real answer.
 ${GUARD}
 ${trendNote()}
@@ -1299,10 +1329,11 @@ ${avoid ? "Do not repeat: " + avoid : ""}
 Reply with ONLY a JSON array: [{"title":"short punchy title","tackQ":"Tack's question, 9 words max","angle":"the surprising true answer in one sentence"}]`, "quick");
     if (!Array.isArray(r) || !r.length) throw { code: "invalid_json" };
     dIdeas = r.filter(i => i && i.title).slice(0, 6).map(i => ({ title: String(i.title), tackQ: String(i.tackQ || ""), angle: String(i.angle || "") }));
-    dPicks = []; LS.set("dIdeas", dIdeas); LS.set("dIdeasKey", key);
+    dPicks = []; LS.set("dIdeas", dIdeas); LS.set("dIdeasKey", key + (S.dadult ? "|18" : ""));
   } catch (e) { $("#dNote").textContent = aiErr(e) + " You can also type your own topic."; $("#dNote").className = "note err"; }
   dBusy = false; renderDIdeas(); updateGo();
 }
+$("#dAdult").onclick = () => { S.dadult = !S.dadult; saveSettings(); dPicks = []; renderDuo(); loadDIdeas(true); toast(S.dadult ? "Adult mode on: swearing in the video, clean titles" : "Clean mode on"); };
 $("#dfShort").onclick = () => { if (S.dfmt === "short") return; S.dfmt = "short"; saveSettings(); renderDuo(); };
 $("#dfLong").onclick = () => { if (S.dfmt === "long") return; S.dfmt = "long"; saveSettings(); renderDuo(); };
 $("#dLen").onchange = e => { if (S.dfmt === "long") S.dllen = +e.target.value; else S.dlen = +e.target.value; saveSettings(); updateGo(); };
@@ -1451,8 +1482,8 @@ async function artSlot(pri, fn) {
 function newProject(spec) {
   const id = uid();
   if (spec.duo) return spec.kind === "long"
-    ? { id, kind: "long", mode: "doc", duo: true, channel: "lt", topic: spec.topic, length: S.dllen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: "sub", scenes: [], palette: CASE_PAL.slice(), kit: {} }
-    : { id, kind: "short", mode: "explainer", duo: true, channel: "lt", topic: spec.topic, length: S.dlen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: S.dcap, scenes: [], palette: CASE_PAL.slice(), kit: {} };
+    ? { id, kind: "long", mode: "doc", duo: true, adult: !!S.dadult, channel: "lt", topic: spec.topic, length: S.dllen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: "sub", scenes: [], palette: CASE_PAL.slice(), kit: {} }
+    : { id, kind: "short", mode: "explainer", duo: true, adult: !!S.dadult, channel: "lt", topic: spec.topic, length: S.dlen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: S.dcap, scenes: [], palette: CASE_PAL.slice(), kit: {} };
   if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
   if (spec.series) { const se = spec.series, n = (se.episodes || []).length + 1;
     return { id, kind: "short", mode: se.mode, topic: `Episode ${n} of the series "${se.name}"${se.plan && se.plan[n - 1] ? ": " + se.plan[n - 1] : ""}`, length: se.length, voice: se.voice, art: se.art, cap: se.mode === "story" ? "story" : "pop", character: se.character, palette: se.palette, seriesId: se.id, episode: n, scenes: [], kit: {} }; }
@@ -1515,6 +1546,17 @@ async function startBatch(specs) {
   $("#mkTitle").textContent = ok === n ? "All " + n + " are ready" : ok + " of " + n + " ready";
   $("#mkSub").replaceChildren(h("span", { text: ok ? "Open each one to watch it, save it and copy its upload kit. " : "" }), h("button", { class: "btn sm", text: "Make more", onclick: () => go(kind === "long" ? "long" : "shorts") }));
 }
+function enforceLanguage(P) {
+  if (!P.adult) return;
+  let n = 0; const cap = strongCap(P);
+  for (const s of P.scenes) {
+    s.narration = s.narration.replace(BANNED_RE, "freaking").replace(STRONG_RE, m => { if (++n <= cap) return m; const r = /^mother/i.test(m) ? "mother-trucker" : /ing$/i.test(m) ? "freaking" : "heck"; return /^[A-Z]/.test(m) ? r[0].toUpperCase() + r.slice(1) : r; });
+    s.emphasis = cleanKitText(s.emphasis);
+  }
+  P.title = cleanKitText(P.title); P.thumbText = cleanKitText(P.thumbText || "");
+  if (P.kit) { const tl = P.kit.titles || [], hard = t => { STRONG_RE.lastIndex = BANNED_RE.lastIndex = 0; return STRONG_RE.test(t) || BANNED_RE.test(t); }, ok = tl.filter(t => !hard(t)); P.kit.titles = (ok.length ? ok : [P.title]).map(cleanKitText); P.kit.description = cleanKitText(P.kit.description); P.kit.hashtags = cleanKitText(P.kit.hashtags); P.kit.pinned = cleanKitText(P.kit.pinned); }
+  if (P.chapters) P.chapters.forEach(c => c.title = cleanKitText(c.title));
+}
 function parseScenes(arr, P, ch) {
   const duo = isDuo(P), FN = HOST.FACE_NAMES, face = (v, d) => FN.includes(v) ? v : d;
   const out = arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0,
@@ -1563,7 +1605,7 @@ async function runJob(job) {
   const P = job.p, st = job.stage, ori = P.kind === "long" ? "h" : "v";
   job.status = "working";
   try {
-    if (!P.scenes.length) await writeScript(job);
+    if (!P.scenes.length) { await writeScript(job); enforceLanguage(P); }
     st("script", "done", P.scenes.length + " scenes written"); paintJob(job);
     const voiceJob = (async () => {
       st("voice", "active", "Recording the voiceover…", 0);
@@ -1654,6 +1696,7 @@ function showResult() {
   $("#kit").replaceChildren(h("h3", { text: "Upload kit" }),
     ...(k.titles || []).map((t, i) => kitRow(i ? "" : "Title options", t)),
     kitRow("Description", (k.description || "") + (k.hashtags ? "\n\n" + k.hashtags : "")), kitRow("Pinned comment", k.pinned || ""),
+    P.adult ? h("p", { class: "note adultnote", text: "Adult mode upload checklist: set the audience to \"No, it's not made for kids\". Keep the title, thumbnail and description clean (the kit above already is). On-screen captions star out the f-word; the voice still says it, which YouTube allows for full ads at this frequency. Don't add an age restriction unless YouTube asks for one." }) : null,
     h("p", { class: "note", text: long ? "Chapters are already timestamped in the description. Upload the thumbnail as a custom thumbnail. These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage." : "These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage. YouTube says the label alone doesn't change reach." }));
   renderLines();
 }
@@ -1789,7 +1832,7 @@ function renderLib() {
   if (!list.length) { box.replaceChildren(h("div", { class: "empty", text: "Finished videos appear here with their titles, descriptions and hashtags." })); return; }
   box.replaceChildren(...list.map(x => { const L = x.kind === "long"; return h("button", { class: "vid" + (L ? " h" : ""), onclick: () => { if (busyRun) { toast("Wait for the current videos to finish"); return; } openSaved(x); } },
     x.thumb ? h("img", { src: x.thumb, alt: "" }) : h("span", { class: "ph" }),
-    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (x.duo ? "L&T · " : "") + (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
+    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (x.duo ? (x.adult ? "L&T 18+ · " : "L&T · ") : "") + (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
 }
 
 
