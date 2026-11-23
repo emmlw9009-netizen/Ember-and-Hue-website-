@@ -90,7 +90,7 @@ function drawHosts(p, seg, t) {
     const hx = H ? CW * 0.79 : CW * 0.66, hy = H ? CH * 0.66 : CH * 0.74, S2 = (H ? 1.45 : 1.95) * pop;
     ctx.save(); ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(hx, CH - 6, 260 * S2 / 2, 26, 0, 0, 7); ctx.fill(); ctx.restore();
     drawChar("tack", tf, tp, talk, hx, hy - Math.abs(Math.sin(t * 11)) * 10 * Math.min(1, amp * 2), S2, 1 + amp * 0.05, Math.sin(t * 7) * 0.03 * Math.min(1, amp * 2));
-    if (!s.artOf) theoryTag(p, t - seg.vStart);
+    if (!s.artOf) theoryTag(p, t - seg.vStart, p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T + 0.3);
     return;
   }
   const LS = H ? 0.95 : 1.32, TS = H ? 0.95 : 1.26;
@@ -100,9 +100,9 @@ function drawHosts(p, seg, t) {
   drawChar("ledger", lf, lp, sp === "ledger" && talk, L.x, L.y + bob(1.6) - la * 8, LS * (sp === "ledger" ? pop : 1), 1 + la * 0.04);
   drawChar("tack", tf, tp, sp === "tack" && talk, T.x, T.y + bob(1.9) - Math.abs(Math.sin(t * 11)) * 10 * Math.min(1, ta * 2), TS * (sp === "tack" ? pop : 1), 1 + ta * 0.05);
 }
-function theoryTag(p, u) {
+function theoryTag(p, u, low) {
   if (u < -0.05) return; const a = Math.min(1, (u + 0.05) / 0.12), H = ORI === "h";
-  ctx.save(); ctx.globalAlpha = a; ctx.translate(H ? 70 : 54, H ? 70 : 140); ctx.rotate(-0.05); ctx.scale(H ? 1.1 : 1.45, H ? 1.1 : 1.45);
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(H ? 70 : 54, H ? 70 : low ? 430 : 140); ctx.rotate(-0.05); ctx.scale(H ? 1.1 : 1.45, H ? 1.1 : 1.45);
   ctx.font = "900 46px Archivo, 'Arial Black', sans-serif"; const txt = "TACK'S THEORY", w = ctx.measureText(txt).width + 48;
   ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(8, 10, w, 74); ctx.fillStyle = "#F2EEE4"; ctx.fillRect(0, 0, w, 74);
   ctx.fillStyle = "#C8281E"; ctx.beginPath(); ctx.arc(w / 2, 4, 10, 0, 7); ctx.fill();

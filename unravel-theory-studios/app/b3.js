@@ -64,7 +64,10 @@ function music(oc, out, total, p) {
 async function mixAudio(p, clips) {
   const long = p.kind === "long", SR = long ? 32000 : 44100, CHN = long ? 1 : 2, total = p.timeline.total;
   const oc = new OfflineAudioContext(CHN, Math.ceil((total + 0.8) * SR), SR);
-  const comp = oc.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.005; comp.release.value = 0.2; comp.connect(oc.destination);
+  const comp = oc.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.005; comp.release.value = 0.2;
+  /* Final limiter so nothing ever clips (sfx peaks). */
+  const lim = oc.createDynamicsCompressor(); lim.threshold.value = -2.5; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.06; const trim = oc.createGain(); trim.gain.value = 0.96;
+  comp.connect(lim).connect(trim).connect(oc.destination);
   const vbus = oc.createGain(); vbus.gain.value = 1.35; vbus.connect(comp);
   /* Voice polish: clean low end, presence for clarity on phone speakers, a little warmth. */
   const hp = oc.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 85; const pres = oc.createBiquadFilter(); pres.type = "peaking"; pres.frequency.value = 3200; pres.Q.value = 0.9; pres.gain.value = 3.5;
@@ -232,15 +235,19 @@ function drawCaption(p, seg, t) {
   if (p.cap === "none") return;
   const st = capStyle(p); const ws = words(p.adult ? maskStrong(seg.s.narration) : seg.s.narration); if (!ws.length) return;
   if (p.duo) { const tk = seg.s.speaker === "tack"; if (st.box) { if (tk) st.fill = "#FFD25A"; } else { st.fill = tk ? "#FFD25A" : "#FFFFFF"; st.hi = tk ? "#FFFFFF" : (p.look && p.look.hi) || "#F7E36A"; }
-    if (p.kind !== "long") { const lay = hostLayout(seg, t); st.y = lay === "two" ? 0.5 : 0.33; } }
+    if (p.kind !== "long") { const lay = hostLayout(seg, t); st.y = lay === "two" ? 0.5 : t <= HOOK_T + 0.3 ? 0.4 : 0.33; } }
   const a0 = seg.vStart, dur = Math.max(0.3, seg.vEnd - a0); const wt = ws.map(w => w.length + 3), tot = wt.reduce((x, y) => x + y, 0);
   let acc = 0, act = ws.length - 1, wS = a0; const loc = t - a0;
   if (loc < 0) act = 0; else for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (loc < acc / tot * dur) { act = i; wS = a0 + s0; break; } }
   if (p.cap === "sub" && (t > seg.vEnd + 0.25 || t < a0 - 0.1)) return;
   const c0 = Math.floor(act / st.chunk) * st.chunk;
   ctx.font = st.font; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; const sp = ctx.measureText(" ").width + (p.cap === "pop" ? 12 : 0);
-  const items = ws.slice(c0, c0 + st.chunk).map((w, j) => { const tx = st.up ? w.toUpperCase() : w; return { tx, i: c0 + j, w: ctx.measureText(tx).width + sp }; });
-  const lines = wrapW(items, Math.min(CW * 0.82, st.maxW || 9999)); const y0 = CH * st.y - (lines.length - 1) * st.lh / 2;
+  let items = ws.slice(c0, c0 + st.chunk).map((w, j) => { const tx = st.up ? w.toUpperCase() : w; return { tx, i: c0 + j, w: ctx.measureText(tx).width + sp }; });
+  const maxW = Math.min(CW * 0.82, st.maxW || 9999), widest = Math.max(...items.map(it => it.w - sp));
+  if (widest > maxW) { /* one word wider than the screen: shrink this chunk to fit instead of overflowing */
+    const k = maxW / widest; st.font = st.font.replace(/(\d+)px/, (m, n) => Math.floor(n * k) + "px"); st.lh *= k; if (st.stroke) st.stroke *= k;
+    ctx.font = st.font; const sp2 = ctx.measureText(" ").width + (p.cap === "pop" ? 12 * k : 0); items = items.map(it => ({ tx: it.tx, i: it.i, w: ctx.measureText(it.tx).width + sp2 })); }
+  const lines = wrapW(items, maxW); const y0 = CH * st.y - (lines.length - 1) * st.lh / 2;
   lines.forEach((ln, li) => {
     const lw = ln.reduce((x, y) => x + y.w, 0) - sp; let x = (CW - lw) / 2; const y = y0 + li * st.lh;
     if (st.box) { ctx.fillStyle = "rgba(8,10,16,.66)"; ctx.beginPath(); (ctx.roundRect ? ctx.roundRect(x - 20, y - st.lh + 12, lw + 40, st.lh + 10, 14) : ctx.rect(x - 20, y - st.lh + 12, lw + 40, st.lh + 10)); ctx.fill(); }
@@ -266,7 +273,7 @@ function stamp(text, u, y, bg, fg, size) {
   ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; L.forEach((l, i) => ctx.fillText(l.map(x => x.tx).join(" "), CW / 2, by + pad + size * 0.82 + i * lh)); ctx.restore();
 }
 const HOOK_T = 2.4;
-function drawHook(p, t) { if (p.kind === "long" || p.mode !== "explainer" || t > HOOK_T || !p.scenes[0]) return; const c = (p.look && p.look.card) || CARDS[0]; stamp(p.title || p.scenes[0].narration, t / HOOK_T * 1.15 * (t > HOOK_T - 0.3 ? 1 : 0.7), 290, c[0], c[1], 64); }
+function drawHook(p, t) { if (p.kind === "long" || p.mode !== "explainer" || t > HOOK_T || !p.scenes[0]) return; const c = (p.look && p.look.card) || CARDS[0]; stamp(p.title || p.scenes[0].narration, t / HOOK_T * 1.15 * (t > HOOK_T - 0.3 ? 1 : 0.7), p.duo ? 150 : 290, c[0], c[1], 64); }
 function drawEmphasis(p, seg, t) {
   const e = p.adult ? cleanKitText(seg.s.emphasis) : seg.s.emphasis; if (!e || darkMode(p) || (p.kind !== "long" && t < HOOK_T + 0.1)) return;
   if (p.kind === "long" && p.timeline.chapters && p.timeline.chapters.some(c => t >= c.t && t < c.t + 3.6)) return;

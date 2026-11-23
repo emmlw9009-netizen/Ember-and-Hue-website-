@@ -76,3 +76,7 @@ The "18+ Adult mode" button on the Ledger & Tack tab switches the hosts to grown
 - **Edit**: 0.06 s between lines, a 0.6 s silent deadpan "beat" before Ledger answers a dumb question (cut to a Ledger close-up on a comic burst), Tack close-ups over a "Tack's theory" cutaway gag, punch cuts and whips, lip-sync from the audio, screen shake on shocks, captions colored by speaker.
 - **Sound**: synthesized comedy SFX chosen by the writer (boom, record scratch, boing, crickets, ding, slide, pop) and a bouncy music bed that ducks under the dialogue.
 - **Writing**: rewritten comedy rules (cold open on a joke, a laugh every 2–3 lines, specific > generic, rule of three, reversal, callback, Tack lands the last line) plus a second "writers' room" punch-up pass on every Short and every long-form chapter. New 20-second Short length.
+
+## Real render test (Nov 23, 2026)
+
+`app/tests/realtest/` renders complete Ledger & Tack Shorts with the real app, real HD voices and real engine; only the AI calls are answered with a hand-written script (`scripts.py`) and hand-drawn Case File art (`art.py`). It renders frame by frame (30 fps, via a test-only copy of the page) because the cloud test machine has no GPU, then muxes with ffmpeg. Results: `samples/LedgerTack-test-onion.mp4` (clean) and `samples/LedgerTack-test-coffee.mp4` (adult mode), both -13 to -15 LUFS with no clipping.
