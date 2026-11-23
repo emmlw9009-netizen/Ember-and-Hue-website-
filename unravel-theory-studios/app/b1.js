@@ -38,7 +38,14 @@ const HOUSE_DIR = `"Unravel signature" house style for a premium documentary cha
 Palette is LOCKED: ink navy ${HOUSE_PAL[0]}, deep blue ${HOUSE_PAL[1]}, slate blue ${HOUSE_PAL[2]}, one warm amber accent ${HOUSE_PAL[3]} used only on the focal point or light source, and warm paper white ${HOUSE_PAL[4]} for highlights. Tints and shades of these only, no other hues.
 Light always comes from the upper left as a soft key light; shadows fall lower right. Use flat fills with at most two-stop gradients, thin 2 to 3 px line details for texture (contour lines, hatching, map lines), and subtle depth through value, not glow.
 Never: neon, rainbow colors, lens flares, heavy glows, busy textures, clutter, random sparkles, dramatic fantasy lighting, uncanny faces, extra limbs, melted or warped shapes. Figures are simple stylized silhouettes with clean proportions.`;
+/* Ledger & Tack channel: the "Case File" look from STYLE.md */
+const CASE_PAL = ["#231B12", "#6B4A2B", "#A8794A", "#C8281E", "#F2EEE4"];
+const CASE_DIR = `"Case File" house style for the Ledger & Tack channel. Every topic is a case being cracked open, shown as paper evidence: a warm cork evidence board, pinned index cards and photos (photos are simple flat drawings inside white borders), red string between clues, manila folders, redaction bars, a desk lamp, magnifying glass, specimen jars, diagrams drawn on paper. Clean flat vector shapes with confident 3 to 4 px dark ink outlines, gentle paper texture made of a few faint lines, soft drop shadows under pinned paper.
+Palette is LOCKED: ink ${CASE_PAL[0]}, walnut ${CASE_PAL[1]}, cork ${CASE_PAL[2]}, evidence red ${CASE_PAL[3]} (pins, string, the one key detail), paper ${CASE_PAL[4]}, plus highlighter yellow #F7E36A used once at most. No other hues.
+The SUBJECT of the explanation is the hero of each frame, drawn big and clear (a pinned photo of it, a diagram card, or the object itself on the desk). No people or faces: the two cartoon hosts are added later in the bottom corners, so keep the bottom-left and bottom-right corners simple paper or cork.
+Never: neon, glow, realistic rendering, clutter, letters or numbers.`;
 const ARTS = {
+  casefile: { label: "Case File", dir: CASE_DIR },
   signature: { label: "Unravel signature", dir: HOUSE_DIR },
   flat: { label: "Bold vector", dir: "Bold flat vector illustration. Big confident shapes, saturated but harmonious colors, soft long shadows, subtle gradients for depth, friendly rounded forms, clean negative space. Feels like a premium animated science channel." },
   silhouette: { label: "Cinematic silhouette", dir: "Cinematic silhouette art. Deep atmospheric night or dusk palette, strong backlight and rim light, layered fog bands, glowing light sources (moon, lamp, window, screen) that cast long beams, figures as crisp dark silhouettes. Moody, tense, beautiful." },
@@ -60,15 +67,18 @@ const HI_S = ["#FFD84D", "#7CF0FF", "#FF8AC8", "#B6FF7A", "#FFB870", "#C8A6FF"];
 const HI_T = ["#FFB870", "#FFD9A0", "#9EE7FF", "#FF9AA8", "#E8C6FF"];
 const CARDS = [["#FFD84D", "#120E08"], ["#FFFFFF", "#0B0D14"], ["#7CF0FF", "#04131A"], ["#FF5C8A", "#FFFFFF"], ["#C8A6FF", "#140A24"], ["#B6FF7A", "#0B1405"]];
 const TSETS = [["whip", "flash", "zoom", "punch"], ["zoom", "punch", "whip", "flash"], ["flash", "whip", "punch", "zoom"], ["punch", "zoom", "flash", "whip"]];
+const DUO_NICHES = ["Weird science", "Human body", "Space", "Animals", "How things work", "Food science", "History oddities", "Money myths", "Psychology"];
 function makeLook(p) {
   const r = rng(hashStr(p.id)), pick = a => a[Math.floor(r() * a.length)];
+  if (p.duo) return { hi: p.kind === "long" ? "#F7E36A" : pick(["#F7E36A", "#FFB870", "#FF8A80"]), card: pick([["#F2EEE4", "#231B12"], ["#C8281E", "#F2EEE4"], ["#F7E36A", "#231B12"]]), tset: Math.floor(r() * TSETS.length), grade: p.kind === "long" ? 1 : 0.85 + r() * 0.2, key: Math.floor(r() * 5) - 2, tempo: 0.95 + r() * 0.1, caseUp: true, capY: p.kind === "long" ? 0.88 : 0.6 + r() * 0.04 };
   if (p.kind === "long") return { hi: HOUSE_PAL[3], card: [HOUSE_PAL[4], HOUSE_PAL[0]], tset: 0, grade: 1, key: Math.floor(r() * 5) - 2, tempo: 0.96 + r() * 0.08, caseUp: false, capY: 0.88 };
   return { hi: pick(p.mode === "story" || p.mode === "lstory" ? HI_T : HI_S), card: pick(CARDS), tset: Math.floor(r() * TSETS.length), grade: 0.8 + r() * 0.4, key: Math.floor(r() * 7) - 3, tempo: 0.92 + r() * 0.16, caseUp: r() > 0.35, capY: 0.6 + r() * 0.06 };
 }
 
 /* ================= State ================= */
 const S = Object.assign({ mode: "explainer", niche: "History POV", length: 45, voice: "af_heart", art: "flat", cap: "pop",
-  lmode: "doc", lniche: "Ancient mysteries", llen: 5, lvoice: "bm_george", lart: "matte", lsubs: "sub", nsmode: "story", hosts: "duo", lhosts: "duo", tackVoice: "am_puck" }, LS.get("settings2", {}));
+  lmode: "doc", lniche: "Ancient mysteries", llen: 5, lvoice: "bm_george", lart: "matte", lsubs: "sub", nsmode: "story", hosts: "duo", lhosts: "duo", tackVoice: "am_puck",
+  dfmt: "short", dlen: 45, dllen: 5, dvoice: "am_michael", dniche: "Weird science", dcap: "pop" }, LS.get("settings2", {}));
 const saveSettings = () => LS.set("settings2", S);
 let sIdeas = LS.get("sIdeas", []), lIdeas = LS.get("lIdeas", []), picks = [], lPicks = [], P = null, view = "shorts";
 
@@ -131,6 +141,14 @@ Reply with ONLY JSON:
 }
 function outlinePrompt(p) {
   const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
+  if (isDuo(p)) return `You are the head writer of "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger (tall, patient explainer) and Tack (short, giant cap, asks dumb but funny questions). Plan a ${p.length}-minute horizontal episode.
+Topic: ${p.topic}
+- Open with a cold-open line from Ledger that promises a payoff the episode truly delivers.
+- ${nch} chapters with short titles (2 to 5 words), each a step up in an escalating arc; the last chapter pays off the hook. Each chapter should contain one question Tack would naturally ask.
+- True, checkable facts only. Mark uncertain claims as uncertain.
+${GUARD}
+Reply with ONLY JSON:
+{"title":"...","hook":"cold-open line","palette":["5 hex colors dark to light"],"character":"","thumbText":"2 to 4 punchy words for the thumbnail","chapters":[{"title":"...","beats":"2 or 3 sentences on what this chapter covers"}],"titles":["3 titles under 70 characters that match the video"],"description":"3 sentences","hashtags":"3 hashtags","pinnedComment":"one line inviting replies"}`;
   return `You are the head writer of a fast-growing faceless YouTube ${doc ? "documentary" : "storytelling"} channel. Plan a ${p.length}-minute horizontal video.
 Topic: ${p.topic}
 - Open with a cold-open hook line that promises a payoff the video truly delivers.

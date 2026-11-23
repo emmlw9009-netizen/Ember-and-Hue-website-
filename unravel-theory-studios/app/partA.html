@@ -7,7 +7,7 @@
 :root{
   --bg:#06080E; --bg2:#0B0F18; --panel:rgba(17,22,35,.78); --panel2:#151B2A; --line:#212A3E; --line2:#2E3850;
   --ink:#EEF1F8; --muted:#8F98AF; --dim:#5A6378;
-  --amber:#FFB547; --cyan:#5CE1E6; --rose:#FF5C8A; --ok:#62D99B; --bad:#FF6B6B;
+  --mustard:#E2B04F; --amber:#FFB547; --cyan:#5CE1E6; --rose:#FF5C8A; --ok:#62D99B; --bad:#FF6B6B;
   --sig:var(--amber); --sig-ink:#160F02;
   --f-display:"Syne","Avenir Next",system-ui,sans-serif;
   --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -19,6 +19,7 @@
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 170px;
   background-image:radial-gradient(900px 520px at 85% -8%,color-mix(in srgb,var(--sig) 16%,transparent),transparent 62%),radial-gradient(700px 480px at -10% 30%,rgba(92,225,230,.06),transparent 60%);background-attachment:fixed;transition:background-image .4s}
+body[data-view="duo"]{--sig:var(--mustard);--sig-ink:#1A1203}
 body[data-view="long"]{--sig:var(--cyan);--sig-ink:#02171A}
 body[data-view="series"]{--sig:var(--rose);--sig-ink:#22030E}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
@@ -51,7 +52,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .bnav{display:none}
 @media (max-width:720px){
   .tnav{display:none}
-  .bnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:25;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:rgba(8,11,18,.88);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+  .bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:25;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:rgba(8,11,18,.88);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
   .bnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--dim);padding:4px 0;cursor:pointer}
   .bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   .bnav button[aria-current="page"]{color:var(--ink)}
@@ -130,6 +131,10 @@ textarea.inp{resize:vertical;line-height:1.45}
 .goal .ghint{font-size:12px;color:var(--dim)}
 .goal .gbar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}.goal .gbar i{display:block;height:100%;background:var(--ok);transition:width .3s}
 @media (max-width:420px){.goal .slot{padding:9px 10px}.goal .slot b{font-size:13px}}
+.duohead{display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;gap:12px}
+.duohead canvas{width:200px;height:auto;flex:none;background:#F2EEE4;border-radius:18px;box-shadow:0 0 0 1px var(--line2),0 10px 30px rgba(0,0,0,.35);transform:rotate(1.5deg)}
+@media (max-width:520px){.duohead canvas{width:120px}}
+.idea .tq{color:var(--mustard);font-style:normal;font-weight:700}
 .daily{position:relative;border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
   background:radial-gradient(420px 200px at 100% 0%,rgba(255,92,138,.16),transparent 70%),linear-gradient(150deg,rgba(255,181,71,.12),var(--panel) 55%)}
 .daily .eb{display:flex;gap:10px;align-items:center;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
@@ -316,6 +321,7 @@ details.edit summary{cursor:pointer;font-weight:600}
     <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#151B2A"/><path d="M8 28c4-11 8-15 11-15s5 4 2 8-8 3-6-2 9-7 16-6" fill="none" stroke="#FFB547" stroke-width="2.4" stroke-linecap="round"/><circle cx="32" cy="13" r="2.3" fill="#5CE1E6"/><circle cx="9" cy="29" r="1.6" fill="#FF5C8A"/></svg>
     <div class="word"><b>Unravel Theory</b><small>Studios · AI video</small></div>
     <nav class="tnav" aria-label="Sections">
+      <button data-go="duo" style="--c:var(--mustard)"><i></i>Ledger &amp; Tack</button>
       <button data-go="shorts" style="--c:var(--amber)"><i></i>Shorts</button>
       <button data-go="long" style="--c:var(--cyan)"><i></i>Long-form</button>
       <button data-go="series" style="--c:var(--rose)"><i></i>Series</button>
@@ -328,6 +334,7 @@ details.edit summary{cursor:pointer;font-weight:600}
 </header>
 
 <nav class="bnav" aria-label="Sections">
+  <button data-go="duo" style="--c:var(--mustard)"><svg viewBox="0 0 24 24"><circle cx="8" cy="7" r="3.2"/><path d="M8 10.2V21M4.5 14l3.5-2 3.5-2"/><circle cx="16.5" cy="13" r="2.6"/><path d="M13.6 11.6c.4-2.4 5.4-2.4 5.8 0M16.5 15.6V21"/></svg>L&amp;T</button>
   <button data-go="shorts" style="--c:var(--amber)"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 9.5l3 2.5-3 2.5z"/></svg>Shorts</button>
   <button data-go="long" style="--c:var(--cyan)"><svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Long-form</button>
   <button data-go="series" style="--c:var(--rose)"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M7 7V4.5h13V17h-4"/></svg>Series</button>
@@ -335,6 +342,30 @@ details.edit summary{cursor:pointer;font-weight:600}
 </nav>
 
 <main class="wrap">
+  <!-- LEDGER & TACK -->
+  <section class="view" id="v-duo" hidden>
+    <div class="vhead duohead"><div><span class="eyebrow">Channel 2 · hosted by two cartoons</span><h1>Ledger <em>&amp;</em> Tack</h1><p>Ledger explains it. Tack asks the dumb question. Every video is drawn in the Case File look: cork board, pinned evidence, red string.</p></div><canvas id="duoHero" width="320" height="220" aria-hidden="true"></canvas></div>
+    <section class="goal" id="goalD" aria-label="Today's posting goal"></section>
+    <div class="block"><div class="bh"><h2>Format</h2></div>
+      <div class="formats"><button class="fmt" id="dfShort" aria-pressed="true"><b>Short</b><span>Vertical, under a minute, one question.</span></button><button class="fmt" id="dfLong" aria-pressed="false"><b>Episode</b><span>Horizontal, 3 to 8 minutes, with chapters.</span></button></div>
+    </div>
+    <div class="block"><div class="bh"><h2>Topics</h2><span class="hint" id="dPickCount">0 of 3 picked</span></div>
+      <div class="chips" id="dNiches"></div>
+      <div class="ideas" id="dIdeas"></div>
+      <div class="row"><input class="inp" type="text" id="dOwn" placeholder="Or type your own topic" autocomplete="off"><button class="btn" id="dMore">New ideas</button><button class="btn" id="dPick3">Pick 3</button></div>
+      <p class="note" id="dNote"></p>
+    </div>
+    <div class="block"><div class="bh"><h2>Hosts</h2><span class="hint">Case File look is locked for this channel</span></div>
+      <div class="settings">
+        <div class="set"><label for="dLen">Length</label><select id="dLen"></select></div>
+        <div class="set"><label for="dVoice">Ledger's voice</label><div class="vrow"><select id="dVoice"></select><button class="pm" id="dLVPrev" aria-label="Hear Ledger's voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
+        <div class="set"><label for="dTack">Tack's voice</label><div class="vrow"><select id="dTack"></select><button class="pm" id="dTVPrev" aria-label="Hear Tack's voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
+        <div class="set" id="dCapSet"><label for="dCap">Captions</label><select id="dCap"><option value="pop">Bold pop</option><option value="clean">Clean</option></select></div>
+      </div>
+      <div class="housecard"><span class="sw" style="background:#231B12"></span><span class="sw" style="background:#6B4A2B"></span><span class="sw" style="background:#A8794A"></span><span class="sw" style="background:#C8281E"></span><span class="sw" style="background:#F2EEE4"></span><p>Locked Case File palette: ink, walnut, cork, evidence red, paper. Tack's voice plays a little faster so the two sound different.</p></div>
+    </div>
+  </section>
+
   <!-- SHORTS -->
   <section class="view" id="v-shorts">
     <div class="vhead"><span class="eyebrow">Vertical · 9:16 · 15 to 60 seconds</span><h1>Shorts <em>studio</em></h1><p>Pick up to three ideas. One tap writes, voices, draws, scores and renders each one with its own look.</p></div>
@@ -356,10 +387,7 @@ details.edit summary{cursor:pointer;font-weight:600}
         <div class="set"><label for="sVoice">Voice</label><div class="vrow"><select id="sVoice"></select><button class="pm" id="sVPrev" aria-label="Hear this voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
         <div class="set"><label for="sArt">Art</label><select id="sArt"></select></div>
         <div class="set"><label for="sCap">Captions</label><select id="sCap"><option value="pop">Bold pop</option><option value="story">Cinematic</option><option value="clean">Clean</option></select></div>
-        <div class="set"><label for="sHosts">Hosts</label><select id="sHosts"><option value="duo">Ledger &amp; Tack</option><option value="off">Narrator only</option></select></div>
-        <div class="set"><label for="sTack">Tack's voice</label><select id="sTack"></select></div>
       </div>
-      <p class="note">Ledger and Tack host explainers: Ledger explains, Tack asks the dumb questions. Ledger uses the voice above. Stories stay narrated.</p>
       <details class="vgal" id="sVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="sVList"></div></details>
       <p class="note" id="voiceNote">The voice runs on your device. The first video downloads it once (about 110 MB).</p>
     </div>
@@ -384,8 +412,6 @@ details.edit summary{cursor:pointer;font-weight:600}
         <div class="set"><label for="lVoice">Voice</label><div class="vrow"><select id="lVoice"></select><button class="pm" id="lVPrev" aria-label="Hear this voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
         <div class="set house"><label>Look</label><b>Unravel signature</b></div>
         <div class="set"><label for="lSubs">Subtitles</label><select id="lSubs"><option value="sub">Burned in</option><option value="none">Off</option></select></div>
-        <div class="set"><label for="lHosts">Hosts</label><select id="lHosts"><option value="duo">Ledger &amp; Tack</option><option value="off">Narrator only</option></select></div>
-        <div class="set"><label for="lTack">Tack's voice</label><select id="lTack"></select></div>
       </div>
       <details class="vgal" id="lVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="lVList"></div></details>
       <div class="housecard"><span class="sw" style="background:#0B1220"></span><span class="sw" style="background:#16233A"></span><span class="sw" style="background:#2C4466"></span><span class="sw" style="background:#E8A33D"></span><span class="sw" style="background:#F4EDE1"></span><p>Every long-form video uses the same house look: clean editorial illustration, one locked ink-and-amber palette, steady camera, quiet effects and the same chapter cards and subtitles. Your channel reads as one studio.</p></div>

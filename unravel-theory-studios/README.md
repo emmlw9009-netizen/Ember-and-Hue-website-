@@ -50,3 +50,11 @@ A scheduled task ("Unravel Theory: daily trend scout", runs 11:17 UTC) researche
 - **Ledger & Tack** host every explainer Short and documentary long-form (Style → Hosts; switch to "Narrator only" to turn them off). See STYLE.md for the comedy rules the script writer follows.
 - **Today's goal** card on the Shorts and Long-form screens: 1 long-form + 2 Shorts a day. Boxes show what you've made today; tap one when that video is posted. It syncs across devices and keeps a streak.
 - **Phone reminders**: two scheduled tasks push a notification every day, at 12:37 PM ("Midday check", with the idea of the day) and 6:43 PM ("Evening check") New York time.
+
+## Two channels in one app (added Nov 23, 2026)
+
+- **Ledger & Tack** (first tab, "L&T" on phones): its own studio for the Ledger & Tack channel. Pick Short (vertical) or Episode (horizontal, 3 to 8 min), pick up to 3 topics (each idea shows the question Tack would ask), set Ledger's and Tack's voices, and generate. These videos always have both hosts and use the locked Case File art style and palette (ink, walnut, cork, evidence red, paper) from STYLE.md. Chapter cards say "LEDGER & TACK".
+- **Unravel Theory Studios** (Shorts, Long-form, Series tabs): narrator-only, with the Unravel look.
+- The library labels Ledger & Tack videos "L&T" and has a filter for them.
+- Channel art: `channels/ledger-and-tack/pfp.png` (800x800 profile picture) and `banner.png` (2560x1440; title and both hosts sit inside YouTube's 1546x423 safe area). Re-render with `node shot.js` in that folder after `npm i @fontsource/archivo-black @fontsource/special-elite @fontsource/courier-prime`.
+- Tests: `app/tests/e2e8.js duo | duolong | uts` (Ledger & Tack Short, Ledger & Tack episode, Unravel Short), plus `e2e4.js ui | long | series` and `e2e7.js nav`.

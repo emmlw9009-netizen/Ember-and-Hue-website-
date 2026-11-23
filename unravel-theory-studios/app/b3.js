@@ -233,7 +233,7 @@ function drawChapterCard(p, t) {
     ctx.textAlign = "center"; ctx.fillStyle = "#FFFFFF"; ctx.font = "800 96px Syne, 'Bricolage Grotesque', sans-serif";
     const L = wrapW(words((p.title || "").toUpperCase()).map(w => ({ tx: w, w: ctx.measureText(w + " ").width })), 1500);
     L.forEach((l, i) => ctx.fillText(l.map(x => x.tx).join(" "), CW / 2, CH / 2 - (L.length - 1) * 55 + i * 110 + slide * 0.3));
-    ctx.font = "600 28px 'JetBrains Mono', monospace"; ctx.fillStyle = (p.look && p.look.hi) || "#5CE1E6"; ctx.fillText("UNRAVEL THEORY STUDIOS", CW / 2, CH / 2 + L.length * 60 + 50);
+    ctx.font = "600 28px 'JetBrains Mono', monospace"; ctx.fillStyle = (p.look && p.look.hi) || "#5CE1E6"; ctx.fillText(p.duo ? "LEDGER & TACK" : "UNRAVEL THEORY STUDIOS", CW / 2, CH / 2 + L.length * 60 + 50);
   } else {
     const x = 110 - slide, y = CH * 0.2;
     ctx.fillStyle = (p.look && p.look.hi) || "#5CE1E6"; ctx.fillRect(x, y - 70, 6, 150);

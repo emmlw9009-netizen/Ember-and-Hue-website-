@@ -48,7 +48,7 @@ const HOST = (() => {
     cache.set(key, c); return c;
   };
   const FACE_NAMES = Object.keys(FACES);
-  return { sprite, BOX, RS, FACE_NAMES };
+  return { sprite, build, BOX, RS, FACE_NAMES };
 })();
 function drawHosts(p, seg, t) {
   if (!p.duo) return;

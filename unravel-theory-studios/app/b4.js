@@ -35,7 +35,7 @@ function projDoc(p) {
   if (!p.createdAt) p.createdAt = Date.now();
   const d = { id: p.id, createdAt: p.createdAt, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
     chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
-    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, channel: p.duo ? "lt" : "uts", tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
   if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
   return d;
 }
@@ -59,17 +59,17 @@ async function uploadToCloud(P) {
   if (Object.keys(patch).length) { Object.assign(P, patch); await lib.save(projDoc(P)); }
 }
 /* ================= Navigation ================= */
-const VIEWS = ["shorts", "long", "series", "library"];
+const VIEWS = ["duo", "shorts", "long", "series", "library"];
 function go(v) {
   if (!VIEWS.includes(v)) v = "shorts";
   view = v; document.body.dataset.view = v;
   VIEWS.forEach(x => $("#v-" + x).hidden = x !== v); $("#v-make").hidden = true;
   $$("[data-go]").forEach(b => b.setAttribute("aria-current", b.dataset.go === v ? "page" : "false"));
-  $("#gobar").hidden = !(v === "shorts" || v === "long");
+  $("#gobar").hidden = !(v === "shorts" || v === "long" || v === "duo");
   updateGo(); updateBusy(); window.scrollTo({ top: 0 });
   if (location.hash.slice(1) !== v) { try { location.hash = v; } catch {} }
 }
-function showMake(kind) { VIEWS.forEach(x => $("#v-" + x).hidden = true); $("#v-make").hidden = false; batchDoneUnseen = false; setTimeout(updateBusy, 0); $("#gobar").hidden = true; document.body.dataset.view = kind === "long" ? "long" : (P && P.seriesId ? "series" : "shorts"); window.scrollTo({ top: 0 }); }
+function showMake(kind) { VIEWS.forEach(x => $("#v-" + x).hidden = true); $("#v-make").hidden = false; batchDoneUnseen = false; setTimeout(updateBusy, 0); $("#gobar").hidden = true; document.body.dataset.view = jobs[0] && jobs[0].p.duo ? "duo" : kind === "long" ? "long" : (P && P.seriesId ? "series" : "shorts"); window.scrollTo({ top: 0 }); }
 $$("[data-go]").forEach(b => b.addEventListener("click", () => { if (!$("#v-make").hidden && busyRun) { /* allow browsing while work runs */ } go(b.dataset.go); }));
 window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (VIEWS.includes(v) && v !== view) go(v); });
 
@@ -80,8 +80,7 @@ function renderShorts() {
   const sn = nichesFor(S.mode);
   $("#sNiches").replaceChildren(...sn.all.map(n => h("button", { class: "chip" + (sn.hot.has(n) ? " hot" : ""), title: sn.hot.has(n) ? "Trending this week" : null, "aria-pressed": String(n === S.niche), onclick: () => { S.niche = n; saveSettings(); renderShorts(); loadSIdeas(true); } }, n)));
   $("#sLen").value = String(S.length);
-  fill($("#sTack"), VOICES, S.tackVoice); $("#sHosts").value = S.hosts;
-  fill($("#sVoice"), VOICES, S.voice); fill($("#sArt"), Object.entries(ARTS).filter(([k]) => k !== "signature").map(([k, a]) => [k, a.label]), S.art); $("#sCap").value = S.cap;
+  fill($("#sVoice"), VOICES, S.voice); fill($("#sArt"), Object.entries(ARTS).filter(([k]) => k !== "signature" && k !== "casefile").map(([k, a]) => [k, a.label]), S.art); $("#sCap").value = S.cap;
   renderVList($("#sVList"), S.voice, id => { S.voice = id; saveSettings(); renderShorts(); });
   renderSIdeas(); updateGo();
 }
@@ -103,9 +102,6 @@ function togglePick(x) {
 function setSMode(m) { if (S.mode === m) return; const d = MODES[m]; S.mode = m; S.niche = d.niches[0]; S.voice = d.voice; S.art = d.art; S.cap = d.cap; picks = picks.filter(x => x.daily); sIdeas = []; saveSettings(); if (!useTrendIdeas("s")) { renderShorts(); loadSIdeas(true); } else renderShorts(); }
 $("#sfExplainer").onclick = () => setSMode("explainer"); $("#sfStory").onclick = () => setSMode("story");
 $("#sLen").onchange = e => { S.length = +e.target.value; saveSettings(); updateGo(); };
-$("#sHosts").onchange = e => { S.hosts = e.target.value; saveSettings(); };
-$("#lHosts").onchange = e => { S.lhosts = e.target.value; saveSettings(); };
-$("#sTack").onchange = $("#lTack").onchange = e => { S.tackVoice = e.target.value; saveSettings(); $("#sTack").value = $("#lTack").value = S.tackVoice; };
 $("#sVoice").onchange = e => { S.voice = e.target.value; saveSettings(); updateGo(); };
 $("#sArt").onchange = e => { S.art = e.target.value; saveSettings(); };
 $("#sCap").onchange = e => { S.cap = e.target.value; saveSettings(); };
@@ -132,12 +128,72 @@ Reply with ONLY a JSON array: [{"title":"short punchy title","hook":"opening lin
   sBusy = false; renderSIdeas(); updateGo();
 }
 
+/* ================= Ledger & Tack studio ================= */
+let dIdeas = LS.get("dIdeas", []), dPicks = [], dBusy = false;
+function drawDuoHero() {
+  const c = $("#duoHero"); if (!c) return; const g = c.getContext("2d"); g.clearRect(0, 0, c.width, c.height);
+  const put = (who, face, pose, x, s) => { const sp = HOST.sprite(who, face, pose, false), [, , bw, bh] = HOST.BOX[who]; g.drawImage(sp, x, c.height - bh * s + (who === "ledger" ? 250 * s : 0), bw * s, bh * s); };
+  const lf = ["explain", "proud", "smug", "deadpan"][dHeroI % 4], tf = ["confused", "shocked", "laughing", "smug"][dHeroI % 4];
+  put("ledger", lf, dHeroI % 4 === 3 ? "facepalm" : "explain", 0, 0.42); put("tack", tf, dHeroI % 4 === 1 ? "armsUp" : "handUp", 150, 0.42);
+}
+let dHeroI = 0; setInterval(() => { if (view === "duo" && !document.hidden) { dHeroI++; drawDuoHero(); } }, 2600);
+function renderDuo() {
+  $("#dfShort").setAttribute("aria-pressed", String(S.dfmt !== "long")); $("#dfLong").setAttribute("aria-pressed", String(S.dfmt === "long"));
+  $("#dNiches").replaceChildren(...DUO_NICHES.map(n => h("button", { class: "chip", "aria-pressed": String(n === S.dniche), onclick: () => { S.dniche = n; saveSettings(); renderDuo(); loadDIdeas(true); } }, n)));
+  const L = S.dfmt === "long", lens = L ? [[3, "3 minutes"], [5, "5 minutes"], [8, "8 minutes"]] : [[30, "30 seconds"], [45, "45 seconds"], [60, "60 seconds"]];
+  fill($("#dLen"), lens.map(([v, l]) => [String(v), l]), String(L ? S.dllen : S.dlen));
+  fill($("#dVoice"), VOICES, S.dvoice); fill($("#dTack"), VOICES, S.tackVoice); $("#dCapSet").hidden = L; $("#dCap").value = S.dcap;
+  drawDuoHero(); renderDIdeas(); updateGo();
+}
+function renderDIdeas(loading) {
+  const box = $("#dIdeas");
+  if (loading) { box.replaceChildren(...[0, 1, 2, 3].map(() => h("div", { class: "skel" }))); return; }
+  box.replaceChildren(...dIdeas.map(i => { const k = dPicks.findIndex(x => x.title === i.title); return h("button", { class: "idea", "aria-pressed": String(k >= 0), onclick: () => toggleDPick(i) },
+    h("b", { text: i.title }), h("i", {}, h("span", { class: "tq", text: "Tack: " }), "“" + (i.tackQ || i.hook) + "”"), h("span", { class: "tick", text: k >= 0 ? String(k + 1) : "" })); }));
+  $("#dPickCount").textContent = Math.min(3, dPicks.length + ($("#dOwn").value.trim() ? 1 : 0)) + " of 3 picked";
+}
+function toggleDPick(i) {
+  const k = dPicks.findIndex(x => x.title === i.title);
+  if (k >= 0) dPicks.splice(k, 1);
+  else if (dPicks.length + ($("#dOwn").value.trim() ? 1 : 0) >= 3) { toast("You can make 3 at a time"); return; }
+  else { dPicks.push(i); warmVoice(); }
+  renderDIdeas(); updateGo();
+}
+async function loadDIdeas(force) {
+  if (dBusy) return; const key = S.dfmt + "|" + S.dniche;
+  if (!force && dIdeas.length && LS.get("dIdeasKey", "") === key) { renderDIdeas(); return; }
+  dBusy = true; renderDIdeas(true); $("#dNote").textContent = ""; $("#dNote").className = "note";
+  try {
+    const avoid = force ? dIdeas.map(i => i.title).join("; ") : "";
+    const r = await askJSON(`You pick topics for "Ledger & Tack", a YouTube explainer channel hosted by a comedy double act: Ledger, a tall patient explainer, and Tack, a short guy in a giant cap who asks dumb but funny questions. Format: ${S.dfmt === "long" ? "a " + S.dllen + "-minute horizontal episode with chapters" : "a Short under a minute"}. Niche: ${S.dniche}.
+Give 6 topics with a true, checkable, surprising answer that is easy to draw as paper evidence (pinned photos, diagrams, specimens). For each, write the dumb-but-funny question Tack would ask that leads straight into the real answer.
+${GUARD}
+${trendNote()}
+${avoid ? "Do not repeat: " + avoid : ""}
+Reply with ONLY a JSON array: [{"title":"short punchy title","tackQ":"Tack's question, 9 words max","angle":"the surprising true answer in one sentence"}]`, "quick");
+    if (!Array.isArray(r) || !r.length) throw { code: "invalid_json" };
+    dIdeas = r.filter(i => i && i.title).slice(0, 6).map(i => ({ title: String(i.title), tackQ: String(i.tackQ || ""), angle: String(i.angle || "") }));
+    dPicks = []; LS.set("dIdeas", dIdeas); LS.set("dIdeasKey", key);
+  } catch (e) { $("#dNote").textContent = aiErr(e) + " You can also type your own topic."; $("#dNote").className = "note err"; }
+  dBusy = false; renderDIdeas(); updateGo();
+}
+$("#dfShort").onclick = () => { if (S.dfmt === "short") return; S.dfmt = "short"; saveSettings(); renderDuo(); };
+$("#dfLong").onclick = () => { if (S.dfmt === "long") return; S.dfmt = "long"; saveSettings(); renderDuo(); };
+$("#dLen").onchange = e => { if (S.dfmt === "long") S.dllen = +e.target.value; else S.dlen = +e.target.value; saveSettings(); updateGo(); };
+$("#dVoice").onchange = e => { S.dvoice = e.target.value; saveSettings(); };
+$("#dTack").onchange = e => { S.tackVoice = e.target.value; saveSettings(); };
+$("#dCap").onchange = e => { S.dcap = e.target.value; saveSettings(); };
+$("#dLVPrev").onclick = () => playSample(S.dvoice); $("#dTVPrev").onclick = () => playSample(S.tackVoice);
+$("#dOwn").addEventListener("input", () => { if ($("#dOwn").value.trim() && dPicks.length >= 3) dPicks.pop(); renderDIdeas(); updateGo(); });
+$("#dMore").onclick = () => loadDIdeas(true);
+$("#dPick3").onclick = () => { for (const i of dIdeas) { if (dPicks.length >= 3) break; if (!dPicks.some(x => x.title === i.title)) dPicks.push(i); } renderDIdeas(); updateGo(); warmVoice(); };
+
 /* ================= Long-form view ================= */
 function renderLong() {
   $("#lfDoc").setAttribute("aria-pressed", String(S.lmode === "doc")); $("#lfStory").setAttribute("aria-pressed", String(S.lmode === "lstory"));
   const ln = nichesFor(S.lmode);
   $("#lNiches").replaceChildren(...ln.all.map(n => h("button", { class: "chip" + (ln.hot.has(n) ? " hot" : ""), title: ln.hot.has(n) ? "Trending this week" : null, "aria-pressed": String(n === S.lniche), onclick: () => { S.lniche = n; saveSettings(); renderLong(); loadLIdeas(true); } }, n)));
-  $("#lLen").value = String(S.llen); fill($("#lVoice"), VOICES, S.lvoice); fill($("#lTack"), VOICES, S.tackVoice); $("#lHosts").value = S.lhosts; $("#lSubs").value = S.lsubs;
+  $("#lLen").value = String(S.llen); fill($("#lVoice"), VOICES, S.lvoice); $("#lSubs").value = S.lsubs;
   renderVList($("#lVList"), S.lvoice, id => { S.lvoice = id; saveSettings(); renderLong(); });
   renderLIdeas(); updateGo();
 }
@@ -230,10 +286,15 @@ cap("dictation").then(d => {
 });
 /* ================= Go bar ================= */
 function longSpecs() { const s = lPicks.map(x => ({ kind: "long", mode: S.lmode, topic: x.title + (x.angle ? ". " + x.angle : "") })); const own = $("#lOwn").value.trim(); if (own && s.length < 3) s.push({ kind: "long", mode: S.lmode, topic: own }); return s.slice(0, 3); }
+function duoSpecs() { const kind = S.dfmt === "long" ? "long" : "short"; const s = dPicks.map(x => ({ kind, duo: true, topic: x.title + (x.angle ? ". Angle: " + x.angle : "") + (x.tackQ ? ". Tack's question: " + x.tackQ : "") })); const own = $("#dOwn").value.trim(); if (own && s.length < 3) s.push({ kind, duo: true, topic: own }); return s.slice(0, 3); }
 function shortSpecs() { const s = picks.map(x => ({ kind: "short", mode: x.mode || S.mode, topic: x.title + (x.angle ? ". Angle: " + x.angle : "") })); const own = $("#sOwn").value.trim(); if (own && s.length < 3) s.push({ kind: "short", mode: S.mode, topic: own }); return s; }
 function updateGo() {
   const g = $("#go"), sub = $("#goSub");
-  if (view === "long") {
+  if (view === "duo") {
+    const n = duoSpecs().length, L = S.dfmt === "long";
+    g.disabled = !n || busyRun; g.textContent = n > 1 ? "Generate " + n + " Ledger & Tack " + (L ? "episodes" : "Shorts") : "Generate " + (L ? S.dllen + "-min episode" : "Ledger & Tack Short");
+    sub.textContent = busyRun ? "Working…" : n ? n + " × " + (L ? S.dllen + " min" : S.dlen + "s") + " · Ledger & Tack" : "Pick up to 3 topics";
+  } else if (view === "long") {
     const n = longSpecs().length;
     g.disabled = !n || busyRun; g.textContent = n > 1 ? "Generate " + n + " long-form videos" : "Generate " + S.llen + "-min video";
     sub.textContent = busyRun ? "Working…" : n ? n + " × " + S.llen + " min · about " + Math.round(n * S.llen * 6 + 10) + "+ min total" : "Pick up to 3 topics";
@@ -245,7 +306,8 @@ function updateGo() {
   $("#sPickCount").textContent = Math.min(3, picks.length + ($("#sOwn").value.trim() ? 1 : 0)) + " of 3 picked";
 }
 $("#go").onclick = () => {
-  if (view === "long") { const s = longSpecs(); if (s.length) startBatch(s); }
+  if (view === "duo") { const s = duoSpecs(); if (s.length) startBatch(s); }
+  else if (view === "long") { const s = longSpecs(); if (s.length) startBatch(s); }
   else { const s = shortSpecs(); if (s.length) startBatch(s); }
 };
 
@@ -262,11 +324,14 @@ async function artSlot(pri, fn) {
 }
 function newProject(spec) {
   const id = uid();
-  if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, duo: S.lhosts === "duo" && spec.mode === "doc", tackVoice: S.tackVoice, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
+  if (spec.duo) return spec.kind === "long"
+    ? { id, kind: "long", mode: "doc", duo: true, channel: "lt", topic: spec.topic, length: S.dllen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: "sub", scenes: [], palette: CASE_PAL.slice(), kit: {} }
+    : { id, kind: "short", mode: "explainer", duo: true, channel: "lt", topic: spec.topic, length: S.dlen, voice: S.dvoice, tackVoice: S.tackVoice, art: "casefile", cap: S.dcap, scenes: [], palette: CASE_PAL.slice(), kit: {} };
+  if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
   if (spec.series) { const se = spec.series, n = (se.episodes || []).length + 1;
     return { id, kind: "short", mode: se.mode, topic: `Episode ${n} of the series "${se.name}"${se.plan && se.plan[n - 1] ? ": " + se.plan[n - 1] : ""}`, length: se.length, voice: se.voice, art: se.art, cap: se.mode === "story" ? "story" : "pop", character: se.character, palette: se.palette, seriesId: se.id, episode: n, scenes: [], kit: {} }; }
   const same = spec.mode === S.mode, d = MODES[spec.mode];
-  return { id, kind: "short", mode: spec.mode, topic: spec.topic, length: S.length, voice: same ? S.voice : d.voice, art: same ? S.art : d.art, cap: same ? S.cap : d.cap, duo: S.hosts === "duo" && spec.mode === "explainer", tackVoice: S.tackVoice, scenes: [], palette: [], kit: {} };
+  return { id, kind: "short", mode: spec.mode, topic: spec.topic, length: S.length, voice: same ? S.voice : d.voice, art: same ? S.art : d.art, cap: same ? S.cap : d.cap, scenes: [], palette: [], kit: {} };
 }
 function makeJob(spec, idx) {
   const p = spec.existing || newProject(spec); if (!p.look) p.look = makeLook(p);
@@ -340,7 +405,7 @@ async function writeScript(job) {
     if (!o || !Array.isArray(o.chapters) || o.chapters.length < 2) throw { code: "invalid_json" };
     o.chapters = o.chapters.filter(c => c && c.title).map(c => ({ title: String(c.title), beats: String(c.beats || "") }));
     P.title = String(o.title || P.topic); P.character = String(o.character || ""); P.thumbText = String(o.thumbText || "");
-    P.palette = HOUSE_PAL.slice(); P.art = "signature"; P.chapters = o.chapters.map(c => ({ title: c.title }));
+    P.palette = P.duo ? CASE_PAL.slice() : HOUSE_PAL.slice(); P.art = P.duo ? "casefile" : "signature"; P.chapters = o.chapters.map(c => ({ title: c.title }));
     P.kit = { titles: (o.titles || []).map(String).slice(0, 3), description: String(o.description || ""), hashtags: String(o.hashtags || ""), pinned: String(o.pinnedComment || "") };
     let done = 0; st("script", null, "Writing " + o.chapters.length + " chapters…", 0.15);
     const parts = await Promise.all(o.chapters.map((c, ci) => artSlot(job.idx, async () => {
@@ -362,7 +427,7 @@ ${(se.episodes || []).length ? "Open by picking up directly from the last cliffh
     const r = await askJSON(scriptPrompt(P, extra));
     if (!r || !Array.isArray(r.scenes) || !r.scenes.length) throw { code: "invalid_json" };
     P.title = String(r.title || P.topic); P.character = P.seriesId ? P.character : String(r.character || "");
-    P.palette = P.seriesId && P.palette && P.palette.length ? P.palette : goodPal(r.palette, darkMode(P));
+    P.palette = P.duo ? CASE_PAL.slice() : P.seriesId && P.palette && P.palette.length ? P.palette : goodPal(r.palette, darkMode(P));
     P.scenes = parseScenes(r.scenes, P, null); P.summary = String(r.summary || ""); P.cliffhanger = String(r.cliffhanger || "");
     P.kit = { titles: (r.titles || []).map(String).slice(0, 3), description: String(r.description || ""), hashtags: String(r.hashtags || "#shorts"), pinned: String(r.pinnedComment || "") };
     if (P.seriesId) P.kit.titles = P.kit.titles.map(t => t.includes("Part") ? t : t + " (Part " + P.episode + ")");
@@ -522,7 +587,7 @@ function renderSeries() {
 function makeEpisode(se) { if (busyRun) { toast("Wait for the current videos to finish"); return; } startBatch([{ series: se }]); }
 $("#nsStory").onclick = () => { S.nsmode = "story"; saveSettings(); renderSeries(); fillNs(); };
 $("#nsExplainer").onclick = () => { S.nsmode = "explainer"; saveSettings(); renderSeries(); fillNs(); };
-function fillNs() { const d = MODES[S.nsmode]; fill($("#nsVoice"), VOICES, d.voice); fill($("#nsArt"), Object.entries(ARTS).filter(([k]) => k !== "signature").map(([k, a]) => [k, a.label]), d.art); renderNsV(); }
+function fillNs() { const d = MODES[S.nsmode]; fill($("#nsVoice"), VOICES, d.voice); fill($("#nsArt"), Object.entries(ARTS).filter(([k]) => k !== "signature" && k !== "casefile").map(([k, a]) => [k, a.label]), d.art); renderNsV(); }
 function renderNsV() { renderVList($("#nsVList"), $("#nsVoice").value, id => { $("#nsVoice").value = id; renderNsV(); }); }
 $("#nsVoice").addEventListener("change", renderNsV);
 async function createSeries(premise, mode, b, opts = {}) {
@@ -591,14 +656,14 @@ function renderStats() {
 let libFilter = "all";
 function renderLib() {
   renderStats();
-  const F = [["all", "All"], ["short", "Shorts"], ["long", "Long-form"], ["series", "Series"]];
+  const F = [["all", "All"], ["duo", "Ledger & Tack"], ["short", "Shorts"], ["long", "Long-form"], ["series", "Series"]];
   $("#libFilter").replaceChildren(...F.map(([k, l]) => h("button", { class: "chip", "aria-pressed": String(libFilter === k), onclick: () => { libFilter = k; renderLib(); } }, l)));
-  const list = lib.list.filter(x => libFilter === "all" || (libFilter === "series" ? x.seriesId : (x.kind || "short") === libFilter && !(libFilter === "short" && x.seriesId)));
+  const list = lib.list.filter(x => libFilter === "all" || (libFilter === "duo" ? x.duo : libFilter === "series" ? x.seriesId : (x.kind || "short") === libFilter && !(libFilter === "short" && x.seriesId)));
   const box = $("#lib");
   if (!list.length) { box.replaceChildren(h("div", { class: "empty", text: "Finished videos appear here with their titles, descriptions and hashtags." })); return; }
   box.replaceChildren(...list.map(x => { const L = x.kind === "long"; return h("button", { class: "vid" + (L ? " h" : ""), onclick: () => { if (busyRun) { toast("Wait for the current videos to finish"); return; } openSaved(x); } },
     x.thumb ? h("img", { src: x.thumb, alt: "" }) : h("span", { class: "ph" }),
-    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
+    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (x.duo ? "L&T · " : "") + (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
 }
 
 
@@ -660,7 +725,7 @@ function renderGoal() {
     h("div", { class: "slots" }, ...slots.map(([k, label, isMade]) => h("button", { class: "slot" + (isMade ? " made" : ""), "aria-pressed": String(posted.includes(k)), onclick: () => toggle(k) },
       h("b", { text: label }), h("small", { text: posted.includes(k) ? "Posted ✓" : isMade ? "Made, not posted" : "Not made yet" })))),
     h("small", { class: "ghint", text: "Tap a box once that video is up on YouTube. Syncs to your phone." }));
-  for (const id of ["#goalS", "#goalL"]) { const box = $(id); if (box) box.replaceChildren(card()); }
+  for (const id of ["#goalS", "#goalL", "#goalD"]) { const box = $(id); if (box) box.replaceChildren(card()); }
 }
 /* ================= Idea of the day ================= */
 let dailyList = [], dailyIdx = 0;
@@ -681,9 +746,9 @@ function renderDaily() {
 /* ================= Boot ================= */
 (function clock() { const el = $("#tcode"), t0 = performance.now(), slow = matchMedia("(prefers-reduced-motion: reduce)").matches;
   setInterval(() => { const s = (performance.now() - t0) / 1000, f = Math.floor((s % 1) * 30); el.textContent = [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60, f].map(n => String(n).padStart(2, "0")).join(":"); }, slow ? 1000 : 100); })();
-renderShorts(); renderLong(); fillNs(); renderSeries(); renderLib(); renderGoal();
-go(location.hash.slice(1) || "shorts");
+renderShorts(); renderLong(); renderDuo(); fillNs(); renderSeries(); renderLib(); renderGoal();
+go(location.hash.slice(1) || "duo");
 initSync();
-sampler().then(s => { if (!s) { $("#sNote").textContent = AI_ERR.unavailable; $("#sNote").className = "note err"; } else { loadSIdeas(); if (!lIdeas.length) loadLIdeas(); } });
+sampler().then(s => { if (!s) { $("#sNote").textContent = AI_ERR.unavailable; $("#sNote").className = "note err"; } else { loadDIdeas(); loadSIdeas(); if (!lIdeas.length) loadLIdeas(); } });
 idb.get("kokoro-q8-v1").then(c => { if (c && c.model) $("#voiceNote").textContent = "The voice is downloaded and runs on this device."; });
 })();
