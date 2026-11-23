@@ -19,21 +19,23 @@ function makeStore(coll, lsKey, onChange) {
     }
   };
 }
-const lib = makeStore("videos", "lib2", () => renderLib());
+const lib = makeStore("videos", "lib2", () => { renderLib(); renderGoal(); });
+const goals = makeStore("goals", "goals1", () => renderGoal());
 const seriesStore = makeStore("series", "series2", () => { renderSeries(); if (typeof renderSeriesTrends === "function" && trends) renderSeriesTrends(); });
 async function initSync() {
   try {
     const [db, user] = await Promise.all([cap("db"), cap("user")]); if (!db || !user) return;
     const id = await user.id(); if (!id) return;
-    lib.attach(db, id); seriesStore.attach(db, id); $("#sync").textContent = "Synced";
+    lib.attach(db, id); seriesStore.attach(db, id); goals.attach(db, id); $("#sync").textContent = "Synced";
     db.doc("trends/current").onSnapshot(s => { trends = s.exists ? s.data() : null; applyTrends(); }, () => {});
     db.collection("daily").orderBy("date", "desc").limit(7).onSnapshot(snap => { dailyList = snap.docs.map(d => d.data()).filter(x => x && x.title); dailyIdx = 0; renderDaily(); }, () => {});
   } catch {}
 }
 function projDoc(p) {
-  const d = { id: p.id, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
+  if (!p.createdAt) p.createdAt = Date.now();
+  const d = { id: p.id, createdAt: p.createdAt, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
     chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
-    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "" })), kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "", speaker: s.speaker || "", lf: s.lf || "", tf: s.tf || "", artOf: s.artOf || "" })), duo: !!p.duo, tackVoice: p.tackVoice || "", kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
   if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
   return d;
 }
@@ -78,6 +80,7 @@ function renderShorts() {
   const sn = nichesFor(S.mode);
   $("#sNiches").replaceChildren(...sn.all.map(n => h("button", { class: "chip" + (sn.hot.has(n) ? " hot" : ""), title: sn.hot.has(n) ? "Trending this week" : null, "aria-pressed": String(n === S.niche), onclick: () => { S.niche = n; saveSettings(); renderShorts(); loadSIdeas(true); } }, n)));
   $("#sLen").value = String(S.length);
+  fill($("#sTack"), VOICES, S.tackVoice); $("#sHosts").value = S.hosts;
   fill($("#sVoice"), VOICES, S.voice); fill($("#sArt"), Object.entries(ARTS).filter(([k]) => k !== "signature").map(([k, a]) => [k, a.label]), S.art); $("#sCap").value = S.cap;
   renderVList($("#sVList"), S.voice, id => { S.voice = id; saveSettings(); renderShorts(); });
   renderSIdeas(); updateGo();
@@ -100,6 +103,9 @@ function togglePick(x) {
 function setSMode(m) { if (S.mode === m) return; const d = MODES[m]; S.mode = m; S.niche = d.niches[0]; S.voice = d.voice; S.art = d.art; S.cap = d.cap; picks = picks.filter(x => x.daily); sIdeas = []; saveSettings(); if (!useTrendIdeas("s")) { renderShorts(); loadSIdeas(true); } else renderShorts(); }
 $("#sfExplainer").onclick = () => setSMode("explainer"); $("#sfStory").onclick = () => setSMode("story");
 $("#sLen").onchange = e => { S.length = +e.target.value; saveSettings(); updateGo(); };
+$("#sHosts").onchange = e => { S.hosts = e.target.value; saveSettings(); };
+$("#lHosts").onchange = e => { S.lhosts = e.target.value; saveSettings(); };
+$("#sTack").onchange = $("#lTack").onchange = e => { S.tackVoice = e.target.value; saveSettings(); $("#sTack").value = $("#lTack").value = S.tackVoice; };
 $("#sVoice").onchange = e => { S.voice = e.target.value; saveSettings(); updateGo(); };
 $("#sArt").onchange = e => { S.art = e.target.value; saveSettings(); };
 $("#sCap").onchange = e => { S.cap = e.target.value; saveSettings(); };
@@ -131,7 +137,7 @@ function renderLong() {
   $("#lfDoc").setAttribute("aria-pressed", String(S.lmode === "doc")); $("#lfStory").setAttribute("aria-pressed", String(S.lmode === "lstory"));
   const ln = nichesFor(S.lmode);
   $("#lNiches").replaceChildren(...ln.all.map(n => h("button", { class: "chip" + (ln.hot.has(n) ? " hot" : ""), title: ln.hot.has(n) ? "Trending this week" : null, "aria-pressed": String(n === S.lniche), onclick: () => { S.lniche = n; saveSettings(); renderLong(); loadLIdeas(true); } }, n)));
-  $("#lLen").value = String(S.llen); fill($("#lVoice"), VOICES, S.lvoice); $("#lSubs").value = S.lsubs;
+  $("#lLen").value = String(S.llen); fill($("#lVoice"), VOICES, S.lvoice); fill($("#lTack"), VOICES, S.tackVoice); $("#lHosts").value = S.lhosts; $("#lSubs").value = S.lsubs;
   renderVList($("#lVList"), S.lvoice, id => { S.lvoice = id; saveSettings(); renderLong(); });
   renderLIdeas(); updateGo();
 }
@@ -256,11 +262,11 @@ async function artSlot(pri, fn) {
 }
 function newProject(spec) {
   const id = uid();
-  if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
+  if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, duo: S.lhosts === "duo" && spec.mode === "doc", tackVoice: S.tackVoice, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
   if (spec.series) { const se = spec.series, n = (se.episodes || []).length + 1;
     return { id, kind: "short", mode: se.mode, topic: `Episode ${n} of the series "${se.name}"${se.plan && se.plan[n - 1] ? ": " + se.plan[n - 1] : ""}`, length: se.length, voice: se.voice, art: se.art, cap: se.mode === "story" ? "story" : "pop", character: se.character, palette: se.palette, seriesId: se.id, episode: n, scenes: [], kit: {} }; }
   const same = spec.mode === S.mode, d = MODES[spec.mode];
-  return { id, kind: "short", mode: spec.mode, topic: spec.topic, length: S.length, voice: same ? S.voice : d.voice, art: same ? S.art : d.art, cap: same ? S.cap : d.cap, scenes: [], palette: [], kit: {} };
+  return { id, kind: "short", mode: spec.mode, topic: spec.topic, length: S.length, voice: same ? S.voice : d.voice, art: same ? S.art : d.art, cap: same ? S.cap : d.cap, duo: S.hosts === "duo" && spec.mode === "explainer", tackVoice: S.tackVoice, scenes: [], palette: [], kit: {} };
 }
 function makeJob(spec, idx) {
   const p = spec.existing || newProject(spec); if (!p.look) p.look = makeLook(p);
@@ -319,7 +325,11 @@ async function startBatch(specs) {
   $("#mkSub").replaceChildren(h("span", { text: ok ? "Open each one to watch it, save it and copy its upload kit. " : "" }), h("button", { class: "btn sm", text: "Make more", onclick: () => go(kind === "long" ? "long" : "shorts") }));
 }
 function parseScenes(arr, P, ch) {
-  return arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0 }));
+  const duo = isDuo(P), FN = HOST.FACE_NAMES, face = (v, d) => FN.includes(v) ? v : d;
+  const out = arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0,
+    ...(duo ? { speaker: s.speaker === "tack" ? "tack" : "ledger", lf: face(s.ledgerFace, "explain"), tf: face(s.tackFace, "confused") } : {}) }));
+  if (duo) out.forEach((s, k) => { if (s.speaker === "tack" && k > 0) { s.artOf = out[k - 1].artOf || out[k - 1].id; s.visual = ""; s.emphasis = ""; } });
+  return out;
 }
 const goodPal = (a, dark) => { const p = (Array.isArray(a) ? a : []).filter(c => /^#[0-9a-f]{3,8}$/i.test(c)).slice(0, 5); return p.length >= 3 ? p : dark ? ["#07070d", "#1b1630", "#3d2f5c", "#b06a3b", "#f4c27a"] : ["#0d1030", "#2337a8", "#4f8cff", "#ffb547", "#fff3d6"]; };
 async function writeScript(job) {
@@ -340,6 +350,7 @@ async function writeScript(job) {
       return parseScenes(r.scenes, P, ci);
     })));
     P.scenes = parts.flat();
+    P.scenes.forEach((s, k) => { if (s.speaker === "tack" && !s.artOf && k > 0) { s.artOf = P.scenes[k - 1].artOf || P.scenes[k - 1].id; s.visual = ""; } });
   } else {
     st("script", "active", P.seriesId ? "Picking up from the last cliffhanger…" : "Writing the script…");
     let extra = "";
@@ -367,11 +378,11 @@ async function runJob(job) {
       st("voice", "active", "Recording the voiceover…", 0);
       const tts = await cpuLock(() => loadVoice((f, c) => st("voice", null, c ? "Voice loaded" : "Downloading the voice once · " + Math.round(f * 100) + "%", f * 0.5)));
       const clips = [];
-      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); clips.push(await cpuLock(() => speak(tts, P.scenes[i].narration, P.voice, MODES[P.mode].speed))); }
+      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); const tk = P.scenes[i].speaker === "tack"; clips.push(await cpuLock(() => speak(tts, P.scenes[i].narration, tk ? (P.tackVoice || "am_puck") : P.voice, MODES[P.mode].speed * (tk ? 1.12 : 1)))); }
       st("voice", "done"); return clips;
     })();
     const artJob = (async () => {
-      const need = P.scenes.filter(s => !arts.has(s.id)); let done = P.scenes.length - need.length;
+      const need = P.scenes.filter(s => !s.artOf && !arts.has(s.id)); let done = P.scenes.length - need.length;
       st("art", "active", "Drawing " + P.scenes.length + " scenes…", done / P.scenes.length);
       let qi = 0;
       const worker = async () => {
@@ -475,9 +486,9 @@ $("#bRemake").onclick = () => { if (busyRun) { toast("Wait for the current video
 $("#bBack").onclick = () => go(P && P.kind === "long" ? "long" : P && P.seriesId ? "series" : view === "long" ? "long" : view);
 $("#bNext").onclick = () => { const se = seriesStore.list.find(x => x.id === P.seriesId); if (se) makeEpisode(se); };
 function renderLines() {
-  $("#lines").replaceChildren(...P.scenes.map((s, i) => h("div", { class: "line" }, h("img", { src: thumbs.get(s.id) || "", alt: "Scene " + (i + 1) }),
+  $("#lines").replaceChildren(...P.scenes.map((s, i) => h("div", { class: "line" }, h("img", { src: thumbs.get(aid(s)) || "", alt: "Scene " + (i + 1) }),
     h("div", {}, h("textarea", { "aria-label": "Line " + (i + 1), value: s.narration, oninput: e => { s.narration = e.target.value; } }),
-      h("div", { class: "la" }, h("button", { class: "btn sm", text: "Redraw", onclick: e => { arts.delete(s.id); s.svg = ""; e.currentTarget.textContent = "Will redraw"; e.currentTarget.disabled = true; } }))))),
+      h("div", { class: "la" }, h("button", { class: "btn sm", text: "Redraw", onclick: e => { const o = P.scenes.find(x => x.id === aid(s)) || s; arts.delete(o.id); o.svg = ""; e.currentTarget.textContent = "Will redraw"; e.currentTarget.disabled = true; } }))))),
     h("p", { class: "note", text: "Press Re-make to apply your edits." }));
 }
 async function openSaved(x) {
@@ -633,6 +644,24 @@ function renderSeriesTrends() {
       h("div", { class: "row" }, h("button", { class: "btn sm sig", text: made ? "Created" : "Create series", disabled: made, onclick: e => createSeries(x.premise, x.mode === "explainer" ? "explainer" : "story", e.currentTarget) }),
         h("button", { class: "btn sm ghost", text: "Edit first", onclick: () => { $("#nsPremise").value = x.premise; S.nsmode = x.mode === "explainer" ? "explainer" : "story"; saveSettings(); renderSeries(); fillNs(); $("#nsPremise").scrollIntoView({ behavior: "smooth", block: "center" }); } }))); }));
 }
+/* ================= Daily posting goal: 1 long-form + 2 Shorts ================= */
+const dayKey = (t = Date.now()) => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+function renderGoal() {
+  const today = dayKey(), g = goals.list.find(x => x.id === today) || { id: today, date: today, posted: [] }, posted = g.posted || [];
+  const made = lib.list.filter(x => dayKey(x.createdAt || x.updatedAt || 0) === today);
+  const mLong = made.filter(x => x.kind === "long").length, mShort = made.filter(x => x.kind !== "long").length;
+  const slots = [["long", "Long-form", mLong >= 1, "long"], ["s1", "Short 1", mShort >= 1, "shorts"], ["s2", "Short 2", mShort >= 2, "shorts"]];
+  const n = slots.filter(s => posted.includes(s[0])).length, full = k => { const x = goals.list.find(y => y.id === k); return x && (x.posted || []).length >= 3; };
+  let streak = 0; for (let i = full(today) ? 0 : 1; i < 400 && full(dayKey(Date.now() - i * 864e5)); i++) streak++;
+  const toggle = k => { const p2 = posted.includes(k) ? posted.filter(x => x !== k) : posted.concat(k); goals.save({ id: today, date: today, posted: p2 }); };
+  const card = () => h("div", { class: "gwrap" },
+    h("div", { class: "gh" }, h("span", { text: "Today's goal · 1 long + 2 Shorts" }), h("b", { text: n >= 3 ? "All 3 posted. Nice." : n + " of 3 posted" }), streak ? h("span", { class: "streak", text: streak + "-day streak" }) : null),
+    h("div", { class: "gbar" }, h("i", { style: "width:" + Math.round(n / 3 * 100) + "%" })),
+    h("div", { class: "slots" }, ...slots.map(([k, label, isMade]) => h("button", { class: "slot" + (isMade ? " made" : ""), "aria-pressed": String(posted.includes(k)), onclick: () => toggle(k) },
+      h("b", { text: label }), h("small", { text: posted.includes(k) ? "Posted ✓" : isMade ? "Made, not posted" : "Not made yet" })))),
+    h("small", { class: "ghint", text: "Tap a box once that video is up on YouTube. Syncs to your phone." }));
+  for (const id of ["#goalS", "#goalL"]) { const box = $(id); if (box) box.replaceChildren(card()); }
+}
 /* ================= Idea of the day ================= */
 let dailyList = [], dailyIdx = 0;
 function renderDaily() {
@@ -652,7 +681,7 @@ function renderDaily() {
 /* ================= Boot ================= */
 (function clock() { const el = $("#tcode"), t0 = performance.now(), slow = matchMedia("(prefers-reduced-motion: reduce)").matches;
   setInterval(() => { const s = (performance.now() - t0) / 1000, f = Math.floor((s % 1) * 30); el.textContent = [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60, f].map(n => String(n).padStart(2, "0")).join(":"); }, slow ? 1000 : 100); })();
-renderShorts(); renderLong(); fillNs(); renderSeries(); renderLib();
+renderShorts(); renderLong(); fillNs(); renderSeries(); renderLib(); renderGoal();
 go(location.hash.slice(1) || "shorts");
 initSync();
 sampler().then(s => { if (!s) { $("#sNote").textContent = AI_ERR.unavailable; $("#sNote").className = "note err"; } else { loadSIdeas(); if (!lIdeas.length) loadLIdeas(); } });

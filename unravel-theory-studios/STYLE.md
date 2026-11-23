@@ -25,6 +25,26 @@ Shared build: huge round white head, 11 px black outline, soft grey shading at t
 | Nan | Grey bun | Knows everything, smug |
 | The crowd | Party hats in pink, blue, yellow | "Everybody" in "everybody but me" videos |
 
+### The hosts: Ledger & Tack
+
+Every explainer Short and documentary long-form is a two-hander. Hosts are drawn by the app's engine (`app/cast.js`) and stand in the bottom corners, Ledger left, Tack right. The speaker's mouth moves and he bobs while talking. Stories and series stay narrated.
+
+| Host | Look | Role | Voice |
+| --- | --- | --- | --- |
+| Ledger | Tall, rectangular glasses, black hair swoop, red tie | The patient explainer and straight man. Carries every fact. | The voice picked in Style |
+| Tack | Short, huge mustard cap, pink cheeks | Asks the dumb-but-funny questions viewers secretly have | Tack's voice (default Puck), 12% faster |
+
+How the double act works (from classic straight-man / funny-man teams like Burns & Allen and Abbott & Costello):
+
+- About 3 Ledger lines for every Tack line; never two Tack lines in a row. Tack lines are 2 to 9 words.
+- Every Tack question sets up the next fact. His wrong guess opens the door to the real answer, so jokes move the explanation forward instead of stopping it.
+- Ledger's patience drops in threes: kind answer, tighter answer, then a deadpan beat.
+- Once per video Tack is accidentally right, and Ledger has to admit it. That reversal is the biggest laugh.
+- Tack gets the last line: a button that reframes the topic.
+- The facts stay true. The comedy comes from questions and reactions, never wrong information.
+
+Faces the engine can draw: explain, deadpan, confused, proud, smug, shocked, terrified, dizzy, nervous, laughing. Character sheet: `design/canvas/project/C03-LedgerTack.dc.html`.
+
 Reactions on file: neutral, proud, dying laughing, shocked, furious, steaming, in love, sobbing, nervous, smug, dizzy, terrified, determined/grit.
 
 ## Color

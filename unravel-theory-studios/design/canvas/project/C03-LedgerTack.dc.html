@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ledger and Tack character sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Special+Elite&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C8281E}a:hover{color:#111}
+</style>
+</helmet>
+<div style="width: 2720px; height: 1460px; box-sizing: border-box; background: #F4F2EC; color: #111111; font-family: 'Courier Prime', 'Courier New', monospace; padding: 64px 72px; display: grid; grid-template-columns: 900px minmax(0, 1fr); gap: 56px">
+  <div style="display: flex; flex-direction: column; gap: 18px">
+    <span style="font-size: 16px; font-weight: 700; letter-spacing: 0.2em; color: #C8281E">CASE FILE · THE HOSTS</span>
+    <h1 style="margin: 0; font-family: 'Archivo Black', Impact, sans-serif; font-size: 84px; line-height: 0.92; text-transform: uppercase">Ledger &amp; Tack</h1>
+    <svg viewBox="0 0 900 1060" width="900" height="1060" role="img" aria-label="Ledger, tall with glasses and a red tie, stands next to Tack, short with an oversized mustard cap" style="display: block; background: #FFFFFF; border: 3px solid #111111">
+      <path d="M0 1010 H900" stroke="#111" stroke-width="3"/>
+      <g stroke="#B8B2A6" stroke-width="2" stroke-dasharray="6 8"><path d="M40 70 H860 M40 520 H860"/></g>
+      <sc-for list="{{ lineup }}" as="c" hint-placeholder-count="2">
+        <g transform="{{ c.t }}">
+          <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="14">
+            <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+          </sc-for>
+        </g>
+      </sc-for>
+    </svg>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; font-size: 17px; line-height: 1.45">
+      <div><b style="font-family: 'Archivo Black', sans-serif; font-size: 26px">LEDGER</b><br>The explainer. Tall, glasses, red tie, hair parted like a filing tab. Patient, precise, slowly cracking. The straight man.</div>
+      <div><b style="font-family: 'Archivo Black', sans-serif; font-size: 26px">TACK</b><br>The question guy. Half Ledger's height, cap two sizes too big, permanent blush. Asks dumb questions with their own logic.</div>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 26px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: 0.2em; color: #C8281E">HOW THE DYNAMIC WORKS</span>
+      <p style="margin: 0; font-size: 20px; line-height: 1.5; max-width: 1500px">Ledger explains, Tack interrupts. Every dumb question sets up the next fact, so the jokes move the story forward. Ledger's patience drops a notch each time (rule of three), and once a video Tack is accidentally right. Tack gets the last line.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px">
+      <sc-for list="{{ moments }}" as="m" hint-placeholder-count="6">
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <svg viewBox="0 0 600 470" width="100%" role="img" aria-label="{{ m.aria }}" style="display: block; background: #FFFFFF; border: 3px solid #111111">
+            <path d="M0 450 H600" stroke="#111" stroke-width="3"/>
+            <sc-for list="{{ m.chars }}" as="c" hint-placeholder-count="2">
+              <g transform="{{ c.t }}">
+                <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="14">
+                  <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+                </sc-for>
+              </g>
+            </sc-for>
+          </svg>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-family: 'Special Elite', 'Courier New', monospace; font-size: 18px; line-height: 1.35">
+            <span><b style="font-family: 'Courier Prime', monospace; color: #C8281E">LEDGER</b> {{ m.l }}</span>
+            <span><b style="font-family: 'Courier Prime', monospace; color: #B9852C">TACK</b> {{ m.k }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2720,"height":1460}}'>
+class Component extends DCLogic {
+renderVals() {
+  const K = '#111111', R = '#D9363E', W = '#FFFFFF', B = '#5BB8F0', P = '#F08AA0', N = 'none';
+  const f = (d, fill, stroke, sw) => ({ d, fill: fill || N, stroke: stroke || N, sw: sw || 0 });
+  const capsule = (x, y, w, h) => 'M' + x + ' ' + (y + w / 2) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + w + ' 0 v' + (h - w) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + (-w) + ' 0 z';
+  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 z';
+  const drop = (x, y, s) => 'M' + x + ' ' + y + ' C ' + (x + s) + ' ' + (y + 1.6 * s) + ' ' + (x + s) + ' ' + (y + 2.4 * s) + ' ' + x + ' ' + (y + 2.4 * s) + ' C ' + (x - s) + ' ' + (y + 2.4 * s) + ' ' + (x - s) + ' ' + (y + 1.6 * s) + ' ' + x + ' ' + y + ' Z';
+  const eyes = (w, h, y) => [f(capsule(182 - w, y, w, h), K), f(capsule(218, y, w, h), K)];
+  const shine = (y) => [f(circ(166, y, 7), W), f(circ(236, y, 7), W)];
+  const openMouth = (y, w, h) => [f('M' + (200 - w / 2) + ' ' + y + ' h' + w + ' q0 ' + h + ' ' + (-w / 2) + ' ' + h + ' q' + (-w / 2) + ' 0 ' + (-w / 2) + ' ' + (-h) + ' z', R, K, 8), f('M' + (200 - w / 2 + 6) + ' ' + (y + 4) + ' l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8 - 12) + ' -14 z', W)];
+  const FACES = {
+    explain: [...eyes(34, 58, 138), f('M164 222 h72 q0 36 -36 36 q-36 0 -36 -36 z', R, K, 8), f('M176 246 q24 -14 48 0 q-24 10 -48 0 z', P)],
+    deadpan: [f('M148 160 h40 v14 a20 20 0 0 1 -40 0 z', K), f('M212 160 h40 v14 a20 20 0 0 1 -40 0 z', K), f('M142 154 h52 M206 154 h52', N, K, 10), f('M180 246 h40', N, K, 8)],
+    confused: [f(capsule(146, 132, 40, 70), K), f(capsule(222, 150, 26, 42), K), f('M142 110 q24 -20 48 -4 M214 136 q16 6 34 4', N, K, 9), f(circ(196, 246, 12), R, K, 7), f('M316 40 q0 -26 22 -26 q22 0 22 22 q0 16 -22 22 v16 M338 110 v2', N, K, 9)],
+    proud: [f('M146 172 q22 -28 44 0', N, K, 11), f('M210 172 q22 -28 44 0', N, K, 11), f('M156 228 q44 40 88 0', N, K, 10)],
+    smug: [f('M148 156 h44 v16 a22 22 0 0 1 -44 0 z', K), f('M208 156 h44 v16 a22 22 0 0 1 -44 0 z', K), f('M204 130 q24 -16 50 -4', N, K, 9), f('M172 246 q40 12 64 -14', N, K, 9)],
+    shocked: [...eyes(44, 82, 124), ...shine(150), f(circ(200, 258, 22), R, K, 8), f('M64 96 l-26 -22 M336 96 l26 -22 M54 176 h-34 M346 176 h34', N, K, 8)],
+    terrified: [f(circ(166, 166, 34), W, K, 8), f(circ(234, 166, 34), W, K, 8), f(circ(172, 172, 7), K), f(circ(240, 172, 7), K), f('M178 224 q22 -6 44 0 q8 34 -22 58 q-30 -24 -22 -58 z', R, K, 8), f(drop(318, 96, 13), B, K, 4)],
+    dizzy: [f('M168 160 m-22 0 a22 22 0 1 1 22 22 a14 14 0 1 1 -12 -14 a6 6 0 1 1 6 6', N, K, 7), f('M232 160 m-22 0 a22 22 0 1 1 22 22 a14 14 0 1 1 -12 -14 a6 6 0 1 1 6 6', N, K, 7), f('M168 236 q32 16 64 0', N, K, 9), f('M210 242 q8 30 24 26 q10 -4 4 -26 z', P, K, 5)],
+    nervous: [...eyes(30, 52, 146), f('M164 248 q9 -10 18 0 t18 0 t18 0 t18 0', N, K, 8), f(drop(312, 108, 14), B, K, 4)],
+    laughing: [f('M144 160 l22 14 l-22 14', N, K, 10), f('M256 160 l-22 14 l22 14', N, K, 10), ...openMouth(214, 116, 70), f('M176 266 q24 -22 48 0 q-24 14 -48 0 z', P, K, 5)]
+  };
+  const shade = f('M98 238 C 140 306 260 306 302 238 C 296 280 252 298 200 298 C 148 298 104 280 98 238 Z', '#E9E9E9');
+  const head = f(circ(200, 180, 120), W, K, 11);
+  const LEDGER_POSES = {
+    explain: 'M200 300 V620 M200 360 L140 470 L176 540 M200 360 L292 312 L330 250 M200 620 L170 850 M200 620 L232 850',
+    point: 'M200 300 V620 M200 360 L140 470 L176 540 M200 360 L340 300 M200 620 L170 850 M200 620 L232 850',
+    facepalm: 'M200 300 V620 M200 360 L262 300 L236 190 M200 360 L140 470 L150 560 M200 620 L170 850 M200 620 L232 850',
+    stand: 'M200 300 V620 M200 360 L150 500 M200 360 L250 500 M200 620 L170 850 M200 620 L232 850',
+    armsUp: 'M200 300 V620 M200 360 L120 250 M200 360 L280 250 M200 620 L160 850 M200 620 L240 850'
+  };
+  const TACK_POSES = {
+    handUp: 'M200 300 V380 M200 330 L270 220 M200 330 L150 380 M200 380 L176 440 M200 380 L224 440',
+    stand: 'M200 300 V380 M200 330 L150 380 M200 330 L250 380 M200 380 L176 440 M200 380 L224 440',
+    armsUp: 'M200 300 V380 M200 330 L134 250 M200 330 L266 250 M200 380 L172 440 M200 380 L228 440',
+    shrug: 'M200 300 V380 M200 330 L146 316 L130 280 M200 330 L254 316 L270 280 M200 380 L176 440 M200 380 L224 440'
+  };
+  const ledger = (face, pose) => [
+    f(LEDGER_POSES[pose], N, K, 24),
+    f('M200 312 L188 360 L200 470 L212 360 Z', '#C8281E', K, 5),
+    head, shade,
+    f('M112 120 C 120 60 200 44 270 70 C 230 66 196 80 170 104 C 150 92 128 100 112 120 Z', K),
+    ...FACES[face],
+    f('M136 128 h60 a10 10 0 0 1 10 10 v52 a10 10 0 0 1 -10 10 h-60 a10 10 0 0 1 -10 -10 v-52 a10 10 0 0 1 10 -10 z M204 128 h60 a10 10 0 0 1 10 10 v52 a10 10 0 0 1 -10 10 h-60 a10 10 0 0 1 -10 -10 v-52 a10 10 0 0 1 10 -10 z M196 160 h8', N, K, 7)
+  ];
+  const tack = (face, pose) => [
+    f(TACK_POSES[pose], N, K, 24),
+    head, shade,
+    f(circ(126, 226, 16), P), f(circ(274, 226, 16), P),
+    ...FACES[face],
+    f('M66 140 C 70 20 330 20 334 140 C 260 112 140 112 66 140 Z', '#D9A441', K, 9),
+    f('M40 150 C 130 106 270 104 360 138 C 270 132 130 138 40 150 Z', '#B9852C', K, 9),
+    f(circ(200, 46, 12), K)
+  ];
+  const place = (shapes, x, base, s, tall) => ({ t: 'translate(' + x + ' ' + (base - (tall ? 860 : 444) * s) + ') scale(' + s + ')', shapes });
+  const duo = (lf, lp, tf, tp) => [place(ledger(lf, lp), 30, 448, 0.48, true), place(tack(tf, tp), 330, 448, 0.48, false)];
+  return {
+    lineup: [place(ledger('explain', 'explain'), 60, 1008, 1.08, true), place(tack('confused', 'handUp'), 470, 1008, 1.08, false)],
+    moments: [
+      { chars: duo('explain', 'explain', 'confused', 'handUp'), l: 'A volcano threw ash into the sky…', k: 'Like a sneeze?', aria: 'Ledger explains while Tack is confused' },
+      { chars: duo('deadpan', 'stand', 'proud', 'handUp'), l: 'The ash blocked the sunlight.', k: 'Okay but what if we turned the sun up.', aria: 'Ledger deadpans while Tack proudly raises his hand' },
+      { chars: duo('deadpan', 'facepalm', 'smug', 'shrug'), l: 'That is not how the sun works.', k: 'Agree to disagree.', aria: 'Ledger facepalms while Tack shrugs smugly' },
+      { chars: duo('shocked', 'stand', 'smug', 'stand'), l: '…so it was the volcano all along?', k: 'Told you the sky sneezed.', aria: 'Ledger is shocked that Tack was right' },
+      { chars: duo('terrified', 'armsUp', 'terrified', 'armsUp'), l: 'Snow. In July.', k: 'IN JULY?!', aria: 'Ledger and Tack scream together' },
+      { chars: duo('nervous', 'point', 'dizzy', 'stand'), l: 'And that is the whole chain of events.', k: 'My brain is buffering.', aria: 'Ledger finishes explaining while Tack is dizzy' }
+    ]
+  };
+}
+}
+</script>
+</body>
+</html>

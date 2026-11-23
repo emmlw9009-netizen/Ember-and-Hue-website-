@@ -95,7 +95,8 @@ function rasterize(art) {
   rasLRU.push(art); while (rasLRU.length > 4) { const o = rasLRU.shift(); if (!o.canvas) o.ras = null; }
   return art.ras;
 }
-function prefetch(p, si) { for (const j of [si + 1, si + 2]) { const s = p.scenes[j]; const a = s && arts.get(s.id); if (a && !a.ras) setTimeout(() => { try { rasterize(a); } catch {} }, 0); } }
+const aid = s => s.artOf || s.id;
+function prefetch(p, si) { for (const j of [si + 1, si + 2]) { const s = p.scenes[j]; const a = s && arts.get(aid(s)); if (a && !a.ras) setTimeout(() => { try { rasterize(a); } catch {} }, 0); } }
 function thumbOfArt(art) { const H2 = art.ori === "h", t = H2 ? mk(192, 108) : mk(108, 192), g = t.getContext("2d"); if (art.canvas) g.drawImage(art.canvas, 0, 0, t.width, t.height); else art.imgs.forEach(im => g.drawImage(im, 0, 0, t.width, t.height)); return t.toDataURL("image/jpeg", 0.72); }
 const thumbs = new Map(), arts = new Map();
 
@@ -174,7 +175,7 @@ function gradeHouse(t) {
 function wrapW(items, maxW) { const L = []; let cur = [], w = 0; for (const it of items) { if (cur.length && w + it.w > maxW) { L.push(cur); cur = []; w = 0; } cur.push(it); w += it.w; } if (cur.length) L.push(cur); return L; }
 function capStyle(p) {
   const lk = p.look || {}, hi = lk.hi || "#FFD84D";
-  if (p.cap === "sub") return { chunk: 11, font: "600 50px Inter, system-ui, sans-serif", up: false, fill: "#FFFFFF", hi: "#FFFFFF", box: true, lh: 66, y: 0.88, maxW: 1500 };
+  if (p.cap === "sub") return { chunk: 11, font: "600 50px Inter, system-ui, sans-serif", up: false, fill: "#FFFFFF", hi: "#FFFFFF", box: true, lh: 66, y: 0.88, maxW: p.duo ? 1000 : 1500 };
   if (p.cap === "story") return { chunk: 5, font: "700 68px 'Bricolage Grotesque', system-ui, sans-serif", up: false, fill: "#F7F1EA", hi, shadow: true, lh: 86, y: (lk.capY || 0.62) + 0.02 };
   if (p.cap === "clean") return { chunk: 7, font: "600 56px Inter, system-ui, sans-serif", up: false, fill: "#FFFFFF", hi, box: true, lh: 74, y: 0.68 };
   return { chunk: 3, font: "900 94px Archivo, 'Arial Black', sans-serif", up: lk.caseUp !== false, fill: "#FFFFFF", hi, stroke: 15, lh: 112, y: lk.capY || 0.62 };
@@ -264,6 +265,7 @@ function drawFrame(p, t) {
   const seg = tl.segs[cur.si];
   drawFx(p, seg.s.fx || (darkMode(p) ? "dust" : "none"), t, cur.focus || { x: 0.5, y: 0.4 });
   grade(p, t);
+  drawHosts(p, seg, t);
   if (cur.inFlash && t - cur.t0 < 0.12) { ctx.fillStyle = `rgba(255,255,255,${0.55 * (1 - (t - cur.t0) / 0.12)})`; ctx.fillRect(0, 0, CW, CH); }
   if (!(p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T)) drawCaption(p, seg, t);
   drawEmphasis(p, seg, t);
@@ -287,7 +289,7 @@ function buildTimeline(p, clips) {
       const dir = m === "zoom-out" ? -1 : m === "zoom-in" ? 1 : ((i + j) % 2 ? 1 : -1);
       const nextScene = segs[i + 1];
       const trans = j < n - 1 ? (dark || long ? "fade" : "punch") : (!nextScene ? "none" : long && nextScene.s.chStart ? "dip" : cyc[i % cyc.length]);
-      shots.push({ calm: long, sid: sg.s.id, si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
+      shots.push({ calm: long, sid: aid(sg.s), si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
     }
   });
   shots.forEach((s, k) => { const prev = shots[k - 1]; if (prev && prev.trans === "punch") s.inPunch = true; if (prev && prev.trans === "flash") s.inFlash = true; });
@@ -297,7 +299,7 @@ function buildTimeline(p, clips) {
 }
 function drawStill(p) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = "#0b0910"; ctx.fillRect(0, 0, CW, CH);
-  const ready = p.scenes ? p.scenes.filter(s => arts.has(s.id)) : [];
+  const ready = p.scenes ? p.scenes.filter(s => !s.artOf && arts.has(s.id)) : [];
   if (ready.length) { const now = performance.now() / 1000, idx = Math.floor(now / 2.2) % ready.length, s = ready[idx]; const sh = { sid: s.id, si: p.scenes.indexOf(s), kind: idx % 2 ? "close" : "wide", t0: Math.floor(now / 2.2) * 2.2, t1: Math.floor(now / 2.2) * 2.2 + 2.2, pan: 1, dir: 1, focus: arts.get(s.id).focus }; renderShot(p, sh, now); drawFx(p, s.fx || "dust", now, sh.focus); grade(p, now); }
   else { const t = performance.now() / 1000; ctx.strokeStyle = p.kind === "long" ? "#5CE1E6" : "#FFB547"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.beginPath(); for (let x = 0; x <= CW; x += 12) { const y = CH / 2 + Math.sin(x / 120 + t * 2) * 60 * Math.sin(t + x / 400); x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
     ctx.fillStyle = "rgba(238,241,248,.75)"; ctx.font = "700 46px Syne, sans-serif"; ctx.textAlign = "center"; ctx.fillText("UNRAVELLING…", CW / 2, CH / 2 + 180); }
@@ -305,7 +307,7 @@ function drawStill(p) {
 /* Thumbnail for long-form: strongest frame + 2 to 4 big words */
 async function makeThumb(p, pickIdx) {
   const c = mk(1280, 720), g = c.getContext("2d");
-  const cands = p.scenes.filter(s => arts.has(s.id)); if (!cands.length) return null;
+  const cands = p.scenes.filter(s => !s.artOf && arts.has(s.id)); if (!cands.length) return null;
   const s = cands[(pickIdx || 0) % cands.length], art = arts.get(s.id);
   const layers = art.canvas ? [art.canvas] : art.imgs;
   const z = 1.18, w = 1280 * z, hh = 720 * z, fx = art.focus.x, fy = art.focus.y;

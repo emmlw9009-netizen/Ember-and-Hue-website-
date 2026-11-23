@@ -68,7 +68,7 @@ function makeLook(p) {
 
 /* ================= State ================= */
 const S = Object.assign({ mode: "explainer", niche: "History POV", length: 45, voice: "af_heart", art: "flat", cap: "pop",
-  lmode: "doc", lniche: "Ancient mysteries", llen: 5, lvoice: "bm_george", lart: "matte", lsubs: "sub", nsmode: "story" }, LS.get("settings2", {}));
+  lmode: "doc", lniche: "Ancient mysteries", llen: 5, lvoice: "bm_george", lart: "matte", lsubs: "sub", nsmode: "story", hosts: "duo", lhosts: "duo", tackVoice: "am_puck" }, LS.get("settings2", {}));
 const saveSettings = () => LS.set("settings2", S);
 let sIdeas = LS.get("sIdeas", []), lIdeas = LS.get("lIdeas", []), picks = [], lPicks = [], P = null, view = "shorts";
 
@@ -83,6 +83,25 @@ const SCENE_FIELDS = `"visual": a cinematic shot for this moment: shot type (wid
 - "fx": rain, snow, fog, embers, sparks, stars, rays, dust or none. Match the scene.`;
 const SCENE_FIELDS_LONG = SCENE_FIELDS.replace("rain, snow, fog, embers, sparks, stars, rays, dust or none. Match the scene.", "dust, fog, rain, snow or none. Keep it subtle; use none for most scenes.");
 
+const isDuo = p => !!p.duo && (p.mode === "explainer" || p.mode === "doc");
+function duoRules(p) {
+  if (!isDuo(p)) return "";
+  const faces = HOST.FACE_NAMES.join(", ");
+  return `
+THE HOSTS (this video is a two-hander, like a classic comedy double act):
+- LEDGER: tall, glasses, red tie. The patient explainer and straight man. Sharp, warm, a little dry. He carries every fact.
+- TACK: short, huge mustard cap. The curious one who asks the questions viewers are secretly thinking, but in a dumb, funny, oddly specific way ("So can I eat it?", "Is the moon a sun that gave up?"). Never mean, never stupid about everything: his logic is strange but internally consistent.
+Rules for the dynamic:
+- Every scene has "speaker": "ledger" or "tack". Ledger has about three lines for every Tack line. Never two Tack lines in a row.
+- Tack lines are 2 to 9 words and their "visual" is "" (the picture stays on the previous shot). Ledger lines carry the visuals.
+- Each Tack question must set up the next fact: his wrong guess is the doorway into the real answer, so the jokes move the explanation forward instead of stopping it.
+- Escalate Ledger's patience over the video (rule of three): first answer kind, second answer tighter, third time a deadpan beat.
+- Exactly once, Tack is accidentally right, and Ledger has to admit it. That reversal is the biggest laugh.
+- Tack gets the final line: a funny button that reframes the whole topic in one breath.
+- Facts stay true. The comedy comes from Tack's questions and Ledger's reactions, never from wrong information.
+- "ledgerFace" and "tackFace" on every scene: each one of ${faces}. Faces react to what was just said (Ledger: explain, proud, deadpan, smug, shocked; Tack: confused, shocked, terrified, dizzy, nervous, laughing, smug when he was right).
+- Scene JSON gets these extra keys: "speaker", "ledgerFace", "tackFace".`;
+}
 function scriptPrompt(p, extra = "") {
   const story = p.mode === "story", wps = story ? 2.5 : 2.75, L = p.length;
   const tw = Math.round(L * wps), n0 = Math.max(4, Math.round(L / 3.4)), n1 = Math.max(5, Math.round(L / 2.6));
@@ -98,7 +117,7 @@ function scriptPrompt(p, extra = "") {
 Topic: ${p.topic}
 ${extra}
 ${rules}
-${GUARD}
+${GUARD}${duoRules(p)}
 - About ${tw} words of narration in total. Use ${n0} to ${n1} scenes. Each scene is ONE short sentence or phrase (5 to 13 words) with its own illustration, so the picture changes every 2 to 3 seconds.
 - Write numbers as words when spoken, no symbols or emojis in narration.
 - ${SCENE_FIELDS}
@@ -108,7 +127,7 @@ ${GUARD}
 - "summary": two sentences on what happened, and "cliffhanger": the open question it ends on (for series continuity).
 
 Reply with ONLY JSON:
-{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
+{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused",' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
 }
 function outlinePrompt(p) {
   const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
@@ -129,14 +148,14 @@ Cold-open hook of the video: ${o.hook}
 All chapters (for continuity): ${o.chapters.map((c, i) => (i + 1) + ". " + c.title + ": " + c.beats).join(" | ")}
 This chapter: "${o.chapters[ci].title}" — ${o.chapters[ci].beats}
 ${o.character ? "Recurring character: " + o.character : ""}
-${GUARD}
+${GUARD}${duoRules(p)}
 - About ${w} words of narration in ${ns} scenes. Each scene is 1 to 3 sentences (12 to 35 words) and gets its own illustration.
 ${ci === 0 ? "- Scene 1 narration starts with the cold-open hook, word for word.\n" : ""}- ${ci < n - 1 ? "End the chapter on a line that pulls viewers into the next chapter." : "Land the payoff of the hook" + (p.mode === "doc" ? " and end with one memorable closing line." : " with the twist, then a final haunting line.")}
 - Write numbers as words when spoken. No symbols or emojis in narration.
 - ${SCENE_FIELDS_LONG}
 - "visual" must fit the channel's house style: one clear focal subject, calm composition, no spectacle for its own sake.
 - "emphasis": a 1 to 3 word on-screen stamp for at most one scene in this chapter (a key date, number or term), otherwise empty.
-Reply with ONLY JSON: {"scenes":[{"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
+Reply with ONLY JSON: {"scenes":[{${isDuo(p) ? '"speaker":"ledger","ledgerFace":"explain","tackFace":"confused",' : ""}"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
 }
 function svgPrompt(p, sc, i) {
   const H = p.kind === "long", W = H ? 1920 : 1080, Hh = H ? 1080 : 1920;
@@ -161,7 +180,7 @@ Structure (required):
 - ${H ? "Compose on the rule of thirds like a magazine cover: one focal subject, calm empty space around it, the bottom 18% quiet and dark (subtitles go there). Keep the composition consistent with the previous shot so the video feels like one series of plates." : "Focal subject in the upper 60%. Keep the bottom 35% darker and simpler (captions go there)."}
 - ${H ? "Lighting: soft key light from the upper left, value-based depth between the three layers, at most one very subtle blur on the light source. No glow halos." : "Lighting: at least 4 gradients, a key light with rim light on the subject, atmospheric haze between layers (semi-transparent gradient rects), one soft glow (feGaussianBlur) on the light source."}
 - ${H ? "Detail through restraint: fewer, cleaner shapes; fine line work instead of noise; clean silhouettes. Stylized forms, no detailed faces, no real people." : "Rich detail where it matters: layered silhouettes with smooth bezier curves, texture through repeated small shapes, cast shadows. Stylized forms, no detailed faces, no real people."}
-- NO text, letters, numbers, logos, <image>, <script>, <foreignObject>, <style>, external links or animation.
+${isDuo(p) ? "- Two cartoon hosts are composited over the bottom-left and bottom-right corners: keep those corners simple and do not draw people there.\n" : ""}- NO text, letters, numbers, logos, <image>, <script>, <foreignObject>, <style>, external links or animation.
 - Under 14000 characters.
 Reply with only the SVG code.`;
 }

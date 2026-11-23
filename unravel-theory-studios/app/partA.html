@@ -115,6 +115,21 @@ textarea.inp{resize:vertical;line-height:1.45}
 .callout{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--muted);border-left:2px solid var(--sig);padding:2px 0 2px 12px}
 
 /* Daily */
+.goal{border:1px solid var(--line2);border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;background:var(--panel);margin-bottom:18px}
+.goal .gh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.goal .gh b{font-family:var(--f-display);font-size:22px;font-weight:800}
+.goal .gh span{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.goal .gh .streak{color:var(--amber)}
+.goal .slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.goal .slot{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:1px solid var(--line2);border-radius:14px;padding:10px 12px;background:var(--bg2);color:var(--ink);cursor:pointer;font:inherit;min-height:64px}
+.goal .slot b{font-size:14px}
+.goal .slot small{font-size:12px;color:var(--muted)}
+.goal .slot.made small{color:var(--amber)}
+.goal .slot[aria-pressed="true"]{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--bg2))}
+.goal .slot[aria-pressed="true"] small{color:var(--ok)}
+.goal .ghint{font-size:12px;color:var(--dim)}
+.goal .gbar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}.goal .gbar i{display:block;height:100%;background:var(--ok);transition:width .3s}
+@media (max-width:420px){.goal .slot{padding:9px 10px}.goal .slot b{font-size:13px}}
 .daily{position:relative;border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
   background:radial-gradient(420px 200px at 100% 0%,rgba(255,92,138,.16),transparent 70%),linear-gradient(150deg,rgba(255,181,71,.12),var(--panel) 55%)}
 .daily .eb{display:flex;gap:10px;align-items:center;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
@@ -323,6 +338,7 @@ details.edit summary{cursor:pointer;font-weight:600}
   <!-- SHORTS -->
   <section class="view" id="v-shorts">
     <div class="vhead"><span class="eyebrow">Vertical · 9:16 · 15 to 60 seconds</span><h1>Shorts <em>studio</em></h1><p>Pick up to three ideas. One tap writes, voices, draws, scores and renders each one with its own look.</p></div>
+    <section class="goal" id="goalS" aria-label="Today's posting goal"></section>
     <section class="daily" id="daily" hidden aria-live="polite"></section>
     <details class="radar" id="radar" hidden><summary><b>Trend radar</b><span id="radarWhen"></span></summary><div class="rbody" id="radarBody"></div></details>
     <div class="block"><div class="bh"><h2>Format</h2></div>
@@ -340,7 +356,10 @@ details.edit summary{cursor:pointer;font-weight:600}
         <div class="set"><label for="sVoice">Voice</label><div class="vrow"><select id="sVoice"></select><button class="pm" id="sVPrev" aria-label="Hear this voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
         <div class="set"><label for="sArt">Art</label><select id="sArt"></select></div>
         <div class="set"><label for="sCap">Captions</label><select id="sCap"><option value="pop">Bold pop</option><option value="story">Cinematic</option><option value="clean">Clean</option></select></div>
+        <div class="set"><label for="sHosts">Hosts</label><select id="sHosts"><option value="duo">Ledger &amp; Tack</option><option value="off">Narrator only</option></select></div>
+        <div class="set"><label for="sTack">Tack's voice</label><select id="sTack"></select></div>
       </div>
+      <p class="note">Ledger and Tack host explainers: Ledger explains, Tack asks the dumb questions. Ledger uses the voice above. Stories stay narrated.</p>
       <details class="vgal" id="sVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="sVList"></div></details>
       <p class="note" id="voiceNote">The voice runs on your device. The first video downloads it once (about 110 MB).</p>
     </div>
@@ -349,6 +368,7 @@ details.edit summary{cursor:pointer;font-weight:600}
   <!-- LONG-FORM -->
   <section class="view" id="v-long" hidden>
     <div class="vhead"><span class="eyebrow">Horizontal · 16:9 · 3 to 8 minutes</span><h1>Long-<em>form</em></h1><p>A full YouTube video with chapters, subtitles, a thumbnail and a description with timestamps. Best made on a computer.</p></div>
+    <section class="goal" id="goalL" aria-label="Today's posting goal"></section>
     <div class="block"><div class="bh"><h2>Format</h2></div>
       <div class="formats"><button class="fmt" id="lfDoc" aria-pressed="true"><b>Documentary</b><span>Explain a mystery, era or idea in depth.</span></button><button class="fmt" id="lfStory" aria-pressed="false"><b>Story</b><span>A full narrated tale in chapters.</span></button></div>
     </div>
@@ -364,6 +384,8 @@ details.edit summary{cursor:pointer;font-weight:600}
         <div class="set"><label for="lVoice">Voice</label><div class="vrow"><select id="lVoice"></select><button class="pm" id="lVPrev" aria-label="Hear this voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
         <div class="set house"><label>Look</label><b>Unravel signature</b></div>
         <div class="set"><label for="lSubs">Subtitles</label><select id="lSubs"><option value="sub">Burned in</option><option value="none">Off</option></select></div>
+        <div class="set"><label for="lHosts">Hosts</label><select id="lHosts"><option value="duo">Ledger &amp; Tack</option><option value="off">Narrator only</option></select></div>
+        <div class="set"><label for="lTack">Tack's voice</label><select id="lTack"></select></div>
       </div>
       <details class="vgal" id="lVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="lVList"></div></details>
       <div class="housecard"><span class="sw" style="background:#0B1220"></span><span class="sw" style="background:#16233A"></span><span class="sw" style="background:#2C4466"></span><span class="sw" style="background:#E8A33D"></span><span class="sw" style="background:#F4EDE1"></span><p>Every long-form video uses the same house look: clean editorial illustration, one locked ink-and-amber palette, steady camera, quiet effects and the same chapter cards and subtitles. Your channel reads as one studio.</p></div>

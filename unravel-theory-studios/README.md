@@ -44,3 +44,9 @@ Then publish `app/index.html` to the app artifact (same URL) with the `kokoro/`,
 ## Daily trend scout
 
 A scheduled task ("Unravel Theory: daily trend scout", runs 11:17 UTC) researches AI content trends and writes `trends/current` and `daily/<date>` into the app's database. Prompt: `scout/daily-trend-scout-prompt.md`.
+
+## Hosts and daily goal (added Nov 23, 2026)
+
+- **Ledger & Tack** host every explainer Short and documentary long-form (Style → Hosts; switch to "Narrator only" to turn them off). See STYLE.md for the comedy rules the script writer follows.
+- **Today's goal** card on the Shorts and Long-form screens: 1 long-form + 2 Shorts a day. Boxes show what you've made today; tap one when that video is posted. It syncs across devices and keeps a streak.
+- **Phone reminders**: two scheduled tasks push a notification every day, at 12:37 PM ("Midday check", with the idea of the day) and 6:43 PM ("Evening check") New York time.
