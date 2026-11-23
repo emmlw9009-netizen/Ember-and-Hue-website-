@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Field Notebook frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B5552E}a:hover{color:#22303A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #F3F0E6; color: #22303A; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <pattern id="grid9" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#BFD0D6" stroke-width="0.8"/></pattern>
+      <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="9" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>
+      <filter id="wash" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="40" result="d"/><feGaussianBlur in="d" stdDeviation="3"/></filter>
+    </defs>
+    <rect width="1280" height="720" fill="url(#grid9)"/>
+    <path d="M96 0 V720" stroke="#D98C7A" stroke-width="1.5"/>
+    <g filter="url(#wash)" style="mix-blend-mode: multiply">
+      <ellipse cx="560" cy="250" rx="300" ry="120" fill="#9DB4C6" opacity="0.55"/>
+      <ellipse cx="520" cy="430" rx="330" ry="80" fill="#D9B46A" opacity="0.5"/>
+      <ellipse cx="760" cy="170" rx="70" ry="60" fill="#F0D9A8" opacity="0.7"/>
+    </g>
+    <g filter="url(#wobble)" fill="none" stroke="#22303A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M220 420 C 340 400 460 410 560 395 C 680 380 780 400 880 392"/>
+      <path d="M560 395 L560 300 L640 250 L720 300 L720 395"/>
+      <path d="M548 306 L640 240 L732 306"/>
+      <path d="M610 395 V345 H650 V395"/>
+      <path d="M300 420 L304 340 M330 422 L332 334 M360 420 L364 342 M390 418 L392 336"/>
+      <path d="M304 360 l-18 -10 M332 352 l18 -12 M364 362 l-18 -10 M392 354 l18 -12"/>
+      <circle cx="760" cy="170" r="34"/>
+      <path d="M740 190 C 760 170 780 175 800 160" stroke-dasharray="4 6"/>
+    </g>
+    <g fill="#22303A"><circle cx="420" cy="200" r="2.2"/><circle cx="470" cy="260" r="2.2"/><circle cx="520" cy="180" r="2.2"/><circle cx="600" cy="210" r="2.2"/><circle cx="680" cy="190" r="2.2"/><circle cx="380" cy="280" r="2.2"/><circle cx="820" cy="260" r="2.2"/><circle cx="880" cy="200" r="2.2"/></g>
+    <path d="M900 300 C 960 300 990 330 1000 370" fill="none" stroke="#B5552E" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M990 360 L1000 372 L1010 358" fill="none" stroke="#B5552E" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="980" y="430" width="210" height="150" fill="#FFFDF6" stroke="#22303A" stroke-width="1.5" transform="rotate(3 1085 505)"/>
+    <rect x="1040" y="416" width="90" height="28" fill="#E9DFA6" opacity="0.85" transform="rotate(-6 1085 430)"/>
+  </svg>
+  <div style="position: absolute; left: 128px; top: 52px; display: flex; flex-direction: column; gap: 0">
+    <span style="font-family: Caveat, cursive; font-size: 30px; color: #B5552E">Notebook · July 1816</span>
+    <span style="font-family: Caveat, cursive; font-weight: 700; font-size: 64px; line-height: 0.95">A summer that never came</span>
+  </div>
+  <div style="position: absolute; left: 820px; top: 270px; font-family: Caveat, cursive; font-size: 30px; color: #B5552E; transform: rotate(-4deg)">snow on the corn!</div>
+  <div style="position: absolute; left: 1000px; top: 456px; width: 180px; font-family: Caveat, cursive; font-size: 25px; line-height: 1.15; transform: rotate(3deg); transform-origin: left top">frost in every month that year, the farmers said</div>
+  <div style="position: absolute; right: 52px; top: 32px; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #5C6A74">No. 9 · Field Notebook</div>
+  <div style="position: absolute; left: 128px; bottom: 50px; background: #FFFDF6; border: 1.5px solid #22303A; font-size: 25px; padding: 8px 16px; box-shadow: 4px 4px 0 #D9B46A">In 1816, snow fell in July across New England.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

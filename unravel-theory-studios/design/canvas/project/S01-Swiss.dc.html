@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Swiss Grid frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;900&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#E3261B}a:hover{color:#111}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #F2F0EB; color: #111111; font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <g stroke="#111" stroke-opacity="0.07" stroke-width="1">
+      <path d="M80 0V720M180 0V720M280 0V720M380 0V720M480 0V720M580 0V720M680 0V720M780 0V720M880 0V720M980 0V720M1080 0V720M1180 0V720"/>
+    </g>
+    <circle cx="930" cy="250" r="170" fill="#E3261B"/>
+    <circle cx="990" cy="230" r="170" fill="#8E8D88" fill-opacity="0.82"/>
+    <g fill="#111">
+      <rect x="682" y="120" width="2" height="14"/><rect x="782" y="160" width="2" height="14"/><rect x="882" y="100" width="2" height="14"/><rect x="1082" y="140" width="2" height="14"/><rect x="1182" y="90" width="2" height="14"/>
+      <rect x="732" y="230" width="2" height="14"/><rect x="832" y="300" width="2" height="14"/><rect x="1132" y="260" width="2" height="14"/><rect x="1032" y="420" width="2" height="14"/><rect x="932" y="460" width="2" height="14"/>
+      <rect x="682" y="380" width="2" height="14"/><rect x="782" y="440" width="2" height="14"/><rect x="1182" y="380" width="2" height="14"/><rect x="1132" y="470" width="2" height="14"/><rect x="882" y="400" width="2" height="14"/>
+    </g>
+    <rect x="80" y="96" width="400" height="4" fill="#111"/>
+  </svg>
+  <div style="position: absolute; left: 80px; top: 116px; width: 400px; display: flex; flex-direction: column; gap: 6px">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; letter-spacing: 0.04em">Chapter 01</span>
+    <span style="font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -0.02em">Snow in July</span>
+  </div>
+  <div style="position: absolute; left: 680px; top: 548px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; line-height: 1.5; color: #111">Mount Tambora<br>8°15′ S 118°00′ E<br>Erupted April 1815</div>
+  <div style="position: absolute; left: 66px; top: 300px; font-size: 300px; font-weight: 900; line-height: 0.8; letter-spacing: -0.06em">1816</div>
+  <div style="position: absolute; left: 80px; bottom: 56px; display: flex; align-items: center; gap: 16px">
+    <span style="background: #111111; color: #F2F0EB; font-size: 26px; font-weight: 500; padding: 10px 16px; letter-spacing: -0.01em">In 1816, snow fell in July across New England.</span>
+  </div>
+  <div style="position: absolute; right: 80px; top: 44px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase">No. 1 · Swiss Grid</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scene 1 Evidence Board</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&amp;family=Archivo+Narrow:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B3261E}a:hover{color:#231B12}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #A8794A; color: #231B12; font-family: 'Special Elite', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" role="img" aria-label="The Archivist points at clues pinned on a cork board while Pip gasps">
+    <defs>
+      <filter id="cork"><feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="4" seed="21"/><feColorMatrix values="0 0 0 0 0.3 0 0 0 0 0.18 0 0 0 0 0.08 0 0 0 0.55 0"/></filter>
+      <pattern id="ht" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.7" fill="#231B12"/></pattern>
+      <filter id="sh" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="4" dy="6" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/></filter>
+    </defs>
+    <rect width="1280" height="720" filter="url(#cork)"/>
+    <g filter="url(#sh)">
+      <g transform="rotate(-4 260 200)"><rect x="110" y="80" width="300" height="230" fill="#F2EEE4"/><rect x="126" y="96" width="268" height="170" fill="url(#ht)"/><path d="M126 266 L210 196 L270 226 L340 170 L394 266 Z" fill="#F2EEE4"/></g>
+      <g transform="rotate(3 610 160)"><rect x="480" y="70" width="250" height="160" fill="#FBF7EC"/><path d="M480 100 H730" stroke="#D47C7C" stroke-width="1.5"/><path d="M480 128 H730 M480 154 H730 M480 180 H730 M480 206 H730" stroke="#9EB4C6" stroke-width="1"/></g>
+      <g transform="rotate(-2 560 420)"><rect x="440" y="330" width="250" height="180" fill="#E9E0C7"/><path d="M466 380 C 520 360 590 400 664 370 M466 420 C 540 410 600 440 664 414" stroke="#8C6A3F" stroke-width="1.5" fill="none"/><path d="M600 450 l8 -16 l8 16" fill="#B3261E"/></g>
+    </g>
+    <path d="M260 88 C 380 110 470 96 600 80 M600 80 C 620 200 590 280 560 336 M260 88 C 300 220 420 300 560 336" stroke="#B3261E" stroke-width="3" fill="none"/>
+    <g><circle cx="260" cy="88" r="10" fill="#B3261E"/><circle cx="600" cy="80" r="10" fill="#B3261E"/><circle cx="560" cy="336" r="10" fill="#B3261E"/></g>
+    <sc-for list="{{ chars }}" as="c" hint-placeholder-count="2">
+      <g transform="{{ c.t }}">
+        <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="12">
+          <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+        </sc-for>
+      </g>
+    </sc-for>
+  </svg>
+  <div style="position: absolute; left: 498px; top: 108px; width: 220px; transform: rotate(3deg); transform-origin: left top; font-size: 20px; line-height: 26px">July 4, 1816<br>Snow at dawn.</div>
+  <div style="position: absolute; left: 470px; top: 520px; transform: rotate(-2deg); transform-origin: left top; font-size: 18px">Tambora · April 1815</div>
+  <div style="position: absolute; left: 40px; top: 30px; background: #231B12; color: #F2EEE4; font-family: 'Archivo Narrow', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.18em; padding: 6px 12px">CASE 1816 · CHAPTER 01</div>
+  <div style="position: absolute; left: 48px; bottom: 40px; max-width: 640px; background: #F2EEE4; font-size: 26px; padding: 8px 18px; box-shadow: 0 6px 14px rgba(0,0,0,0.35)">It all starts with a volcano on the other side of the world.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+  const K = '#111111', R = '#D9363E', W = '#FFFFFF', B = '#5BB8F0', P = '#F08AA0', N = 'none';
+  const f = (d, fill, stroke, sw) => ({ d, fill: fill || N, stroke: stroke || N, sw: sw || 0 });
+  const capsule = (x, y, w, h) => 'M' + x + ' ' + (y + w / 2) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + w + ' 0 v' + (h - w) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + (-w) + ' 0 z';
+  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 z';
+  const drop = (x, y, s) => 'M' + x + ' ' + y + ' C ' + (x + s) + ' ' + (y + 1.6 * s) + ' ' + (x + s) + ' ' + (y + 2.4 * s) + ' ' + x + ' ' + (y + 2.4 * s) + ' C ' + (x - s) + ' ' + (y + 2.4 * s) + ' ' + (x - s) + ' ' + (y + 1.6 * s) + ' ' + x + ' ' + y + ' Z';
+  const eyes = (w, h, y) => [f(capsule(182 - w, y, w, h), K), f(capsule(218, y, w, h), K)];
+  const shine = (y) => [f(circ(166, y, 7), W), f(circ(236, y, 7), W)];
+  const openMouth = (y, w, h) => [f('M' + (200 - w / 2) + ' ' + y + ' h' + w + ' q0 ' + h + ' ' + (-w / 2) + ' ' + h + ' q' + (-w / 2) + ' 0 ' + (-w / 2) + ' ' + (-h) + ' z', R, K, 8), f('M' + (200 - w / 2 + 6) + ' ' + (y + 4) + ' l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8 - 12) + ' -14 z', W)];
+  const FACES = {
+    determined: [f('M142 136 L192 152 M258 136 L208 152', N, K, 12), f(capsule(158, 152, 30, 46), K), f(capsule(212, 152, 30, 46), K), f('M170 240 q30 -10 60 0', N, K, 9)],
+    shocked: [...eyes(44, 82, 124), ...shine(150), f(circ(200, 258, 22), R, K, 8), f('M64 96 l-26 -22 M336 96 l26 -22 M54 176 h-34 M346 176 h34', N, K, 8)]
+  };
+  const POSES = {
+    point: ['M200 300 V430 M200 350 L140 420 M200 350 L318 296 M200 430 L168 524 M200 430 L232 524', 'M298 296 l10 16'],
+    stand: ['M200 300 V430 M200 350 L140 420 M200 350 L260 420 M200 430 L168 524 M200 430 L232 524', 'M250 404 l14 14']
+  };
+  const HATS = {
+    cap: [f('M92 132 C 100 50 300 50 308 132 C 250 110 150 110 92 132 Z', '#D9A441', K, 8), f('M70 142 C 140 112 250 110 318 132 C 250 128 150 132 70 142 Z', '#B9852C', K, 8), f(circ(200, 72, 9), K)],
+    beanie: [f('M98 138 C 98 36 302 36 302 138 Z', '#4C9A5B', K, 8), f('M90 128 h220 v26 h-220 z', '#3C7D49', K, 8), f(circ(200, 40, 20), '#4C9A5B', K, 7)]
+  };
+  const person = (face, pose, hat, wrist) => [f(POSES[pose][0], N, K, 24), ...(wrist ? [f(POSES[pose][1], N, '#C8281E', 12)] : []), f(circ(200, 180, 120), W, K, 11), f('M98 238 C 140 306 260 306 302 238 C 296 280 252 298 200 298 C 148 298 104 280 98 238 Z', '#E9E9E9'), ...HATS[hat], ...FACES[face]];
+  return { chars: [
+    { t: 'translate(1250 180) scale(-0.95 0.95)', shapes: person('determined', 'point', 'cap', true) },
+    { t: 'translate(760 400) scale(0.62)', shapes: person('shocked', 'stand', 'beanie', false) }
+  ] };
+}
+}
+</script>
+</body>
+</html>

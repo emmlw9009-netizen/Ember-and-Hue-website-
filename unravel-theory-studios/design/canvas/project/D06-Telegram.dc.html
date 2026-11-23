@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Telegram and Ticker frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&amp;family=Old+Standard+TT:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#9C2B23}a:hover{color:#1E1A14}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #3D4A52; color: #1E1A14; font-family: 'Courier Prime', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <filter id="sh6" x="-10%" y="-10%" width="130%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#000" flood-opacity="0.4"/></filter>
+      <filter id="pp6"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="16"/><feColorMatrix values="0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 0.1 0"/></filter>
+    </defs>
+    <g filter="url(#sh6)" transform="rotate(-2 640 300)">
+      <rect x="260" y="60" width="760" height="440" fill="#EFE3BF"/>
+      <rect x="290" y="150" width="700" height="2" fill="#1E1A14"/>
+      <rect x="290" y="186" width="180" height="40" fill="none" stroke="#1E1A14" stroke-width="1.5"/><rect x="480" y="186" width="250" height="40" fill="none" stroke="#1E1A14" stroke-width="1.5"/><rect x="740" y="186" width="250" height="40" fill="none" stroke="#1E1A14" stroke-width="1.5"/>
+      <rect x="300" y="270" width="640" height="34" fill="#F7EFD6" stroke="#CDBE94"/>
+      <rect x="300" y="316" width="560" height="34" fill="#F7EFD6" stroke="#CDBE94"/>
+      <rect x="300" y="362" width="610" height="34" fill="#F7EFD6" stroke="#CDBE94"/>
+      <rect x="260" y="60" width="760" height="440" filter="url(#pp6)"/>
+    </g>
+    <path d="M-20 600 C 200 560 380 640 640 600 S 1060 560 1300 610 L1300 664 C 1060 614 880 650 640 654 S 200 614 -20 654 Z" fill="#F2E8C9" filter="url(#sh6)"/>
+    <g fill="#1E1A14" fill-opacity="0.18"><circle cx="40" cy="626" r="3"/><circle cx="140" cy="612" r="3"/><circle cx="1180" cy="632" r="3"/><circle cx="1240" cy="638" r="3"/></g>
+  </svg>
+  <div style="position: absolute; left: 290px; top: 82px; width: 700px; transform: rotate(-2deg); transform-origin: 350px 218px; display: flex; justify-content: space-between; align-items: baseline">
+    <span style="font-family: 'Old Standard TT', Georgia, serif; font-weight: 700; font-size: 46px; letter-spacing: 0.24em">TELEGRAM</span>
+    <span style="font-size: 14px; letter-spacing: 0.1em">D6 · TELEGRAM &amp; TICKER</span>
+  </div>
+  <div style="position: absolute; left: 298px; top: 196px; width: 680px; transform: rotate(-2deg); transform-origin: 342px 104px; display: grid; grid-template-columns: 180px 250px 250px; gap: 10px; font-size: 13px; letter-spacing: 0.08em">
+    <span>FROM: VERMONT</span><span>TO: HARTFORD</span><span>DATE: JULY 6 1816</span>
+  </div>
+  <div style="position: absolute; left: 312px; top: 276px; width: 640px; transform: rotate(-2deg); transform-origin: 328px 24px; display: flex; flex-direction: column; gap: 20px; font-weight: 700; font-size: 21px; letter-spacing: 0.06em; line-height: 26px">
+    <span>SNOW FELL AGAIN LAST NIGHT STOP</span>
+    <span>CORN BLACK IN EVERY FIELD STOP</span>
+    <span>NO ONE KNOWS WHY STOP SEND WORD</span>
+  </div>
+  <div style="position: absolute; left: 0; right: 0; top: 607px; display: flex; justify-content: center">
+    <span style="font-weight: 700; font-size: 24px; letter-spacing: 0.08em; transform: rotate(-1deg)">IN 1816, SNOW FELL IN JULY ACROSS NEW ENGLAND.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

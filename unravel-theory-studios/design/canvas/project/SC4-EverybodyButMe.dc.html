@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scene 4 Everybody but me</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Special+Elite&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B3261E}a:hover{color:#231B12}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #A8794A; color: #231B12; font-family: 'Special Elite', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" role="img" aria-label="Left card: a crowd partying in party hats. Right card: the Archivist training alone, panting huss huss huss">
+    <defs>
+      <filter id="cork"><feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="4" seed="21"/><feColorMatrix values="0 0 0 0 0.3 0 0 0 0 0.18 0 0 0 0 0.08 0 0 0 0.55 0"/></filter>
+      <filter id="sh" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="4" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/></filter>
+      <clipPath id="cl"><rect x="70" y="120" width="520" height="470"/></clipPath>
+      <clipPath id="cr"><rect x="690" y="120" width="520" height="470"/></clipPath>
+    </defs>
+    <rect width="1280" height="720" filter="url(#cork)"/>
+    <g filter="url(#sh)"><rect x="56" y="106" width="548" height="498" fill="#F2EEE4" transform="rotate(-2 330 355)"/><rect x="676" y="106" width="548" height="498" fill="#F2EEE4" transform="rotate(2 950 355)"/></g>
+    <g transform="rotate(-2 330 355)"><rect x="70" y="120" width="520" height="470" fill="#FFF3D6"/>
+      <g fill="#E85D9F"><path d="M90 140 l16 30 l14 -30 z"/><path d="M200 136 l16 30 l14 -30 z" fill="#5BB8F0"/><path d="M320 140 l16 30 l14 -30 z" fill="#F2C230"/><path d="M440 136 l16 30 l14 -30 z"/><path d="M540 140 l16 30 l14 -30 z" fill="#4C9A5B"/></g>
+      <path d="M80 150 C 220 178 420 170 580 150" stroke="#231B12" stroke-width="2" fill="none"/>
+      <g clip-path="url(#cl)">
+        <sc-for list="{{ crowd }}" as="c" hint-placeholder-count="4">
+          <g transform="{{ c.t }}">
+            <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="12">
+              <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+            </sc-for>
+          </g>
+        </sc-for>
+      </g>
+    </g>
+    <g transform="rotate(2 950 355)"><rect x="690" y="120" width="520" height="470" fill="#E9EEF2"/>
+      <g clip-path="url(#cr)">
+        <path d="M700 560 H1200" stroke="#231B12" stroke-width="3"/>
+        <sc-for list="{{ me }}" as="c" hint-placeholder-count="1">
+          <g transform="{{ c.t }}">
+            <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="12">
+              <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+            </sc-for>
+          </g>
+        </sc-for>
+        <path d="M720 380 h50 M716 410 h70 M724 440 h46" stroke="#231B12" stroke-width="5" stroke-linecap="round"/>
+      </g>
+    </g>
+    <g><circle cx="330" cy="104" r="11" fill="#B3261E"/><circle cx="950" cy="104" r="11" fill="#B3261E"/></g>
+  </svg>
+  <div style="position: absolute; left: 72px; top: 30px; font-family: 'Archivo Black', Impact, sans-serif; font-size: 34px; color: #FFFFFF; -webkit-text-stroke: 2px #231B12">IN THIS TOWN, EVERYBODY GOES OUT PARTYING…</div>
+  <div style="position: absolute; left: 696px; top: 140px; transform: rotate(2deg); transform-origin: left top; font-family: 'Archivo Black', Impact, sans-serif; font-size: 40px; line-height: 1; color: #231B12">…EXCEPT ME.</div>
+  <div style="position: absolute; left: 1040px; top: 220px; transform: rotate(8deg); transform-origin: left top; display: flex; flex-direction: column; gap: 6px; font-family: 'Archivo Black', Impact, sans-serif; font-size: 42px; color: #FFFFFF; -webkit-text-stroke: 2.5px #231B12">
+    <span>HUSS</span><span style="margin-left: 24px">HUSS</span><span style="margin-left: 48px">HUSS</span>
+  </div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center">
+    <span style="background: #F2EEE4; font-size: 26px; padding: 8px 18px; box-shadow: 0 6px 14px rgba(0,0,0,0.35)">While they dance, I train. Every. Single. Night.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+  const K = '#111111', R = '#D9363E', W = '#FFFFFF', B = '#5BB8F0', P = '#F08AA0', N = 'none';
+  const f = (d, fill, stroke, sw) => ({ d, fill: fill || N, stroke: stroke || N, sw: sw || 0 });
+  const capsule = (x, y, w, h) => 'M' + x + ' ' + (y + w / 2) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + w + ' 0 v' + (h - w) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + (-w) + ' 0 z';
+  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 z';
+  const heart = (cx, cy, s) => 'M' + cx + ' ' + (cy + s) + ' C ' + (cx - 2 * s) + ' ' + (cy - 0.2 * s) + ' ' + (cx - 1.1 * s) + ' ' + (cy - 1.6 * s) + ' ' + cx + ' ' + (cy - 0.6 * s) + ' C ' + (cx + 1.1 * s) + ' ' + (cy - 1.6 * s) + ' ' + (cx + 2 * s) + ' ' + (cy - 0.2 * s) + ' ' + cx + ' ' + (cy + s) + ' Z';
+  const drop = (x, y, s) => 'M' + x + ' ' + y + ' C ' + (x + s) + ' ' + (y + 1.6 * s) + ' ' + (x + s) + ' ' + (y + 2.4 * s) + ' ' + x + ' ' + (y + 2.4 * s) + ' C ' + (x - s) + ' ' + (y + 2.4 * s) + ' ' + (x - s) + ' ' + (y + 1.6 * s) + ' ' + x + ' ' + y + ' Z';
+  const openMouth = (y, w, h) => [f('M' + (200 - w / 2) + ' ' + y + ' h' + w + ' q0 ' + h + ' ' + (-w / 2) + ' ' + h + ' q' + (-w / 2) + ' 0 ' + (-w / 2) + ' ' + (-h) + ' z', R, K, 8), f('M' + (200 - w / 2 + 6) + ' ' + (y + 4) + ' l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8 - 12) + ' -14 z', W)];
+  const FACES = {
+    laughing: [f('M144 160 l22 14 l-22 14', N, K, 10), f('M256 160 l-22 14 l22 14', N, K, 10), ...openMouth(214, 116, 70), f('M176 266 q24 -22 48 0 q-24 14 -48 0 z', P, K, 5)],
+    proud: [f('M146 172 q22 -28 44 0', N, K, 11), f('M210 172 q22 -28 44 0', N, K, 11), f('M156 228 q44 40 88 0', N, K, 10), f(circ(132, 222, 14), P), f(circ(268, 222, 14), P)],
+    love: [f(heart(168, 160, 26), '#E0262F', K, 6), f(heart(232, 160, 26), '#E0262F', K, 6), f('M166 230 q34 30 68 0', N, K, 10)],
+    grit: [f('M142 136 L192 152 M258 136 L208 152', N, K, 12), f(capsule(158, 152, 30, 46), K), f(capsule(212, 152, 30, 46), K), f('M160 236 h80 v26 h-80 z', W, K, 7), f('M180 236 v26 M200 236 v26 M220 236 v26', N, K, 5), f(drop(316, 120, 13), B, K, 4), f(drop(92, 150, 11), B, K, 4)]
+  };
+  const POSES = {
+    party: ['M200 300 V430 M200 350 L116 296 M200 350 L284 276 M200 430 L146 504 M200 430 L254 496', 'M270 284 l14 8'],
+    armsUp: ['M200 300 V430 M200 350 L124 256 M200 350 L276 256 M200 430 L160 524 M200 430 L240 524', 'M262 268 l16 6'],
+    run: ['M200 300 V422 M200 350 L146 296 M200 350 L264 404 M200 422 L138 476 L122 524 M200 422 L254 470 L300 454', 'M254 392 l14 14']
+  };
+  const HATS = {
+    cap: [f('M92 132 C 100 50 300 50 308 132 C 250 110 150 110 92 132 Z', '#D9A441', K, 8), f('M70 142 C 140 112 250 110 318 132 C 250 128 150 132 70 142 Z', '#B9852C', K, 8), f(circ(200, 72, 9), K)],
+    party: [f('M158 80 L200 -20 L242 80 Z', '#E85D9F', K, 7), f(circ(200, -24, 12), '#F2C230', K, 5)],
+    party2: [f('M158 80 L200 -20 L242 80 Z', '#5BB8F0', K, 7), f(circ(200, -24, 12), '#F2C230', K, 5)]
+  };
+  const person = (face, pose, hat, wrist) => [f(POSES[pose][0], N, K, 24), ...(wrist ? [f(POSES[pose][1], N, '#C8281E', 12)] : []), f(circ(200, 180, 120), W, K, 11), f('M98 238 C 140 306 260 306 302 238 C 296 280 252 298 200 298 C 148 298 104 280 98 238 Z', '#E9E9E9'), ...HATS[hat], ...FACES[face]];
+  return {
+    crowd: [
+      { t: 'translate(40 250) scale(0.5)', shapes: person('laughing', 'party', 'party', false) },
+      { t: 'translate(170 210) scale(0.56)', shapes: person('love', 'armsUp', 'party2', false) },
+      { t: 'translate(310 260) scale(0.5)', shapes: person('proud', 'party', 'party2', false) },
+      { t: 'translate(430 220) scale(0.54)', shapes: person('laughing', 'armsUp', 'party', false) }
+    ],
+    me: [ { t: 'translate(760 230) scale(0.66)', shapes: person('grit', 'run', 'cap', true) } ]
+  };
+}
+}
+</script>
+</body>
+</html>

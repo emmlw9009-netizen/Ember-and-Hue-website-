@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Emotion sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C8281E}a:hover{color:#111}
+</style>
+</helmet>
+<div style="width: 2720px; height: 1380px; box-sizing: border-box; background: #F4F2EC; color: #111111; font-family: 'Courier Prime', 'Courier New', monospace; padding: 64px 72px; display: flex; flex-direction: column; gap: 36px">
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: 0.2em; color: #C8281E">CASE FILE · CHARACTER EMOTIONS</span>
+      <h1 style="margin: 0; font-family: 'Archivo Black', Impact, sans-serif; font-size: 76px; line-height: 0.95; text-transform: uppercase">The Archivist: 12 reactions</h1>
+    </div>
+    <p style="margin: 0; max-width: 760px; font-size: 20px; line-height: 1.5; color: #3A3A3A">Big round head, thick outline, giant bean eyes and huge mouths do all the acting. His own look: a mustard newsboy cap and a red string tied on his wrist. Every reaction reads from across the room.</p>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 32px">
+    <sc-for list="{{ faces }}" as="f" hint-placeholder-count="12">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <svg viewBox="0 0 400 440" width="100%" role="img" aria-label="{{ f.aria }}" style="display: block; background: #FFFFFF; border: 3px solid #111111">
+          <path d="M200 300 V460 M200 352 L120 430 M200 352 L280 430" stroke="#111111" stroke-width="24" stroke-linecap="round" fill="none"/>
+          <path d="M112 422 l18 18" stroke="#C8281E" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="200" cy="180" r="120" fill="{{ f.skin }}" stroke="#111111" stroke-width="11"/>
+          <path d="M98 238 C 140 306 260 306 302 238 C 296 280 252 298 200 298 C 148 298 104 280 98 238 Z" fill="#E9E9E9"/>
+          <path d="M92 132 C 100 50 300 50 308 132 C 250 110 150 110 92 132 Z" fill="#D9A441" stroke="#111111" stroke-width="8" stroke-linejoin="round"/>
+          <path d="M70 142 C 140 112 250 110 318 132 C 250 128 150 132 70 142 Z" fill="#B9852C" stroke="#111111" stroke-width="8" stroke-linejoin="round"/>
+          <circle cx="200" cy="72" r="9" fill="#111111"/>
+          <sc-for list="{{ f.shapes }}" as="s" hint-placeholder-count="4">
+            <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+          </sc-for>
+        </svg>
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-family: 'Archivo Black', Impact, sans-serif; font-size: 24px; text-transform: uppercase">{{ f.name }}</span>
+          <span style="font-size: 15px; font-weight: 700; color: #C8281E">{{ f.num }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2720,"height":1380}}'>
+class Component extends DCLogic {
+renderVals() {
+  const K = '#111111', R = '#D9363E', W = '#FFFFFF', B = '#5BB8F0', P = '#F08AA0', N = 'none';
+  const cap = (x, y, w, h) => 'M' + x + ' ' + (y + w / 2) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + w + ' 0 v' + (h - w) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + (-w) + ' 0 z';
+  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 z';
+  const heart = (cx, cy, s) => 'M' + cx + ' ' + (cy + s) + ' C ' + (cx - 2 * s) + ' ' + (cy - 0.2 * s) + ' ' + (cx - 1.1 * s) + ' ' + (cy - 1.6 * s) + ' ' + cx + ' ' + (cy - 0.6 * s) + ' C ' + (cx + 1.1 * s) + ' ' + (cy - 1.6 * s) + ' ' + (cx + 2 * s) + ' ' + (cy - 0.2 * s) + ' ' + cx + ' ' + (cy + s) + ' Z';
+  const drop = (x, y, s) => 'M' + x + ' ' + y + ' C ' + (x + s) + ' ' + (y + 1.6 * s) + ' ' + (x + s) + ' ' + (y + 2.4 * s) + ' ' + x + ' ' + (y + 2.4 * s) + ' C ' + (x - s) + ' ' + (y + 2.4 * s) + ' ' + (x - s) + ' ' + (y + 1.6 * s) + ' ' + x + ' ' + y + ' Z';
+  const f = (d, fill, stroke, sw) => ({ d, fill: fill || N, stroke: stroke || N, sw: sw || 0 });
+  const eyes = (w, h, y) => [f(cap(200 - 18 - w, y, w, h), K), f(cap(218, y, w, h), K)];
+  const shine = (y) => [f(circ(166, y, 7), W), f(circ(236, y, 7), W)];
+  const openMouth = (y, w, h) => [f('M' + (200 - w / 2) + ' ' + y + ' h' + w + ' q0 ' + h + ' ' + (-w / 2) + ' ' + h + ' q' + (-w / 2) + ' 0 ' + (-w / 2) + ' ' + (-h) + ' z', R, K, 8), f('M' + (200 - w / 2 + 6) + ' ' + (y + 4) + ' l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8 - 12) + ' -14 z', W)];
+  const faces = [
+    ['Neutral', [...eyes(36, 62, 140), f('M182 246 h36', N, K, 8)]],
+    ['Proud', [f('M146 172 q22 -28 44 0', N, K, 11), f('M210 172 q22 -28 44 0', N, K, 11), f('M156 228 q44 40 88 0', N, K, 10), f(circ(132, 222, 14), P), f(circ(268, 222, 14), P)]],
+    ['Dying laughing', [f('M144 160 l22 14 l-22 14', N, K, 10), f('M256 160 l-22 14 l22 14', N, K, 10), ...openMouth(214, 116, 70), f('M176 266 q24 -22 48 0 q-24 14 -48 0 z', P, K, 5), f(drop(124, 168, 10), B, K, 3), f(drop(276, 168, 10), B, K, 3)]],
+    ['Shocked', [...eyes(44, 82, 124), ...shine(150), f(circ(200, 258, 22), R, K, 8), f('M64 96 l-26 -22 M336 96 l26 -22 M54 176 h-34 M346 176 h34', N, K, 8)]],
+    ['Furious', [f('M142 136 L192 158 M258 136 L208 158', N, K, 12), f(cap(156, 156, 30, 40), K), f(cap(214, 156, 30, 40), K), ...openMouth(218, 104, 52), f('M262 82 l10 22 M282 78 l-8 24 M260 98 l24 -6', N, R, 7)]],
+    ['Steaming', [f('M144 158 L190 170', N, K, 12), f('M256 158 L210 170', N, K, 12), f(cap(160, 168, 26, 30), K), f(cap(214, 168, 26, 30), K), f('M160 238 h80 v26 h-80 z', W, K, 7), f('M180 238 v26 M200 238 v26 M220 238 v26', N, K, 5), f('M60 150 c -30 -10 -30 -40 0 -46 c -10 -24 30 -36 36 -12', '#DADADA', K, 6), f('M340 150 c 30 -10 30 -40 0 -46 c 10 -24 -30 -36 -36 -12', '#DADADA', K, 6)]],
+    ['In love', [f(heart(168, 160, 26), '#E0262F', K, 6), f(heart(232, 160, 26), '#E0262F', K, 6), f('M166 230 q34 30 68 0', N, K, 10), f(circ(128, 222, 15), P), f(circ(272, 222, 15), P)]],
+    ['Sobbing', [f('M146 160 q22 18 44 0', N, K, 11), f('M210 160 q22 18 44 0', N, K, 11), f('M150 170 C 140 220 150 260 144 300 L164 300 C 166 260 160 220 170 172 Z', B, K, 5), f('M250 170 C 260 220 250 260 256 300 L236 300 C 234 260 240 220 230 172 Z', B, K, 5), f('M168 262 q32 -30 64 0', N, K, 10)]],
+    ['Nervous', [...eyes(30, 52, 146), f('M164 248 q9 -10 18 0 t18 0 t18 0 t18 0', N, K, 8), f(drop(312, 108, 14), B, K, 4), f('M330 190 l14 6 M332 210 l16 2', N, K, 6)]],
+    ['Smug', [f('M148 156 h44 v16 a22 22 0 0 1 -44 0 z', K), f('M208 156 h44 v16 a22 22 0 0 1 -44 0 z', K), f('M142 150 h56 M204 150 h56', N, K, 10), f('M204 130 q24 -16 50 -4', N, K, 9), f('M172 246 q40 12 64 -14', N, K, 9)]],
+    ['Dizzy', [f('M168 160 m-22 0 a22 22 0 1 1 22 22 a14 14 0 1 1 -12 -14 a6 6 0 1 1 6 6', N, K, 7), f('M232 160 m-22 0 a22 22 0 1 1 22 22 a14 14 0 1 1 -12 -14 a6 6 0 1 1 6 6', N, K, 7), f('M168 236 q32 16 64 0', N, K, 9), f('M210 242 q8 30 24 26 q10 -4 4 -26 z', P, K, 5), f('M120 70 l8 -16 l8 16 l-16 -8 l16 0 z M286 64 l6 -12 l6 12 l-12 -6 l12 0 z', '#F2C230', K, 3)]],
+    ['Terrified', [f(circ(166, 166, 34), W, K, 8), f(circ(234, 166, 34), W, K, 8), f(circ(166, 172, 7), K), f(circ(234, 172, 7), K), f('M178 224 q22 -6 44 0 q8 34 -22 58 q-30 -24 -22 -58 z', R, K, 8), f('M74 120 l-18 6 M70 160 l-22 0 M326 120 l18 6 M330 160 l22 0', N, K, 7), f(drop(98, 96, 12), B, K, 4)]]
+  ];
+  return { faces: faces.map((x, i) => ({ name: x[0], num: 'No. ' + String(i + 1).padStart(2, '0'), aria: 'The Archivist looking ' + x[0].toLowerCase(), skin: x[0] === 'Furious' || x[0] === 'Steaming' ? '#FFE3DE' : '#FFFFFF', shapes: x[1] })) };
+}
+}
+</script>
+</body>
+</html>

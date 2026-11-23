@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Evidence Board frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&amp;family=Archivo+Narrow:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B3261E}a:hover{color:#231B12}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #A8794A; color: #231B12; font-family: 'Special Elite', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <filter id="cork"><feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="4" seed="21"/><feColorMatrix values="0 0 0 0 0.3 0 0 0 0 0.18 0 0 0 0 0.08 0 0 0 0.55 0"/></filter>
+      <pattern id="ht1" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.7" fill="#231B12"/></pattern>
+      <filter id="sh1" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="4" dy="6" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/></filter>
+    </defs>
+    <rect width="1280" height="720" filter="url(#cork)"/>
+    <g filter="url(#sh1)">
+      <g transform="rotate(-4 300 250)"><rect x="140" y="120" width="320" height="250" fill="#F2EEE4"/><rect x="156" y="136" width="288" height="190" fill="url(#ht1)"/><path d="M156 326 L250 250 L320 290 L400 220 L444 326 Z" fill="#F2EEE4"/></g>
+      <g transform="rotate(3 660 200)"><rect x="560" y="110" width="250" height="160" fill="#FBF7EC"/><path d="M560 140 H810" stroke="#D47C7C" stroke-width="1.5"/><path d="M560 170 H810 M560 196 H810 M560 222 H810 M560 248 H810" stroke="#9EB4C6" stroke-width="1"/></g>
+      <g transform="rotate(-2 1040 290)"><rect x="900" y="170" width="290" height="230" fill="#E9E0C7"/><path d="M930 220 C 990 200 1060 240 1150 210 M930 260 C 1010 250 1060 280 1150 255 M930 300 C 1000 300 1080 320 1150 300" stroke="#8C6A3F" stroke-width="1.5" fill="none"/><path d="M1080 330 l8 -16 l8 16" fill="#B3261E"/></g>
+      <g transform="rotate(5 560 470)"><rect x="470" y="380" width="230" height="170" fill="#F2EEE4"/><rect x="486" y="396" width="198" height="20" fill="#231B12"/><path d="M486 430 H684 M486 446 H684 M486 462 H660 M486 478 H684 M486 494 H640 M486 510 H684" stroke="#231B12" stroke-width="2" stroke-opacity="0.55"/></g>
+    </g>
+    <g stroke="#B3261E" stroke-width="3" fill="none">
+      <path d="M300 128 C 420 150 520 140 680 118"/>
+      <path d="M680 118 C 840 140 960 160 1040 180"/>
+      <path d="M300 128 C 360 260 480 340 585 388"/>
+      <path d="M1040 180 C 900 280 760 340 585 388"/>
+    </g>
+    <g><circle cx="300" cy="128" r="10" fill="#B3261E"/><circle cx="680" cy="118" r="10" fill="#B3261E"/><circle cx="1040" cy="180" r="10" fill="#B3261E"/><circle cx="585" cy="388" r="10" fill="#B3261E"/>
+    <circle cx="297" cy="125" r="3" fill="#F2B0A8"/><circle cx="677" cy="115" r="3" fill="#F2B0A8"/><circle cx="1037" cy="177" r="3" fill="#F2B0A8"/><circle cx="582" cy="385" r="3" fill="#F2B0A8"/></g>
+  </svg>
+  <div style="position: absolute; left: 582px; top: 150px; width: 220px; transform: rotate(3deg); transform-origin: left top; font-size: 21px; line-height: 26px">July 4, 1816<br>Snow at dawn.<br>Ponds frozen.</div>
+  <div style="position: absolute; left: 488px; top: 398px; transform: rotate(5deg); transform-origin: left top; font-family: 'Archivo Narrow', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.06em; color: #F2EEE4">FROST KILLS CORN CROP</div>
+  <div style="position: absolute; left: 960px; top: 410px; transform: rotate(-2deg); transform-origin: left top; font-size: 18px">Tambora · April 1815</div>
+  <div style="position: absolute; left: 48px; top: 36px; background: #231B12; color: #F2EEE4; font-family: 'Archivo Narrow', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.18em; padding: 6px 12px">CASE 1816 · D1 EVIDENCE BOARD</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 42px; display: flex; justify-content: center">
+    <span style="background: #F2EEE4; font-size: 26px; padding: 8px 18px; box-shadow: 0 6px 14px rgba(0,0,0,0.35)">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

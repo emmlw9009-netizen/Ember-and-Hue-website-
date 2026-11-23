@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tracing Overlays frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C0392B}a:hover{color:#1C1A17}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #33302B; color: #1C1A17; font-family: 'Courier Prime', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <pattern id="ht10" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.5" fill="#2E2A24"/></pattern>
+      <filter id="sh10" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.45"/></filter>
+      <filter id="ink10" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.5"/></filter>
+    </defs>
+    <path d="M60 70 H520 L550 40 H1220 V660 H60 Z" fill="#CFAE72" filter="url(#sh10)"/>
+    <rect x="110" y="110" width="760" height="500" fill="#EAE3D2" filter="url(#sh10)"/>
+    <rect x="130" y="130" width="720" height="460" fill="url(#ht10)" opacity="0.55"/>
+    <path d="M130 470 L300 330 L420 400 L560 260 L700 380 L850 300 V590 H130 Z" fill="#EAE3D2" opacity="0.85"/>
+    <path d="M540 270 L560 252 L580 270" fill="#2E2A24"/>
+    <rect x="420" y="90" width="760" height="520" fill="#F7F5EE" opacity="0.62" filter="url(#sh10)"/>
+    <g filter="url(#ink10)" fill="none" stroke="#1C1A17" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="930" cy="270" r="34"/>
+      <path d="M930 304 V410 M930 330 L880 300 L846 268 M930 330 L976 368 M930 410 L904 470 M930 410 L956 470"/>
+      <circle cx="918" cy="262" r="3.5" fill="#1C1A17"/><circle cx="942" cy="262" r="3.5" fill="#1C1A17"/>
+      <path d="M916 284 q14 10 28 0"/>
+      <circle cx="1080" cy="350" r="26"/>
+      <path d="M1080 376 V450 M1080 396 C 1062 400 1058 414 1070 418 M1080 396 C 1098 400 1102 414 1090 418 M1080 450 L1066 498 M1080 450 L1094 498"/>
+      <circle cx="1071" cy="346" r="3" fill="#1C1A17"/><circle cx="1089" cy="346" r="3" fill="#1C1A17"/>
+      <path d="M1072 362 q8 -6 16 0"/>
+      <path d="M1050 324 l-8 -8 M1110 324 l8 -8" stroke-width="3"/>
+    </g>
+    <g fill="none" stroke="#C0392B" stroke-width="3.5" stroke-linecap="round">
+      <path d="M840 266 C 760 240 650 236 590 258"/><path d="M604 248 L588 260 L606 268"/>
+      <ellipse cx="560" cy="262" rx="44" ry="26"/>
+    </g>
+    <g fill="#1C1A17"><circle cx="1010" cy="160" r="3"/><circle cx="1050" cy="200" r="3"/><circle cx="1110" cy="150" r="3"/><circle cx="1150" cy="230" r="3"/><circle cx="990" cy="220" r="3"/></g>
+  </svg>
+  <div style="position: absolute; left: 610px; top: 196px; font-family: 'Patrick Hand', cursive; font-size: 26px; color: #C0392B; transform: rotate(-6deg)">this one. Tambora.</div>
+  <div style="position: absolute; left: 1010px; top: 510px; font-family: 'Patrick Hand', cursive; font-size: 22px; color: #1C1A17">“it's July…”</div>
+  <div style="position: absolute; left: 82px; top: 48px; font-weight: 700; font-size: 14px; letter-spacing: 0.18em; color: #4A3A1E">CASE 1816 · OVERLAY B · D10 TRACING</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center">
+    <span style="background: #F7F5EE; font-family: 'Patrick Hand', cursive; font-size: 30px; padding: 4px 20px; border-left: 6px solid #C0392B">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

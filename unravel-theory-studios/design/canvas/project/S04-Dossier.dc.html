@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Archive Dossier frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&amp;family=Courier+Prime:wght@400;700&amp;family=Archivo+Narrow:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#A3291F}a:hover{color:#2A2620}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #3B3A36; color: #2A2620; font-family: 'Courier Prime', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="8"/><feColorMatrix values="0 0 0 0 0.2 0 0 0 0 0.16 0 0 0 0 0.1 0 0 0 0.16 0"/></filter>
+      <pattern id="half" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="2" fill="#2A2620"/></pattern>
+    </defs>
+    <path d="M70 60 H560 L590 92 H1210 V680 H70 Z" fill="#C9A970"/>
+    <path d="M110 120 H1170 V650 H110 Z" fill="#D8BC86"/>
+    <g transform="rotate(-3 380 360)">
+      <rect x="150" y="150" width="460" height="460" fill="#F1EBDD"/>
+      <g fill="none" stroke="#9EB4C6" stroke-width="1"><path d="M150 210H610M150 250H610M150 290H610M150 330H610M150 370H610M150 410H610M150 450H610M150 490H610M150 530H610M150 570H610"/></g>
+      <path d="M200 150 V610" stroke="#D99" stroke-width="1"/>
+    </g>
+    <g transform="rotate(4 900 330)">
+      <rect x="700" y="150" width="380" height="300" fill="#ECE6D8"/>
+      <rect x="724" y="174" width="332" height="216" fill="url(#half)" opacity="0.85"/>
+      <path d="M724 390 L820 300 L880 340 L960 260 L1056 390 Z" fill="#ECE6D8" opacity="0.9"/>
+      <path d="M724 390 L820 318 L880 352 L960 280 L1056 390" fill="none" stroke="#2A2620" stroke-width="3"/>
+      <rect x="690" y="132" width="90" height="34" fill="#E8DFA9" opacity="0.85" transform="rotate(-8 735 149)"/>
+    </g>
+    <g transform="rotate(-12 1000 560)" fill="none" stroke="#A3291F" stroke-width="4">
+      <rect x="870" y="500" width="270" height="110" rx="10"/><rect x="880" y="510" width="250" height="90" rx="6" stroke-width="1.5"/>
+    </g>
+    <rect width="1280" height="720" filter="url(#grain)"/>
+  </svg>
+  <div style="position: absolute; left: 92px; top: 74px; font-family: 'Archivo Narrow', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.16em; color: #4A3F2B">FILE 1816-07 · NO. 4 ARCHIVE DOSSIER</div>
+  <div style="position: absolute; left: 186px; top: 186px; width: 400px; transform: rotate(-3deg); transform-origin: left top; font-family: 'Special Elite', 'Courier New', monospace; font-size: 22px; line-height: 40px; color: #2A2620">Weather journal,<br>July 4th, 1816.<br>Snow this morning.<br>Ice on the ponds.<br>Corn black in the fields.</div>
+  <div style="position: absolute; left: 744px; top: 470px; width: 340px; transform: rotate(4deg); transform-origin: left top; font-size: 15px; color: #2A2620">Exhibit B · Vermont hills, summer 1816</div>
+  <div style="position: absolute; left: 902px; top: 536px; transform: rotate(-12deg); transform-origin: left top; font-family: 'Archivo Narrow', sans-serif; font-weight: 700; font-size: 44px; letter-spacing: 0.08em; color: #A3291F">NO SUMMER</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 40px; display: flex; justify-content: center">
+    <span style="background: #F1EBDD; color: #2A2620; font-family: 'Special Elite', 'Courier New', monospace; font-size: 26px; padding: 8px 18px; box-shadow: 3px 3px 0 #2A2620">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

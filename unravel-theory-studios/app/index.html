@@ -1,0 +1,1628 @@
+<title>Unravel Theory Studios</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Archivo:wght@700;900&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
+<style>
+/* Layout: a projection-booth console. Header with a timecode ruler, one view at a time, a docked monitor while making.
+   Each section has its own signal color: Shorts = amber, Long-form = cyan, Series = rose. Single dark look by choice. */
+:root{
+  --bg:#06080E; --bg2:#0B0F18; --panel:rgba(17,22,35,.78); --panel2:#151B2A; --line:#212A3E; --line2:#2E3850;
+  --ink:#EEF1F8; --muted:#8F98AF; --dim:#5A6378;
+  --amber:#FFB547; --cyan:#5CE1E6; --rose:#FF5C8A; --ok:#62D99B; --bad:#FF6B6B;
+  --sig:var(--amber); --sig-ink:#160F02;
+  --f-display:"Syne","Avenir Next",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 170px;
+  background-image:radial-gradient(900px 520px at 85% -8%,color-mix(in srgb,var(--sig) 16%,transparent),transparent 62%),radial-gradient(700px 480px at -10% 30%,rgba(92,225,230,.06),transparent 60%);background-attachment:fixed;transition:background-image .4s}
+body[data-view="long"]{--sig:var(--cyan);--sig-ink:#02171A}
+body[data-view="series"]{--sig:var(--rose);--sig-ink:#22030E}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--sig);outline-offset:3px}
+h1,h2,h3{margin:0;text-wrap:balance}
+.wrap{max-width:860px;margin:0 auto}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:12px max(16px,env(safe-area-inset-left,0px)) 0;background:linear-gradient(180deg,var(--bg) 70%,transparent);backdrop-filter:blur(6px)}
+.top-in{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.mark{width:38px;height:38px;flex:none}
+.word{display:flex;flex-direction:column;line-height:1}
+.word b{font-family:var(--f-display);font-weight:800;font-size:18px;letter-spacing:.02em;text-transform:uppercase}
+.word small{font-family:var(--f-mono);font-size:10px;letter-spacing:.22em;color:var(--muted);margin-top:4px;text-transform:uppercase}
+.tnav{margin-left:auto;display:flex;gap:4px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tnav button{border:0;background:none;padding:7px 13px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:7px}
+.tnav button i{width:7px;height:7px;border-radius:50%;background:var(--c,var(--muted));opacity:.8}
+.tnav button[aria-current="page"]{background:var(--panel2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.sync{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.ruler{max-width:860px;margin:10px auto 0;height:22px;position:relative;border-top:1px solid var(--line);
+  background:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px 12px) top/100% 6px no-repeat,repeating-linear-gradient(90deg,var(--muted) 0 1px,transparent 1px 60px) top/100% 10px no-repeat}
+.ruler span{position:absolute;right:0;top:6px;font-family:var(--f-mono);font-size:10px;color:var(--sig);letter-spacing:.08em}
+.ruler svg{position:absolute;left:0;top:-1px;width:100%;height:20px;overflow:visible}
+.ruler path{fill:none;stroke:var(--sig);stroke-width:1.6;stroke-linecap:round;stroke-dasharray:6 900;animation:run 6s linear infinite}
+@keyframes run{from{stroke-dashoffset:0}to{stroke-dashoffset:-906}}
+@media (prefers-reduced-motion:reduce){.ruler path{animation:none;stroke-dasharray:none;opacity:.5}}
+
+/* Bottom nav (phones) */
+.bnav{display:none}
+@media (max-width:720px){
+  .tnav{display:none}
+  .bnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:25;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:rgba(8,11,18,.88);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+  .bnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--dim);padding:4px 0;cursor:pointer}
+  .bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .bnav button[aria-current="page"]{color:var(--ink)}
+  .bnav button[aria-current="page"] svg{stroke:var(--c)}
+}
+
+/* Views */
+.view{display:flex;flex-direction:column;gap:22px;padding-top:22px}
+.vhead{display:flex;flex-direction:column;gap:8px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sig)}
+.vhead h1{font-family:var(--f-display);font-weight:800;font-size:clamp(40px,8.5vw,72px);line-height:.92;letter-spacing:-.02em;text-transform:uppercase}
+.vhead h1 em{font-style:normal;-webkit-text-stroke:1.5px var(--sig);color:transparent}
+.vhead p{margin:0;color:var(--muted);font-size:16px;max-width:56ch}
+.block{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;backdrop-filter:blur(8px);min-width:0}
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bh h2{font-family:var(--f-display);font-size:19px;font-weight:700;letter-spacing:.01em}
+.hint{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.formats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fmt{position:relative;text-align:left;border:1px solid var(--line);background:var(--bg2);border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;overflow:hidden;min-width:0}
+.fmt b{font-family:var(--f-display);font-size:18px;font-weight:700}
+.fmt span{font-size:13px;color:var(--muted)}
+.fmt::after{content:"";position:absolute;right:12px;top:12px;width:12px;height:12px;border-radius:50%;border:1.5px solid var(--line2)}
+.fmt[aria-pressed="true"]{border-color:var(--sig);background:linear-gradient(160deg,color-mix(in srgb,var(--sig) 14%,var(--bg2)),var(--bg2) 70%)}
+.fmt[aria-pressed="true"]::after{background:var(--sig);border-color:var(--sig);box-shadow:0 0 12px var(--sig)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:var(--bg2);border-radius:99px;padding:6px 12px;font-size:13.5px;cursor:pointer;font-weight:500;color:var(--ink)}
+.chip:hover{border-color:var(--line2)}
+.chip[aria-pressed="true"]{border-color:var(--sig);color:var(--sig);background:color-mix(in srgb,var(--sig) 10%,transparent)}
+.ideas{display:flex;flex-direction:column;gap:8px}
+.idea{text-align:left;border:1px solid var(--line);background:var(--bg2);border-radius:14px;padding:13px 14px;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 26px;gap:3px 12px;align-items:start}
+.idea:hover{border-color:var(--line2)}
+.idea b{font-weight:600;font-size:15.5px;line-height:1.3}
+.idea i{font-style:normal;color:var(--muted);font-size:13.5px;grid-column:1}
+.idea .tick{grid-row:1/3;grid-column:2;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--sig-ink)}
+.idea[aria-pressed="true"]{border-color:var(--sig);background:linear-gradient(90deg,color-mix(in srgb,var(--sig) 10%,var(--bg2)),var(--bg2) 70%)}
+.idea[aria-pressed="true"] .tick{background:var(--sig);border-color:var(--sig)}
+.skel{height:58px;border-radius:14px;background:linear-gradient(90deg,var(--bg2) 0%,var(--panel2) 50%,var(--bg2) 100%);background-size:200% 100%;animation:sh 1.4s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inp{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;width:100%}
+.inp:focus{border-color:var(--sig)}
+textarea.inp{resize:vertical;line-height:1.45}
+.btn{border:1px solid var(--line2);background:var(--panel2);border-radius:11px;padding:9px 15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}
+.btn.sm{padding:6px 11px;font-size:13.5px;border-radius:9px}
+.btn.sig{background:var(--sig);border-color:var(--sig);color:var(--sig-ink)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.set{display:flex;flex-direction:column;gap:5px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:11px 13px;min-width:0}
+.set label{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.set select{background:transparent;border:0;padding:0 18px 0 0;font-weight:600;font-size:14.5px;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 9px) 55%,calc(100% - 4px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.set select option{background:var(--panel2);color:var(--ink)}
+.vrow{display:flex;gap:8px;align-items:center}
+.vrow select{flex:1}
+.pm{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pm svg{width:9px;height:9px;fill:currentColor}
+.note{font-size:13px;color:var(--muted);margin:0}
+.note.err{color:var(--bad)}
+.callout{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--muted);border-left:2px solid var(--sig);padding:2px 0 2px 12px}
+
+/* Daily */
+.daily{position:relative;border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
+  background:radial-gradient(420px 200px at 100% 0%,rgba(255,92,138,.16),transparent 70%),linear-gradient(150deg,rgba(255,181,71,.12),var(--panel) 55%)}
+.daily .eb{display:flex;gap:10px;align-items:center;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+.daily .eb i{font-style:normal;color:var(--muted);border:1px solid var(--line2);border-radius:99px;padding:2px 8px;letter-spacing:.06em}
+.daily h2{font-family:var(--f-display);font-size:clamp(22px,4.6vw,30px);font-weight:800;line-height:1.08}
+.daily .hk{margin:0;font-size:16px}
+.daily .why{margin:0;color:var(--muted);font-size:13.5px;max-width:64ch}
+.daily .src{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px}
+.daily .src a{color:var(--muted);text-underline-offset:3px;overflow-wrap:anywhere}
+.past{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.past button{flex:none;border:1px solid var(--line);background:var(--bg2);border-radius:9px;padding:5px 9px;font-size:12px;color:var(--muted);cursor:pointer;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.past button[aria-pressed="true"]{color:var(--ink);border-color:var(--line2)}
+
+
+/* Trend radar */
+.radar{border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:14px 18px;backdrop-filter:blur(8px)}
+.radar summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.radar summary::-webkit-details-marker{display:none}
+.radar summary b{font-family:var(--f-display);font-size:19px;font-weight:700}
+.radar summary span{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.radar summary::after{content:"+";margin-left:auto;font-family:var(--f-mono);color:var(--muted)}
+.radar[open] summary::after{content:"\2212"}
+.radar .rbody{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.radar .rsum{margin:0;color:var(--muted);font-size:14px;max-width:64ch}
+.rlist{display:flex;flex-direction:column;gap:8px}
+.ritem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 12px;border-radius:12px;background:var(--bg2);border:1px solid var(--line)}
+.ritem b{font-weight:600;font-size:14.5px}
+.ritem p{margin:0;grid-column:1;font-size:13px;color:var(--muted)}
+.ritem a{grid-column:1;font-size:12px;color:var(--dim);text-underline-offset:3px;overflow-wrap:anywhere}
+.ritem .fit{grid-row:1;grid-column:2;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-radius:6px;padding:2px 7px;border:1px solid var(--line2);color:var(--muted);align-self:start}
+.ritem .fit.shorts{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 50%,var(--line))}
+.ritem .fit.long{color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 50%,var(--line))}
+.ritem .fit.series{color:var(--rose);border-color:color-mix(in srgb,var(--rose) 50%,var(--line))}
+.ritem.avoid b{color:var(--bad)}
+.rlbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.chip.hot::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rose);margin-right:6px;vertical-align:1px;box-shadow:0 0 8px var(--rose)}
+.idea .tr{color:var(--rose);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:6px}
+
+/* Go bar */
+.gobar{position:fixed;left:0;right:0;bottom:0;z-index:22;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:linear-gradient(180deg,transparent,var(--bg) 40%)}
+@media (max-width:720px){.gobar{bottom:calc(62px + env(safe-area-inset-bottom,0px));padding-bottom:10px}}
+.gobar-in{max-width:860px;margin:0 auto;display:flex;gap:14px;align-items:center}
+.go{flex:1;border:0;border-radius:16px;padding:16px 20px;font-family:var(--f-display);font-weight:800;font-size:18px;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;color:var(--sig-ink);
+  background:linear-gradient(100deg,color-mix(in srgb,var(--sig) 75%,#fff),var(--sig) 50%,color-mix(in srgb,var(--sig) 80%,#000));box-shadow:0 12px 36px -12px var(--sig);display:flex;align-items:center;justify-content:center;gap:10px}
+.go[disabled]{background:var(--panel2);color:var(--dim);box-shadow:none;cursor:not-allowed}
+.go-sub{font-family:var(--f-mono);font-size:11px;color:var(--muted);max-width:230px;letter-spacing:.04em}
+@media (max-width:520px){.go-sub{display:none}.go{font-size:16px;padding:14px}}
+
+/* Make */
+.make{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding-top:22px}
+@media (min-width:760px){.make{grid-template-columns:300px minmax(0,1fr);align-items:start}.make.h{grid-template-columns:minmax(0,1fr)}}
+.monitor{position:relative;width:100%;max-width:300px;margin:0 auto;aspect-ratio:9/16;border-radius:20px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--line2),0 30px 90px -30px color-mix(in srgb,var(--sig) 60%,transparent)}
+.monitor::before,.monitor::after{content:"";position:absolute;top:0;bottom:0;width:9px;z-index:2;pointer-events:none;background:repeating-linear-gradient(180deg,transparent 0 10px,rgba(255,255,255,.16) 10px 16px,transparent 16px 26px)}
+.monitor::before{left:4px}.monitor::after{right:4px}
+.make.h .monitor{max-width:760px;aspect-ratio:16/9}
+.make.h .monitor::before,.make.h .monitor::after{display:none}
+.monitor canvas,.monitor video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.monitor .tag{position:absolute;top:12px;left:18px;z-index:3;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:3px 8px;display:flex;gap:6px;align-items:center}
+.monitor .tag i{width:7px;height:7px;border-radius:50%;background:var(--rose);display:inline-block}
+.mk h2{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
+.mk .sub{color:var(--muted);margin:6px 0 16px;font-size:14px}
+.jobs{display:flex;flex-direction:column;gap:10px}
+.job{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+.job.on{border-color:var(--sig);box-shadow:0 0 0 4px color-mix(in srgb,var(--sig) 15%,transparent)}
+.job.fail{border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
+.job .jt{width:62px;aspect-ratio:9/16;max-width:100%;border-radius:10px;object-fit:cover;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:22px;color:var(--dim)}
+.job.h .jt{aspect-ratio:16/9;align-self:start}
+.job .jb{display:flex;flex-direction:column;gap:6px;min-width:0}
+.job .jm{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.job.on .jm{color:var(--sig)}
+.job .jtitle{font-weight:600;font-size:15.5px;line-height:1.3;overflow-wrap:anywhere}
+.pips{display:flex;flex-wrap:wrap;gap:4px 10px}
+.pip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--dim)}
+.pip i{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+.pip.active{color:var(--ink)} .pip.active i{background:var(--sig);box-shadow:0 0 0 3px color-mix(in srgb,var(--sig) 25%,transparent)}
+.pip.done{color:var(--muted)} .pip.done i{background:var(--sig)}
+.pip.fail{color:var(--bad)} .pip.fail i{background:var(--bad)}
+.job .jd{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.job .jd.err{color:var(--bad)}
+.jbar{height:4px;border-radius:9px;background:var(--panel2);overflow:hidden}
+.jbar i{display:block;height:100%;background:var(--sig);transition:width .4s}
+.jacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.result{display:flex;flex-direction:column;gap:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.kit{display:flex;flex-direction:column;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.kit h3{font-family:var(--f-display);font-size:17px;font-weight:700}
+.kit .kr{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.kit .kr p{margin:0;font-size:14px;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.kit .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.thumbbox{display:flex;flex-direction:column;gap:8px}
+.thumbbox img{width:100%;max-width:480px;aspect-ratio:16/9;border-radius:12px;border:1px solid var(--line2);object-fit:cover}
+details.edit{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+details.edit summary{cursor:pointer;font-weight:600}
+.lines{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.line{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;align-items:start}
+.line img{width:54px;aspect-ratio:9/16;max-width:100%;border-radius:8px;object-fit:cover;background:var(--panel2)}
+.make.h .line img{aspect-ratio:16/9}
+.line textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical;min-height:58px}
+.line .la{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+
+/* Series */
+.slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.scard{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.scard .smeta{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--rose)}
+.scard h3{font-family:var(--f-display);font-size:20px;font-weight:800;line-height:1.1}
+.scard p{margin:0;font-size:13.5px;color:var(--muted)}
+.eps{display:flex;gap:5px;flex-wrap:wrap}
+.eps span{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line2);border-radius:6px;padding:2px 7px;color:var(--muted)}
+.eps span.next{border-style:dashed;color:var(--rose);border-color:var(--rose)}
+
+.sideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.sidea{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);min-width:0}
+.sidea b{font-family:var(--f-display);font-size:17px;font-weight:700;line-height:1.15}
+.sidea p{margin:0;font-size:13px;color:var(--muted)}
+.sidea p.pr{color:var(--ink);font-size:14px}
+.sidea .fit{align-self:flex-start;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-radius:6px;padding:2px 7px;border:1px solid var(--line2)}
+.sidea .fit.shorts{color:var(--amber)} .sidea .fit.series{color:var(--rose)}
+.sidea .row{margin-top:auto}
+.set.house b{font-weight:600;font-size:14.5px;color:var(--cyan)}
+.housecard{display:flex;flex-wrap:wrap;align-items:center;gap:6px 6px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.housecard .sw{width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.housecard p{flex:1 1 260px;margin:0 0 0 8px;font-size:13px;color:var(--muted)}
+.vgal{border-top:1px solid var(--line);padding-top:10px}
+.vgal summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--sig)}
+.vlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
+.vitem{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.vitem.cur{border-color:var(--sig)}
+.vplay{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.vplay svg{width:11px;height:11px;fill:currentColor}
+.vplay.playing{background:var(--sig);border-color:var(--sig);color:var(--sig-ink)}
+.vtx{display:flex;flex-direction:column;min-width:0;flex:1}
+.vtx b{font-size:14px}
+.vtx span{font-size:12px;color:var(--muted)}
+.vuse{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--sig)}
+
+/* Busy pill */
+.busy{display:flex;align-items:center;gap:8px;border:1px solid var(--sig);background:color-mix(in srgb,var(--sig) 14%,var(--bg2));color:var(--ink);border-radius:99px;padding:5px 12px 5px 10px;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.busy i{width:8px;height:8px;border-radius:50%;background:var(--rose);box-shadow:0 0 8px var(--rose);animation:pulse 1.2s ease-in-out infinite}
+.busy.done i{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:none}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.busy i{animation:none}}
+@media (max-width:720px){.busy{margin-left:auto}.top-in .sync{display:none}}
+/* Mic */
+.btn.mic{padding:0;width:44px;flex:none}
+.btn.mic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.btn.mic.on{background:var(--rose);border-color:var(--rose);color:#fff}
+/* Stats */
+.stats{display:flex;flex-direction:column;gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile b{font-family:var(--f-display);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile span{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;position:relative}
+.chartbox .ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.chartbox h3{font-family:var(--f-display);font-size:16px;font-weight:700}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chartbox svg{width:100%;height:auto;display:block;overflow:visible}
+.chartbox .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.4;white-space:nowrap;transform:translate(-50%,-100%);z-index:3}
+.chartbox table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.chartbox th,.chartbox td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--line)}
+.chartbox th:first-child,.chartbox td:first-child{text-align:left}
+.chartbox th{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+
+/* Library */
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.vid{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;padding:0;color:var(--ink)}
+.vid img,.vid .ph{width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--panel2);display:block}
+.vid.h img,.vid.h .ph{aspect-ratio:16/9}
+.vid div{padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.vid b{font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.vid small{font-family:var(--f-mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.vid small.l{color:var(--cyan)} .vid small.s{color:var(--amber)} .vid small.r{color:var(--rose)}
+.empty{border:1px dashed var(--line2);border-radius:16px;padding:18px;color:var(--muted);font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:14px;font-weight:600;z-index:40;max-width:calc(100% - 32px)}
+.spin{width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (max-width:520px){.block{padding:14px;border-radius:18px}.vhead p{font-size:15px}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#151B2A"/><path d="M8 28c4-11 8-15 11-15s5 4 2 8-8 3-6-2 9-7 16-6" fill="none" stroke="#FFB547" stroke-width="2.4" stroke-linecap="round"/><circle cx="32" cy="13" r="2.3" fill="#5CE1E6"/><circle cx="9" cy="29" r="1.6" fill="#FF5C8A"/></svg>
+    <div class="word"><b>Unravel Theory</b><small>Studios · AI video</small></div>
+    <nav class="tnav" aria-label="Sections">
+      <button data-go="shorts" style="--c:var(--amber)"><i></i>Shorts</button>
+      <button data-go="long" style="--c:var(--cyan)"><i></i>Long-form</button>
+      <button data-go="series" style="--c:var(--rose)"><i></i>Series</button>
+      <button data-go="library" style="--c:var(--muted)"><i></i>Library</button>
+    </nav>
+    <button class="busy" id="busyPill" hidden><i></i><span id="busyText">Working</span></button>
+    <span class="sync" id="sync">Local</span>
+  </div>
+  <div class="ruler" aria-hidden="true"><svg viewBox="0 0 860 20" preserveAspectRatio="none"><path d="M0 12 C 120 2, 220 20, 340 10 S 560 2, 660 12 S 800 18, 860 8"/></svg><span id="tcode">00:00:00:00</span></div>
+</header>
+
+<nav class="bnav" aria-label="Sections">
+  <button data-go="shorts" style="--c:var(--amber)"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 9.5l3 2.5-3 2.5z"/></svg>Shorts</button>
+  <button data-go="long" style="--c:var(--cyan)"><svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Long-form</button>
+  <button data-go="series" style="--c:var(--rose)"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M7 7V4.5h13V17h-4"/></svg>Series</button>
+  <button data-go="library" style="--c:var(--muted)"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Library</button>
+</nav>
+
+<main class="wrap">
+  <!-- SHORTS -->
+  <section class="view" id="v-shorts">
+    <div class="vhead"><span class="eyebrow">Vertical · 9:16 · 15 to 60 seconds</span><h1>Shorts <em>studio</em></h1><p>Pick up to three ideas. One tap writes, voices, draws, scores and renders each one with its own look.</p></div>
+    <section class="daily" id="daily" hidden aria-live="polite"></section>
+    <details class="radar" id="radar" hidden><summary><b>Trend radar</b><span id="radarWhen"></span></summary><div class="rbody" id="radarBody"></div></details>
+    <div class="block"><div class="bh"><h2>Format</h2></div>
+      <div class="formats"><button class="fmt" id="sfExplainer" aria-pressed="true"><b>Explainer</b><span>One surprising idea, explained fast.</span></button><button class="fmt" id="sfStory" aria-pressed="false"><b>Story</b><span>Original tale, cliffhanger ending.</span></button></div>
+    </div>
+    <div class="block"><div class="bh"><h2>Ideas</h2><span class="hint" id="sPickCount">0 of 3 picked</span></div>
+      <div class="chips" id="sNiches"></div>
+      <div class="ideas" id="sIdeas"></div>
+      <div class="row"><input class="inp" type="text" id="sOwn" placeholder="Or type or say your own idea" autocomplete="off"><button class="btn mic" id="sMic" hidden aria-label="Speak instead of typing"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn" id="sMore">New ideas</button><button class="btn" id="sPick3">Pick 3</button></div>
+      <p class="note" id="sNote"></p>
+    </div>
+    <div class="block"><div class="bh"><h2>Style</h2><span class="hint">Each video gets its own captions, colors and transitions</span></div>
+      <div class="settings">
+        <div class="set"><label for="sLen">Length</label><select id="sLen"><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option></select></div>
+        <div class="set"><label for="sVoice">Voice</label><div class="vrow"><select id="sVoice"></select><button class="pm" id="sVPrev" aria-label="Hear this voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
+        <div class="set"><label for="sArt">Art</label><select id="sArt"></select></div>
+        <div class="set"><label for="sCap">Captions</label><select id="sCap"><option value="pop">Bold pop</option><option value="story">Cinematic</option><option value="clean">Clean</option></select></div>
+      </div>
+      <details class="vgal" id="sVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="sVList"></div></details>
+      <p class="note" id="voiceNote">The voice runs on your device. The first video downloads it once (about 110 MB).</p>
+    </div>
+  </section>
+
+  <!-- LONG-FORM -->
+  <section class="view" id="v-long" hidden>
+    <div class="vhead"><span class="eyebrow">Horizontal · 16:9 · 3 to 8 minutes</span><h1>Long-<em>form</em></h1><p>A full YouTube video with chapters, subtitles, a thumbnail and a description with timestamps. Best made on a computer.</p></div>
+    <div class="block"><div class="bh"><h2>Format</h2></div>
+      <div class="formats"><button class="fmt" id="lfDoc" aria-pressed="true"><b>Documentary</b><span>Explain a mystery, era or idea in depth.</span></button><button class="fmt" id="lfStory" aria-pressed="false"><b>Story</b><span>A full narrated tale in chapters.</span></button></div>
+    </div>
+    <div class="block"><div class="bh"><h2>Topics</h2><span class="hint" id="lPickCount">0 of 3 picked</span></div>
+      <div class="chips" id="lNiches"></div>
+      <div class="ideas" id="lIdeas"></div>
+      <div class="row"><input class="inp" type="text" id="lOwn" placeholder="Or type or say your own topic" autocomplete="off"><button class="btn mic" id="lMic" hidden aria-label="Speak instead of typing"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn" id="lMore">New ideas</button><button class="btn" id="lPick3">Pick 3</button></div>
+      <p class="note" id="lNote"></p>
+    </div>
+    <div class="block"><div class="bh"><h2>Style</h2></div>
+      <div class="settings">
+        <div class="set"><label for="lLen">Length</label><select id="lLen"><option value="3">3 minutes</option><option value="5">5 minutes</option><option value="8">8 minutes</option></select></div>
+        <div class="set"><label for="lVoice">Voice</label><div class="vrow"><select id="lVoice"></select><button class="pm" id="lVPrev" aria-label="Hear this voice"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></button></div></div>
+        <div class="set house"><label>Look</label><b>Unravel signature</b></div>
+        <div class="set"><label for="lSubs">Subtitles</label><select id="lSubs"><option value="sub">Burned in</option><option value="none">Off</option></select></div>
+      </div>
+      <details class="vgal" id="lVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="lVList"></div></details>
+      <div class="housecard"><span class="sw" style="background:#0B1220"></span><span class="sw" style="background:#16233A"></span><span class="sw" style="background:#2C4466"></span><span class="sw" style="background:#E8A33D"></span><span class="sw" style="background:#F4EDE1"></span><p>Every long-form video uses the same house look: clean editorial illustration, one locked ink-and-amber palette, steady camera, quiet effects and the same chapter cards and subtitles. Your channel reads as one studio.</p></div>
+      <div class="callout">Pick up to 3 topics to make them in one go. Plan on about 20 minutes for one 3-minute video and 45 minutes or more for 8 minutes; a batch of 3 shares the drawing time, so it takes roughly twice as long as one. The final render runs in real time, so keep this screen open and plugged in.</div>
+    </div>
+  </section>
+
+  <!-- SERIES -->
+  <section class="view" id="v-series" hidden>
+    <div class="vhead"><span class="eyebrow">Recurring characters · numbered parts</span><h1>Series</h1><p>Lock a character, art style and voice, then make episode after episode. Each one picks up from the last cliffhanger.</p></div>
+    <div class="block" id="sTrend" hidden><div class="bh"><h2>Today's series ideas</h2><span class="hint" id="sTrendWhen"></span></div><div class="sideas" id="sTrendList"></div></div>
+    <div class="slist" id="slist"></div>
+    <div class="block" id="snew"><div class="bh"><h2>New series</h2><span class="hint">Shorts, one episode at a time</span></div>
+      <div class="formats"><button class="fmt" id="nsStory" aria-pressed="true"><b>Story</b><span>A hero, a mystery, a cliffhanger per part.</span></button><button class="fmt" id="nsExplainer" aria-pressed="false"><b>Explainer</b><span>A host character and a running theme.</span></button></div>
+      <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><textarea class="inp" id="nsPremise" rows="3" placeholder="Premise, e.g. A lion appears at an empty train station every night at 2 a.m., waiting for someone who never came back."></textarea><button class="btn mic" id="nsMic" hidden aria-label="Speak instead of typing"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>
+      <div class="settings">
+        <div class="set"><label for="nsLen">Episode length</label><select id="nsLen"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option></select></div>
+        <div class="set"><label for="nsVoice">Voice</label><select id="nsVoice"></select></div>
+        <div class="set"><label for="nsArt">Art</label><select id="nsArt"></select></div>
+      </div>
+      <details class="vgal" id="nsVGal"><summary>Hear all 10 voices</summary><div class="vlist" id="nsVList"></div></details>
+      <div class="row"><button class="btn sig" id="nsCreate">Create series</button><span class="note" id="nsNote"></span></div>
+    </div>
+  </section>
+
+  <!-- LIBRARY -->
+  <section class="view" id="v-library" hidden>
+    <div class="vhead"><span class="eyebrow">Everything you've made</span><h1>Library</h1><p>Open any video to watch it, save it and copy its upload kit.</p></div>
+    <section class="stats" id="stats" aria-label="Studio stats"></section>
+    <div class="chips" id="libFilter"></div>
+    <div class="lib" id="lib"></div>
+  </section>
+
+  <!-- MAKE -->
+  <section id="v-make" hidden>
+    <div class="make" id="makeGrid">
+      <div class="monitor" id="monitor"><canvas id="cv" width="1080" height="1920"></canvas><video id="vid" playsinline controls hidden></video><span class="tag" id="tag" hidden><i></i>REC</span></div>
+      <div class="mk">
+        <div id="track"><h2 id="mkTitle">Making</h2><p class="sub" id="mkSub"></p><div class="jobs" id="jobs"></div></div>
+        <div class="result" id="result" hidden>
+          <h2 id="rTitle"></h2>
+          <div class="acts"><button class="btn sig" id="bSave">Save video</button><button class="btn" id="bBoard" hidden>All videos</button><button class="btn" id="bRemake">Re-make</button><button class="btn" id="bNext" hidden>Next episode</button><button class="btn ghost" id="bBack">Done</button></div>
+          <p class="note" id="saveNote"></p>
+          <div class="thumbbox" id="thumbbox" hidden><div class="lbl" style="font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)">Thumbnail</div><img id="thumbImg" alt="Video thumbnail"><div class="row"><button class="btn sm" id="bThumb">Save thumbnail</button><button class="btn sm ghost" id="bThumbRe">Try another frame</button></div></div>
+          <div class="kit" id="kit"></div>
+          <details class="edit" id="edit"><summary>Edit lines or redraw scenes</summary><div class="lines" id="lines"></div></details>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="gobar" id="gobar"><div class="gobar-in"><button class="go" id="go" disabled>Generate</button><span class="go-sub" id="goSub"></span></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v; else if (k === "text") el.textContent = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "value" || k === "disabled" || k === "hidden") el[k] = v; else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+}
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const words = s => (s || "").trim().split(/\s+/).filter(Boolean);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const tick = () => new Promise(r => setTimeout(r, 0));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtTime = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const hashStr = str => { let x = 2166136261; for (const c of String(str)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; };
+const rng = seed => { let s = seed || 7; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return (s % 100000) / 100000; }; };
+let toastT; function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+async function copy(text) { try { await navigator.clipboard.writeText(text); toast("Copied"); } catch { const ta = h("textarea", { value: text }); document.body.append(ta); ta.select(); try { document.execCommand("copy"); toast("Copied"); } catch { toast("Select the text to copy it"); } ta.remove(); } }
+const LS = { get(k, d) { try { const v = localStorage.getItem("uts." + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem("uts." + k, JSON.stringify(v)); } catch {} } };
+const cap = n => (window.claude && window.claude.use) ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
+
+/* ================= Presets (shaped by the Nov 2026 trend report) ================= */
+const VOICES = [
+  ["af_heart", "Heart · warm, natural"], ["af_bella", "Bella · bright, lively"], ["am_michael", "Michael · documentary"],
+  ["am_fenrir", "Fenrir · deep, dramatic"], ["am_puck", "Puck · upbeat"], ["am_onyx", "Onyx · low and calm"],
+  ["bm_george", "George · British narrator"], ["bf_emma", "Emma · British, clear"], ["af_nicole", "Nicole · soft, close"], ["af_sky", "Sky · light, young"]
+];
+/* Long-form house style: every long video shares this look so the channel reads as one studio, not AI slop. */
+const HOUSE_PAL = ["#0B1220", "#16233A", "#2C4466", "#E8A33D", "#F4EDE1"];
+const HOUSE_DIR = `"Unravel signature" house style for a premium documentary channel. Clean editorial vector illustration with the restraint of a printed magazine cover: large simple shapes, crisp edges, generous negative space (25 to 40% of the frame calm and empty), and one clear focal subject.
+Palette is LOCKED: ink navy ${HOUSE_PAL[0]}, deep blue ${HOUSE_PAL[1]}, slate blue ${HOUSE_PAL[2]}, one warm amber accent ${HOUSE_PAL[3]} used only on the focal point or light source, and warm paper white ${HOUSE_PAL[4]} for highlights. Tints and shades of these only, no other hues.
+Light always comes from the upper left as a soft key light; shadows fall lower right. Use flat fills with at most two-stop gradients, thin 2 to 3 px line details for texture (contour lines, hatching, map lines), and subtle depth through value, not glow.
+Never: neon, rainbow colors, lens flares, heavy glows, busy textures, clutter, random sparkles, dramatic fantasy lighting, uncanny faces, extra limbs, melted or warped shapes. Figures are simple stylized silhouettes with clean proportions.`;
+const ARTS = {
+  signature: { label: "Unravel signature", dir: HOUSE_DIR },
+  flat: { label: "Bold vector", dir: "Bold flat vector illustration. Big confident shapes, saturated but harmonious colors, soft long shadows, subtle gradients for depth, friendly rounded forms, clean negative space. Feels like a premium animated science channel." },
+  silhouette: { label: "Cinematic silhouette", dir: "Cinematic silhouette art. Deep atmospheric night or dusk palette, strong backlight and rim light, layered fog bands, glowing light sources (moon, lamp, window, screen) that cast long beams, figures as crisp dark silhouettes. Moody, tense, beautiful." },
+  matte: { label: "Painted documentary", dir: "Painterly digital matte painting for a history documentary. Grand cinematic composition, soft volumetric light, rich layered textures built from many overlapping translucent shapes, warm-cool contrast, sense of scale and era." },
+  neon: { label: "Neon noir", dir: "Neon noir. Near-black environment, glowing magenta, cyan and amber neon light, wet reflective ground with reflections, haze, strong glow halos made with blurred duplicates. Stylish and dramatic." },
+  paper: { label: "Paper cutout", dir: "Layered paper cutout diorama. 5 to 7 flat paper layers stacked in depth, each with a soft drop shadow, muted earthy palette with one accent color, handmade charm." },
+  poster: { label: "Retro poster", dir: "Retro screen-print travel poster. Limited 4-color palette, big simple shapes, sunburst or radial rays, dotted halftone pattern areas, strong central composition." }
+};
+const MODES = {
+  explainer: { niches: ["History POV", "Weird science", "Human body", "Space", "Psychology", "Animals", "Money myths", "Lost places"], voice: "af_heart", art: "flat", cap: "pop", speed: 1.08, gap: 0.12 },
+  story: { niches: ["Revenge & justice", "Folktales", "History mysteries", "Creepy encounters", "Animal heroes", "Survival", "Sci-fi twist"], voice: "am_michael", art: "silhouette", cap: "story", speed: 0.98, gap: 0.28 },
+  doc: { niches: ["Ancient mysteries", "Lost civilizations", "Disasters", "Strange science", "Space", "Inventions", "Unsolved history"], voice: "bm_george", art: "matte", speed: 1.0, gap: 0.32 },
+  lstory: { niches: ["Folktales", "Revenge & justice", "Survival", "Creepy encounters", "Sci-fi", "Legends"], voice: "am_michael", art: "silhouette", speed: 0.96, gap: 0.36 }
+};
+const GUARD = `- Original content only: no copyrighted characters, songs, logos or brands. Never depict, name as a character, or voice real people, creators or public figures. No personal medical, legal or financial advice (general facts are fine). Nothing staged to upset people, no fake rescues.`;
+
+/* Per-video look, so no two videos in a batch share captions, colors or transitions (YouTube demonetizes templated sameness). */
+const HI_S = ["#FFD84D", "#7CF0FF", "#FF8AC8", "#B6FF7A", "#FFB870", "#C8A6FF"];
+const HI_T = ["#FFB870", "#FFD9A0", "#9EE7FF", "#FF9AA8", "#E8C6FF"];
+const CARDS = [["#FFD84D", "#120E08"], ["#FFFFFF", "#0B0D14"], ["#7CF0FF", "#04131A"], ["#FF5C8A", "#FFFFFF"], ["#C8A6FF", "#140A24"], ["#B6FF7A", "#0B1405"]];
+const TSETS = [["whip", "flash", "zoom", "punch"], ["zoom", "punch", "whip", "flash"], ["flash", "whip", "punch", "zoom"], ["punch", "zoom", "flash", "whip"]];
+function makeLook(p) {
+  const r = rng(hashStr(p.id)), pick = a => a[Math.floor(r() * a.length)];
+  if (p.kind === "long") return { hi: HOUSE_PAL[3], card: [HOUSE_PAL[4], HOUSE_PAL[0]], tset: 0, grade: 1, key: Math.floor(r() * 5) - 2, tempo: 0.96 + r() * 0.08, caseUp: false, capY: 0.88 };
+  return { hi: pick(p.mode === "story" || p.mode === "lstory" ? HI_T : HI_S), card: pick(CARDS), tset: Math.floor(r() * TSETS.length), grade: 0.8 + r() * 0.4, key: Math.floor(r() * 7) - 3, tempo: 0.92 + r() * 0.16, caseUp: r() > 0.35, capY: 0.6 + r() * 0.06 };
+}
+
+/* ================= State ================= */
+const S = Object.assign({ mode: "explainer", niche: "History POV", length: 45, voice: "af_heart", art: "flat", cap: "pop",
+  lmode: "doc", lniche: "Ancient mysteries", llen: 5, lvoice: "bm_george", lart: "matte", lsubs: "sub", nsmode: "story" }, LS.get("settings2", {}));
+const saveSettings = () => LS.set("settings2", S);
+let sIdeas = LS.get("sIdeas", []), lIdeas = LS.get("lIdeas", []), picks = [], lPicks = [], P = null, view = "shorts";
+
+/* ================= AI ================= */
+const AI_ERR = { not_granted: "AI is turned off for this page. Allow it from the page's permissions menu.", rate_limited: "Claude is busy. Wait a few seconds and try again.", invalid_json: "The answer came back garbled. Try again.", refused: "Claude declined that topic. Pick another idea.", unavailable: "AI isn't available in this view. Open the page in claude.ai.", prompt_too_large: "That was too long to send.", cancelled: "Stopped." };
+const aiErr = e => AI_ERR[e && e.code] || (e && e.message) || "Something went wrong. Try again.";
+let samplerP; const sampler = () => samplerP || (samplerP = cap("sample"));
+async function askJSON(prompt, tier = "default") { const s = await sampler(); if (!s) throw { code: "unavailable" }; return s.json(prompt, { modelTier: tier, cache: false }); }
+async function askText(prompt, tier = "default") { const s = await sampler(); if (!s) throw { code: "unavailable" }; return (await s(prompt, { modelTier: tier, cache: false })).text; }
+const SCENE_FIELDS = `"visual": a cinematic shot for this moment: shot type (wide, close-up, over-the-shoulder, low angle, top-down), focal subject and action, setting, a FOREGROUND framing element (branches, window frame, railing, rocks, curtains, silhouettes), lighting and mood. Vary shot types like a film editor. No text in the image. Reuse the exact character description whenever the character appears.
+- "motion": zoom-in, zoom-out, pan-left or pan-right. Vary it.
+- "fx": rain, snow, fog, embers, sparks, stars, rays, dust or none. Match the scene.`;
+const SCENE_FIELDS_LONG = SCENE_FIELDS.replace("rain, snow, fog, embers, sparks, stars, rays, dust or none. Match the scene.", "dust, fog, rain, snow or none. Keep it subtle; use none for most scenes.");
+
+function scriptPrompt(p, extra = "") {
+  const story = p.mode === "story", wps = story ? 2.5 : 2.75, L = p.length;
+  const tw = Math.round(L * wps), n0 = Math.max(4, Math.round(L / 3.4)), n1 = Math.max(5, Math.round(L / 2.6));
+  const rules = story ? `- Scene 1 opens in the middle of the most tense moment. No setup, no greetings.
+- Short punchy sentences, one tense, vivid sensory detail. Escalate every 2 scenes. Land a twist in the final 20%.
+- End on a cliffhanger or chilling final line that makes people comment or come back for the next part.
+- First person narration unless told otherwise.`
+    : `- Scene 1 is the hook: 12 words max, a surprising claim, sharp question or contradiction. Never "Did you know", greetings or "In this video".
+- Scene 2 says why the viewer should care. Then escalating micro-reveals; keep one open question until near the end.
+- Plain words, concrete comparisons, talk to "you". Only facts you are confident are true; for History POV put the viewer inside the moment ("You wake up in…").
+- The final line flows back into the first line so the video loops when it replays.`;
+  return `You are an elite YouTube Shorts writer and art director whose channel grows because every video feels hand-made, never templated. Write a ${L}-second ${story ? "storytime" : "explainer"} Short.
+Topic: ${p.topic}
+${extra}
+${rules}
+${GUARD}
+- About ${tw} words of narration in total. Use ${n0} to ${n1} scenes. Each scene is ONE short sentence or phrase (5 to 13 words) with its own illustration, so the picture changes every 2 to 3 seconds.
+- Write numbers as words when spoken, no symbols or emojis in narration.
+- ${SCENE_FIELDS}
+- "emphasis": ${story ? "always empty" : "1 to 3 words to slam on screen (a key number, word or punchline) on about one scene in three, otherwise empty"}.
+- "palette": 5 hex colors that set the mood for the whole video (dark to light).
+- "titles": 3 upload titles under 60 characters that describe what the video really shows (no bait the video doesn't pay off).
+- "summary": two sentences on what happened, and "cliffhanger": the open question it ends on (for series continuity).
+
+Reply with ONLY JSON:
+{"title":"...","palette":["#..."],"character":"recurring character description or empty","scenes":[{"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}],"titles":["..."],"description":"2 sentences","hashtags":"5 hashtags incl #shorts","pinnedComment":"one line inviting replies","summary":"...","cliffhanger":"..."}`;
+}
+function outlinePrompt(p) {
+  const doc = p.mode === "doc", nch = p.length <= 3 ? 4 : p.length <= 5 ? 5 : 7;
+  return `You are the head writer of a fast-growing faceless YouTube ${doc ? "documentary" : "storytelling"} channel. Plan a ${p.length}-minute horizontal video.
+Topic: ${p.topic}
+- Open with a cold-open hook line that promises a payoff the video truly delivers.
+- ${nch} chapters with short titles (2 to 5 words), each a step up in an escalating arc; the last chapter pays off the hook.
+- ${doc ? "True, checkable facts only. Mark uncertain claims as uncertain (\"historians think\"). Give viewers a clear point of view, not a list of trivia." : "An original story told in first person with a recurring cast, rising stakes and a twist in the final chapter."}
+${GUARD}
+Reply with ONLY JSON:
+{"title":"...","hook":"cold-open line","palette":["5 hex colors dark to light"],"character":"recurring character description or empty","thumbText":"2 to 4 punchy words for the thumbnail","chapters":[{"title":"...","beats":"2 or 3 sentences on what this chapter covers"}],"titles":["3 titles under 70 characters that match the video"],"description":"3 sentences","hashtags":"3 hashtags","pinnedComment":"one line inviting replies"}`;
+}
+function chapterPrompt(p, o, ci) {
+  const wpm = p.mode === "doc" ? 150 : 140, total = p.length * wpm, n = o.chapters.length;
+  const w = Math.round(total / n), ns = Math.max(4, Math.round(p.length * 60 / n / 9));
+  return `Write chapter ${ci + 1} of ${n} for the ${p.mode === "doc" ? "documentary" : "story"} video "${o.title}".
+Cold-open hook of the video: ${o.hook}
+All chapters (for continuity): ${o.chapters.map((c, i) => (i + 1) + ". " + c.title + ": " + c.beats).join(" | ")}
+This chapter: "${o.chapters[ci].title}" — ${o.chapters[ci].beats}
+${o.character ? "Recurring character: " + o.character : ""}
+${GUARD}
+- About ${w} words of narration in ${ns} scenes. Each scene is 1 to 3 sentences (12 to 35 words) and gets its own illustration.
+${ci === 0 ? "- Scene 1 narration starts with the cold-open hook, word for word.\n" : ""}- ${ci < n - 1 ? "End the chapter on a line that pulls viewers into the next chapter." : "Land the payoff of the hook" + (p.mode === "doc" ? " and end with one memorable closing line." : " with the twist, then a final haunting line.")}
+- Write numbers as words when spoken. No symbols or emojis in narration.
+- ${SCENE_FIELDS_LONG}
+- "visual" must fit the channel's house style: one clear focal subject, calm composition, no spectacle for its own sake.
+- "emphasis": a 1 to 3 word on-screen stamp for at most one scene in this chapter (a key date, number or term), otherwise empty.
+Reply with ONLY JSON: {"scenes":[{"narration":"...","visual":"...","motion":"zoom-in","fx":"none","emphasis":""}]}`;
+}
+function svgPrompt(p, sc, i) {
+  const H = p.kind === "long", W = H ? 1920 : 1080, Hh = H ? 1080 : 1920;
+  const prev = p.scenes[i - 1], next = p.scenes[i + 1];
+  return `You are a top illustrator for animated YouTube channels. Draw ONE full-bleed ${H ? "horizontal 16:9" : "vertical 9:16"} illustration as an SVG, built in depth layers so it can be animated with parallax.
+Shot ${i + 1} of ${p.scenes.length}: ${sc.visual}
+Narration over this shot: "${sc.narration}"
+${prev ? "Previous shot (continuity): " + prev.visual : ""}
+${next ? "Next shot: " + next.visual : ""}
+${p.character ? "Recurring character (draw consistently every time): " + p.character : ""}
+Art direction: ${ARTS[p.art].dir}
+Palette to build from: ${p.palette.join(", ")}
+
+Structure (required):
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Hh}" data-focus-x="X" data-focus-y="Y">
+  <defs>gradients and at most 2 filters</defs>
+  <g id="bg"> sky or back wall, distant shapes, big light source. Must cover the ENTIRE ${W}x${Hh} canvas (start with a full rect) </g>
+  <g id="mid"> the focal subject and main action, large and readable, with rim light </g>
+  <g id="fg"> 1 to 3 dark foreground framing shapes touching the canvas edges. Keep the center clear. Transparent elsewhere </g>
+</svg>
+- data-focus-x / data-focus-y = the center of the focal subject in viewBox units.
+- ${H ? "Compose on the rule of thirds like a magazine cover: one focal subject, calm empty space around it, the bottom 18% quiet and dark (subtitles go there). Keep the composition consistent with the previous shot so the video feels like one series of plates." : "Focal subject in the upper 60%. Keep the bottom 35% darker and simpler (captions go there)."}
+- ${H ? "Lighting: soft key light from the upper left, value-based depth between the three layers, at most one very subtle blur on the light source. No glow halos." : "Lighting: at least 4 gradients, a key light with rim light on the subject, atmospheric haze between layers (semi-transparent gradient rects), one soft glow (feGaussianBlur) on the light source."}
+- ${H ? "Detail through restraint: fewer, cleaner shapes; fine line work instead of noise; clean silhouettes. Stylized forms, no detailed faces, no real people." : "Rich detail where it matters: layered silhouettes with smooth bezier curves, texture through repeated small shapes, cast shadows. Stylized forms, no detailed faces, no real people."}
+- NO text, letters, numbers, logos, <image>, <script>, <foreignObject>, <style>, external links or animation.
+- Under 14000 characters.
+Reply with only the SVG code.`;
+}
+/* ================= Voice engine (Kokoro, runs in the browser) ================= */
+const KB = "./kokoro/";
+const HF = "huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/";
+const realFetch = window.fetch.bind(window);
+let ttsP = null, model = null, wasmBlob = null;
+const idb = {
+  db: null,
+  async open() { if (this.db !== null) return this.db; try { this.db = await new Promise((res, rej) => { const r = indexedDB.open("uts", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); } catch { this.db = false; } return this.db; },
+  async op(mode, fn) { const db = await this.open(); if (!db) return null; return new Promise(res => { try { const t = db.transaction("kv", mode); const r = fn(t.objectStore("kv")); t.oncomplete = () => res(r && r.result); t.onerror = () => res(null); t.onabort = () => res(null); } catch { res(null); } }); },
+  get(k) { return this.op("readonly", s => s.get(k)); }, put(k, v) { return this.op("readwrite", s => s.put(v, k)); }, del(k) { return this.op("readwrite", s => s.delete(k)); }
+};
+async function fetchParts(prefix, n, onBytes) {
+  const parts = [];
+  for (let i = 0; i < n; i++) {
+    const r = await realFetch(KB + prefix + i + ".wasm");
+    if (!r.ok) throw new Error("Voice files are missing from this page.");
+    if (r.body && r.body.getReader) { const rd = r.body.getReader(); const ch = []; for (;;) { const { done, value } = await rd.read(); if (done) break; ch.push(value); onBytes(value.byteLength); } parts.push(new Blob(ch)); }
+    else { const b = await r.arrayBuffer(); onBytes(b.byteLength); parts.push(b); }
+  }
+  return new Blob(parts);
+}
+function installShims() {
+  if (window.__utsShim) return; window.__utsShim = true;
+  window.fetch = async (input, init) => {
+    const url = typeof input === "string" ? input : (input && input.url) || String(input);
+    if (url.includes(HF)) {
+      const p = url.split(HF)[1].split("?")[0];
+      if (p.endsWith(".onnx")) return new Response(model, { headers: { "content-type": "application/octet-stream", "content-length": String(model.size) } });
+      return realFetch(KB + p.replace(/\.bin$/, ".wasm"));
+    }
+    if (/ort-wasm[^/]*\.wasm(\?|$)/.test(url)) return new Response(wasmBlob, { headers: { "content-type": "application/wasm" } });
+    return realFetch(input, init);
+  };
+  const fake = { match: async () => undefined, put: async () => {}, delete: async () => false, keys: async () => [] };
+  try { Object.defineProperty(window, "caches", { value: { open: async () => fake, match: async () => undefined, has: async () => false, delete: async () => false, keys: async () => [] }, configurable: true }); } catch {}
+}
+function loadVoice(onProgress = () => {}) {
+  if (ttsP) return ttsP;
+  ttsP = (async () => {
+    let cached = await idb.get("kokoro-q8-v1");
+    if (cached && cached.model && cached.wasm) { model = cached.model; wasmBlob = cached.wasm; onProgress(1, true); }
+    else {
+      const TOTAL = 92361116 + 21596019; let got = 0;
+      const on = b => { got += b; onProgress(Math.min(1, got / TOTAL)); };
+      [model, wasmBlob] = await Promise.all([fetchParts("m", 8, on), fetchParts("w", 2, on)]);
+      if (model.size !== 92361116) throw new Error("The voice model didn't download completely. Try again.");
+      idb.put("kokoro-q8-v1", { model, wasm: wasmBlob });
+    }
+    installShims();
+    const mod = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js");
+    return await mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "q8", device: "wasm" });
+  })();
+  ttsP.catch(() => { ttsP = null; });
+  return ttsP;
+}
+function warmVoice() { idb.get("kokoro-q8-v1").then(c => { if (c && c.model) loadVoice().catch(() => {}); }); }
+async function speak(tts, text, voice, speed) { const a = await tts.generate(text, { voice, speed }); return a.audio; }
+
+/* ================= Audio: music + sfx + mix ================= */
+let ac = null; function getAC() { if (!ac) { const A = window.AudioContext || window.webkitAudioContext; ac = new A(); } return ac; }
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+function kick(oc, out, t, amp) { const o = oc.createOscillator(), g = oc.createGain(); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14); g.gain.setValueAtTime(amp, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.32); o.connect(g).connect(out); o.start(t); o.stop(t + 0.35); }
+let noiseCache = null;
+function noiseBuf(oc, secs) { if (noiseCache && noiseCache.sampleRate === oc.sampleRate && noiseCache.duration >= secs) return noiseCache; const b = oc.createBuffer(1, Math.ceil(oc.sampleRate * secs), oc.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; noiseCache = b; return b; }
+function whoosh(oc, out, t, amp) { const s = oc.createBufferSource(); s.buffer = noiseBuf(oc, 0.6); const f = oc.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3500, t + 0.45); const g = oc.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.3); g.gain.linearRampToValueAtTime(0, t + 0.55); s.connect(f).connect(g).connect(out); s.start(t); }
+function music(oc, out, total, p) {
+  const look = p.look, dark = p.mode === "story" || p.mode === "lstory", long = p.kind === "long", tr = look.key;
+  const bpm = (dark ? 66 : long ? 84 : 104) * look.tempo, beat = 60 / bpm, bar = beat * 4, len = dark || long ? bar * 2 : bar;
+  const progs = dark ? [[[57, 60, 64], [53, 57, 60], [48, 52, 55], [52, 56, 59]], [[57, 60, 64], [55, 59, 62], [53, 57, 60], [52, 55, 59]]]
+                     : [[[48, 52, 55], [55, 59, 62], [57, 60, 64], [53, 57, 60]], [[53, 57, 60], [48, 52, 55], [55, 59, 62], [57, 60, 64]]];
+  const prog = progs[hashStr(p.id) % 2];
+  const lp = oc.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = dark ? 800 : long ? 1300 : 1900; lp.Q.value = 0.4; lp.connect(out);
+  for (let t = 0, i = 0; t < total + 0.5; t += len, i++) {
+    const ch = prog[i % 4].map(n => n + tr);
+    ch.forEach(n => [-7, 7].forEach(det => { const o = oc.createOscillator(); o.type = "sawtooth"; o.frequency.value = mtof(n); o.detune.value = det; const g = oc.createGain(); const pk = dark ? 0.03 : 0.022; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(pk, t + len * 0.35); g.gain.setValueAtTime(pk, t + len * 0.8); g.gain.linearRampToValueAtTime(0, t + len + 0.5); o.connect(g).connect(lp); o.start(t); o.stop(t + len + 0.6); }));
+    const b = oc.createOscillator(); b.type = "sine"; b.frequency.value = mtof(ch[0] - 24); const bg = oc.createGain(); bg.gain.setValueAtTime(0, t); bg.gain.linearRampToValueAtTime(dark ? 0.16 : 0.1, t + 0.4); bg.gain.linearRampToValueAtTime(0, t + len + 0.3); b.connect(bg).connect(out); b.start(t); b.stop(t + len + 0.4);
+    if (dark) { kick(oc, out, t, 0.2); kick(oc, out, t + 0.3, 0.12); if (!long) { kick(oc, out, t + bar, 0.2); kick(oc, out, t + bar + 0.3, 0.12); }
+      const bell = oc.createOscillator(); bell.type = "sine"; bell.frequency.value = mtof(ch[2] + 24); const gg = oc.createGain(); gg.gain.setValueAtTime(0, t + bar); gg.gain.linearRampToValueAtTime(0.022, t + bar + 0.01); gg.gain.exponentialRampToValueAtTime(0.0005, t + bar + 2.5); bell.connect(gg).connect(out); bell.start(t + bar); bell.stop(t + bar + 2.6); }
+    else if (long) { const pat = [0, 2, 1, 2]; for (let k = 0; k < 4; k++) { const tt = t + k * beat * 2; const o = oc.createOscillator(); o.type = "triangle"; o.frequency.value = mtof(ch[pat[k]] + 12); const g = oc.createGain(); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.035, tt + 0.01); g.gain.exponentialRampToValueAtTime(0.0006, tt + 1.2); o.connect(g).connect(out); o.start(tt); o.stop(tt + 1.25); } }
+    else { const pat = [0, 1, 2, 1, 0, 2, 1, 2]; for (let k = 0; k < 8; k++) { const tt = t + k * beat / 2; const o = oc.createOscillator(); o.type = "triangle"; o.frequency.value = mtof(ch[pat[k]] + 12); const g = oc.createGain(); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(0.05, tt + 0.006); g.gain.exponentialRampToValueAtTime(0.0006, tt + 0.3); o.connect(g).connect(out); o.start(tt); o.stop(tt + 0.32); }
+      kick(oc, out, t, 0.32); kick(oc, out, t + 2 * beat, 0.32); }
+  }
+}
+async function mixAudio(p, clips) {
+  const long = p.kind === "long", SR = long ? 32000 : 44100, CHN = long ? 1 : 2, total = p.timeline.total;
+  const oc = new OfflineAudioContext(CHN, Math.ceil((total + 0.8) * SR), SR);
+  const comp = oc.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.005; comp.release.value = 0.2; comp.connect(oc.destination);
+  const vbus = oc.createGain(); vbus.gain.value = 1.35; vbus.connect(comp);
+  clips.forEach((clip, i) => { const seg = p.timeline.segs[i]; const b = oc.createBuffer(1, clip.length, 24000); b.copyToChannel(clip, 0); const s = oc.createBufferSource(); s.buffer = b; s.connect(vbus); s.start(seg.vStart); });
+  const mv = (p.mode === "story" || p.mode === "lstory") ? 0.5 : long ? 0.34 : 0.42;
+  const mbus = oc.createGain(); mbus.gain.setValueAtTime(0, 0); mbus.gain.linearRampToValueAtTime(mv, 0.8); mbus.gain.setValueAtTime(mv, Math.max(1, total - 0.6)); mbus.gain.linearRampToValueAtTime(0, total + 0.6); mbus.connect(comp);
+  music(oc, mbus, total, p);
+  const sfx = oc.createGain(); sfx.connect(comp);
+  p.timeline.segs.forEach((s, i) => { if (i && (!long || s.s.chStart)) whoosh(oc, sfx, Math.max(0, s.start - 0.3), long ? 0.06 : (p.mode === "story" ? 0.05 : 0.08)); });
+  return oc.startRendering();
+}
+
+/* ================= Visuals: engine v3 (layered 2.5D parallax, vertical + horizontal) ================= */
+let CW = 1080, CH = 1920, ORI = "v";
+const cv = $("#cv"), ctx = cv.getContext("2d");
+const mk = (w, hh) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(hh)); return c; };
+const ease = k => { k = clamp(k, 0, 1); return k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; };
+let bloomC = mk(216, 384), bloomG = bloomC.getContext("2d");
+function setFormat(kind) {
+  const h2 = kind === "long"; ORI = h2 ? "h" : "v"; CW = h2 ? 1920 : 1080; CH = h2 ? 1080 : 1920;
+  if (cv.width !== CW || cv.height !== CH) { cv.width = CW; cv.height = CH; }
+  bloomC = mk(CW / 5, CH / 5); bloomG = bloomC.getContext("2d");
+  $("#makeGrid").classList.toggle("h", h2);
+}
+const DIM = { v: { w: 1080, h: 1920, iw: 1350, ih: 2400 }, h: { w: 1920, h: 1080, iw: 2400, ih: 1350 } };
+function cleanSvg(raw, ori) {
+  const d = DIM[ori || "v"];
+  let s = String(raw || ""); const a = s.indexOf("<svg"), b = s.lastIndexOf("</svg>");
+  if (a < 0 || b < 0) return null; s = s.slice(a, b + 6);
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, "").replace(/<image\b[^>]*>/gi, "").replace(/\s(xlink:)?href="(?!#)[^"]*"/gi, "").replace(/\son\w+="[^"]*"/gi, "").replace(/url\((?!#)[^)]*\)/gi, "none");
+  s = s.replace(/<svg\b([^>]*)>/i, (m, at) => { at = at.replace(/\s(width|height|preserveAspectRatio)="[^"]*"/gi, ""); if (!/xmlns=/.test(at)) at += ' xmlns="http://www.w3.org/2000/svg"'; if (!/viewBox=/.test(at)) at += ` viewBox="0 0 ${d.w} ${d.h}"`; return `<svg${at} width="${d.iw}" height="${d.ih}" preserveAspectRatio="xMidYMid slice">`; });
+  return s;
+}
+function focusOf(svg, ori) {
+  const d = DIM[ori], fx = /data-focus-x="([\d.]+)"/.exec(svg), fy = /data-focus-y="([\d.]+)"/.exec(svg);
+  return { x: clamp(fx ? +fx[1] / d.w : 0.5, 0.25, 0.75), y: clamp(fy ? +fy[1] / d.h : 0.4, 0.22, 0.7) };
+}
+async function svgImage(svg) { const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" })); const img = new Image(); img.src = url; await img.decode(); return img; }
+const LAYERS = ["bg", "mid", "fg"];
+async function buildArt(svg, ori) {
+  const layered = LAYERS.every(id => new RegExp('id="' + id + '"').test(svg)), focus = focusOf(svg, ori);
+  if (!layered) return { imgs: [await svgImage(svg)], focus, ori };
+  const imgs = await Promise.all(LAYERS.map(keep => { const hide = LAYERS.filter(x => x !== keep).map(x => "#" + x).join(","); return svgImage(svg.replace(/<svg\b[^>]*>/i, m => m + `<style>${hide}{display:none!important}</style>`)); }));
+  return { imgs, focus, ori };
+}
+function fallbackArt(p, i) {
+  const ori = p.kind === "long" ? "h" : "v", c = ori === "h" ? mk(2311, 1300) : mk(1300, 2311), g = c.getContext("2d"), pal = p.palette || [];
+  const gr = g.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0, pal[2] || "#2a2140"); gr.addColorStop(0.6, pal[1] || "#17122a"); gr.addColorStop(1, pal[0] || "#0b0910");
+  g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
+  const rg = g.createRadialGradient(c.width * (0.35 + 0.3 * ((i * 37) % 10) / 10), c.height * 0.33, 10, c.width / 2, c.height * 0.36, Math.max(c.width, c.height) * 0.6); rg.addColorStop(0, (pal[4] || "#FFB547") + "dd"); rg.addColorStop(1, "transparent");
+  g.fillStyle = rg; g.fillRect(0, 0, c.width, c.height);
+  return { canvas: c, focus: { x: 0.5, y: 0.38 }, ori };
+}
+function rast(img, w, hh, blur) {
+  const c = mk(w, hh), g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height);
+  if (blur) { const s = mk(w / blur, hh / blur), sg = s.getContext("2d"); sg.imageSmoothingQuality = "high"; sg.drawImage(c, 0, 0, s.width, s.height); g.clearRect(0, 0, c.width, c.height); g.imageSmoothingQuality = "high"; g.drawImage(s, 0, 0, c.width, c.height); }
+  return c;
+}
+const rasLRU = [];
+function rasterize(art) {
+  if (art.ras) return art.ras;
+  if (art.canvas) return (art.ras = [{ c: art.canvas, d: 1 }]);
+  const V = art.ori !== "h", sz = (a, b) => V ? [a, b] : [b, a];
+  art.ras = art.imgs.length === 3
+    ? [{ c: rast(art.imgs[0], ...sz(900, 1600), 2.2), d: 0.55 }, { c: rast(art.imgs[1], ...sz(1300, 2311), 0), d: 1 }, { c: rast(art.imgs[2], ...sz(1080, 1920), 1.5), d: 1.45 }]
+    : [{ c: rast(art.imgs[0], ...sz(1300, 2311), 0), d: 1 }];
+  rasLRU.push(art); while (rasLRU.length > 4) { const o = rasLRU.shift(); if (!o.canvas) o.ras = null; }
+  return art.ras;
+}
+function prefetch(p, si) { for (const j of [si + 1, si + 2]) { const s = p.scenes[j]; const a = s && arts.get(s.id); if (a && !a.ras) setTimeout(() => { try { rasterize(a); } catch {} }, 0); } }
+function thumbOfArt(art) { const H2 = art.ori === "h", t = H2 ? mk(192, 108) : mk(108, 192), g = t.getContext("2d"); if (art.canvas) g.drawImage(art.canvas, 0, 0, t.width, t.height); else art.imgs.forEach(im => g.drawImage(im, 0, 0, t.width, t.height)); return t.toDataURL("image/jpeg", 0.72); }
+const thumbs = new Map(), arts = new Map();
+
+const grain = []; for (let k = 0; k < 4; k++) { const c = mk(270, 480), g = c.getContext("2d"), d = g.createImageData(270, 480); for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); grain.push(c); }
+const fogTex = (() => { const c = mk(540, 960), g = c.getContext("2d"); for (let i = 0; i < 26; i++) { const x = Math.random() * 540, y = 300 + Math.random() * 660, r = 80 + Math.random() * 170; const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, "rgba(255,255,255,.22)"); rg.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = rg; g.fillRect(0, 0, 540, 960); } return c; })();
+const seeds = Array.from({ length: 170 }, () => [Math.random(), Math.random(), Math.random()]);
+
+function camFor(shot, k) {
+  const e = ease(k), f = shot.focus, L = (a, b) => a + (b - a) * e;
+  if (shot.calm) { if (shot.kind === "close") return { z: L(1.3, 1.38), cx: (f.x * 2 + 0.5) / 3, cy: (f.y * 2 + 0.5) / 3 }; if (shot.kind === "medium") return { z: L(1.14, 1.2), cx: (f.x + 0.5) / 2, cy: (f.y + 0.5) / 2 }; return { z: shot.dir > 0 ? L(1.04, 1.1) : L(1.1, 1.04), cx: 0.5 + shot.pan * (e - 0.5) * 0.05, cy: 0.5 }; }
+  if (shot.kind === "close") return { z: L(1.48, 1.62), cx: f.x + shot.pan * (e - 0.5) * 0.04, cy: f.y };
+  if (shot.kind === "medium") return { z: L(1.22, 1.3), cx: (f.x + 0.5) / 2 + shot.pan * (e - 0.5) * 0.05, cy: (f.y + 0.5) / 2 };
+  return { z: shot.dir > 0 ? L(1.05, 1.17) : L(1.17, 1.05), cx: 0.5 + shot.pan * (e - 0.5) * 0.1, cy: 0.5 };
+}
+function drawLayer(c, d, cam, drift, sway) {
+  const z = Math.max(1.03, 1 + (cam.z - 1) * d), w = CW * z, hh = CH * z, m = 1 / (2 * z);
+  const cx = clamp(0.5 + (cam.cx - 0.5) * Math.min(1.15, d), m, 1 - m), cy = clamp(0.5 + (cam.cy - 0.5) * Math.min(1.15, d), m, 1 - m);
+  ctx.drawImage(c, CW / 2 - cx * w + (drift + sway.x) * d, CH / 2 - cy * hh + sway.y * d, w, hh);
+}
+const darkMode = p => p.mode === "story" || p.mode === "lstory";
+function renderShot(p, shot, t, extraZ) {
+  const art = arts.get(shot.sid) || (() => { const a = fallbackArt(p, shot.si); arts.set(shot.sid, a); return a; })();
+  const ras = rasterize(art); shot.focus = art.focus;
+  const k = (t - shot.t0) / (shot.t1 - shot.t0), cam = camFor(shot, k); cam.z += extraZ || 0;
+  const drift = (ease(k) - 0.5) * (ORI === "h" ? 70 : 46) * (shot.pan || shot.dir);
+  const sway = p.kind === "long" ? { x: 0, y: 0 } : darkMode(p) ? { x: Math.sin(t * 0.9) * 5 + Math.sin(t * 2.3) * 2, y: Math.cos(t * 0.7) * 4 } : { x: 0, y: 0 };
+  for (const L of ras) drawLayer(L.c, L.d, cam, drift, sway);
+}
+function drawFx(p, fx, t, focus) {
+  if (p.kind === "long") { fx = ({ rays: "dust", embers: "dust", sparks: "dust", stars: "none" })[fx] || fx; }
+  ctx.save(); if (p.kind === "long") ctx.globalAlpha = 0.6; const S2 = Math.max(CW, CH) / 1920;
+  if (fx === "rain") { ctx.strokeStyle = "rgba(190,210,255,.32)"; ctx.lineWidth = 2.2; ctx.beginPath(); for (let i = 0; i < 150; i++) { const [a, b, c] = seeds[i]; const y = (b * CH + t * 1700 * (0.8 + c * 0.5)) % (CH + 80) - 80, x = (a * (CW + 200) - t * 220 * (0.8 + c * 0.5)) % (CW + 200); const xx = x < -100 ? x + CW + 200 : x; ctx.moveTo(xx, y); ctx.lineTo(xx - 12, y + 70); } ctx.stroke(); }
+  else if (fx === "snow") { ctx.fillStyle = "rgba(255,255,255,.75)"; for (let i = 0; i < 120; i++) { const [a, b, c] = seeds[i]; const y = (b * CH + t * 90 * (0.5 + c)) % CH, x = a * CW + Math.sin(t * (0.6 + c) + i) * 34; ctx.globalAlpha = 0.35 + c * 0.6; ctx.beginPath(); ctx.arc(x, y, (2 + c * 5) * S2, 0, 6.283); ctx.fill(); } }
+  else if (fx === "embers" || fx === "sparks") { ctx.globalCompositeOperation = "lighter"; for (let i = 0; i < 80; i++) { const [a, b, c] = seeds[i]; const sp = fx === "sparks" ? 260 : 120; const y = CH - ((b * CH + t * sp * (0.5 + c)) % CH), x = a * CW + Math.sin(t * 2 + i) * 26; ctx.globalAlpha = (0.35 + 0.65 * Math.abs(Math.sin(t * 6 + i))) * (0.4 + c * 0.6); ctx.fillStyle = fx === "sparks" ? "#BFE3FF" : "#FFA24A"; ctx.beginPath(); ctx.arc(x, y, 1.5 + c * 3.5, 0, 6.283); ctx.fill(); } }
+  else if (fx === "stars") { ctx.fillStyle = "#FFFFFF"; for (let i = 0; i < 130; i++) { const [a, b, c] = seeds[i]; ctx.globalAlpha = 0.15 + 0.85 * Math.abs(Math.sin(t * (1 + c * 2) + i)); ctx.fillRect(a * CW, b * CH * 0.55, 2 + c * 2.5, 2 + c * 2.5); } }
+  else if (fx === "fog") { ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = 0.38; const off = (t * 26) % CW; ctx.drawImage(fogTex, -off, 0, CW, CH); ctx.drawImage(fogTex, CW - off, 0, CW, CH); ctx.globalAlpha = 0.22; const o2 = (t * 12) % CW; ctx.drawImage(fogTex, o2 - CW, 140, CW, CH); ctx.drawImage(fogTex, o2, 140, CW, CH); }
+  if (fx !== "rain" && fx !== "snow") { ctx.globalCompositeOperation = "screen"; ctx.fillStyle = darkMode(p) ? "#FFD3A0" : "#FFFFFF"; for (let i = 0; i < 40; i++) { const [a, b, c] = seeds[i + 120]; const y = ((b * CH - t * 32 * (0.3 + c)) % CH + CH) % CH, x = a * CW + Math.sin(t * 0.6 + b * 9) * 18; ctx.globalAlpha = (darkMode(p) ? 0.26 : 0.14) * (0.3 + c); ctx.beginPath(); ctx.arc(x, y, 1.2 + c * 3, 0, 6.283); ctx.fill(); } }
+  if (p.kind !== "long" && (fx === "rays" || (darkMode(p) && (fx === "fog" || fx === "dust")))) {
+    ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = 1; const ox = focus.x * CW, oy = -120, R = Math.max(CW, CH) * 1.25;
+    for (let i = 0; i < 7; i++) { const ang = Math.PI / 2 + (i - 3) * 0.13 + Math.sin(t * 0.25 + i) * 0.03, wdt = 0.035 + (i % 3) * 0.012;
+      const g = ctx.createLinearGradient(ox, oy, ox + Math.cos(ang) * R, oy + Math.sin(ang) * R); g.addColorStop(0, "rgba(255,226,180,.085)"); g.addColorStop(1, "rgba(255,226,180,0)"); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(ang - wdt) * R, oy + Math.sin(ang - wdt) * R); ctx.lineTo(ox + Math.cos(ang + wdt) * R, oy + Math.sin(ang + wdt) * R); ctx.closePath(); ctx.fill(); }
+  }
+  ctx.restore();
+}
+function grade(p, t) {
+  if (p.kind === "long") return gradeHouse(t);
+  const dark = darkMode(p), gk = p.look ? p.look.grade : 1;
+  ctx.save();
+  bloomG.clearRect(0, 0, bloomC.width, bloomC.height); bloomG.drawImage(cv, 0, 0, bloomC.width, bloomC.height);
+  ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = (dark ? 0.13 : 0.12) * gk; ctx.drawImage(bloomC, 0, 0, CW, CH);
+  ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = (dark ? 0.42 : 0.18) * gk;
+  const g = ctx.createLinearGradient(0, 0, 0, CH);
+  if (dark) { g.addColorStop(0, "#155565"); g.addColorStop(0.55, "#2a2a3a"); g.addColorStop(1, "#c46a2c"); } else { g.addColorStop(0, (p.palette && p.palette[3]) || "#ffb547"); g.addColorStop(1, (p.palette && p.palette[1]) || "#2337a8"); }
+  ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  const top = ORI === "h" ? 0.6 : 0.45;
+  const b = ctx.createLinearGradient(0, CH * top, 0, CH); b.addColorStop(0, "rgba(0,0,0,0)"); b.addColorStop(1, ORI === "h" ? "rgba(0,0,0,.55)" : "rgba(0,0,0,.68)"); ctx.fillStyle = b; ctx.fillRect(0, CH * top, CW, CH * (1 - top));
+  const v = ctx.createRadialGradient(CW / 2, CH * 0.45, Math.min(CW, CH) * 0.45, CW / 2, CH * 0.5, Math.max(CW, CH) * 0.8); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, dark ? "rgba(0,0,0,.62)" : "rgba(0,0,0,.38)"); ctx.fillStyle = v; ctx.fillRect(0, 0, CW, CH);
+  ctx.globalAlpha = 0.07; ctx.globalCompositeOperation = "overlay"; ctx.drawImage(grain[Math.floor(t * 24) % 4], 0, 0, CW, CH);
+  ctx.restore();
+}
+/* House grade for long-form: one calm, consistent finish on every video. */
+function gradeHouse(t) {
+  ctx.save();
+  bloomG.clearRect(0, 0, bloomC.width, bloomC.height); bloomG.drawImage(cv, 0, 0, bloomC.width, bloomC.height);
+  ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = 0.06; ctx.drawImage(bloomC, 0, 0, CW, CH);
+  ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = 0.16;
+  const g = ctx.createLinearGradient(0, 0, CW, CH); g.addColorStop(0, "#2C4466"); g.addColorStop(1, "#E8A33D"); ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  const b = ctx.createLinearGradient(0, CH * 0.66, 0, CH); b.addColorStop(0, "rgba(11,18,32,0)"); b.addColorStop(1, "rgba(11,18,32,.6)"); ctx.fillStyle = b; ctx.fillRect(0, CH * 0.66, CW, CH * 0.34);
+  const v = ctx.createRadialGradient(CW / 2, CH / 2, CH * 0.5, CW / 2, CH / 2, CW * 0.75); v.addColorStop(0, "rgba(11,18,32,0)"); v.addColorStop(1, "rgba(11,18,32,.42)"); ctx.fillStyle = v; ctx.fillRect(0, 0, CW, CH);
+  ctx.globalAlpha = 0.045; ctx.globalCompositeOperation = "overlay"; ctx.drawImage(grain[Math.floor(t * 12) % 4], 0, 0, CW, CH);
+  ctx.restore();
+}
+function wrapW(items, maxW) { const L = []; let cur = [], w = 0; for (const it of items) { if (cur.length && w + it.w > maxW) { L.push(cur); cur = []; w = 0; } cur.push(it); w += it.w; } if (cur.length) L.push(cur); return L; }
+function capStyle(p) {
+  const lk = p.look || {}, hi = lk.hi || "#FFD84D";
+  if (p.cap === "sub") return { chunk: 11, font: "600 50px Inter, system-ui, sans-serif", up: false, fill: "#FFFFFF", hi: "#FFFFFF", box: true, lh: 66, y: 0.88, maxW: 1500 };
+  if (p.cap === "story") return { chunk: 5, font: "700 68px 'Bricolage Grotesque', system-ui, sans-serif", up: false, fill: "#F7F1EA", hi, shadow: true, lh: 86, y: (lk.capY || 0.62) + 0.02 };
+  if (p.cap === "clean") return { chunk: 7, font: "600 56px Inter, system-ui, sans-serif", up: false, fill: "#FFFFFF", hi, box: true, lh: 74, y: 0.68 };
+  return { chunk: 3, font: "900 94px Archivo, 'Arial Black', sans-serif", up: lk.caseUp !== false, fill: "#FFFFFF", hi, stroke: 15, lh: 112, y: lk.capY || 0.62 };
+}
+function drawCaption(p, seg, t) {
+  if (p.cap === "none") return;
+  const st = capStyle(p); const ws = words(seg.s.narration); if (!ws.length) return;
+  const a0 = seg.vStart, dur = Math.max(0.3, seg.vEnd - a0); const wt = ws.map(w => w.length + 3), tot = wt.reduce((x, y) => x + y, 0);
+  let acc = 0, act = ws.length - 1, wS = a0; const loc = t - a0;
+  if (loc < 0) act = 0; else for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (loc < acc / tot * dur) { act = i; wS = a0 + s0; break; } }
+  if (p.cap === "sub" && (t > seg.vEnd + 0.25 || t < a0 - 0.1)) return;
+  const c0 = Math.floor(act / st.chunk) * st.chunk;
+  ctx.font = st.font; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; const sp = ctx.measureText(" ").width;
+  const items = ws.slice(c0, c0 + st.chunk).map((w, j) => { const tx = st.up ? w.toUpperCase() : w; return { tx, i: c0 + j, w: ctx.measureText(tx).width + sp }; });
+  const lines = wrapW(items, Math.min(CW * 0.82, st.maxW || 9999)); const y0 = CH * st.y - (lines.length - 1) * st.lh / 2;
+  lines.forEach((ln, li) => {
+    const lw = ln.reduce((x, y) => x + y.w, 0) - sp; let x = (CW - lw) / 2; const y = y0 + li * st.lh;
+    if (st.box) { ctx.fillStyle = "rgba(8,10,16,.66)"; ctx.beginPath(); (ctx.roundRect ? ctx.roundRect(x - 20, y - st.lh + 12, lw + 40, st.lh + 10, 14) : ctx.rect(x - 20, y - st.lh + 12, lw + 40, st.lh + 10)); ctx.fill(); }
+    for (const it of ln) {
+      const on = it.i === act; const pop = on && p.cap === "pop" ? 1 + 0.1 * Math.max(0, 1 - (t - wS) / 0.13) : 1;
+      ctx.save(); const cx = x + (it.w - sp) / 2; ctx.translate(cx, y); ctx.scale(pop, pop); ctx.translate(-cx, -y);
+      if (st.shadow) { ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 26; ctx.shadowOffsetY = 4; }
+      if (st.stroke) { ctx.lineWidth = st.stroke; ctx.strokeStyle = "#000"; ctx.lineJoin = "round"; ctx.strokeText(it.tx, x, y); }
+      ctx.fillStyle = on ? st.hi : st.fill; if (p.cap === "story" && it.i > act) ctx.globalAlpha = 0.5;
+      ctx.fillText(it.tx, x, y); ctx.restore(); x += it.w;
+    }
+  });
+}
+function stamp(text, u, y, bg, fg, size) {
+  const a = u < 0.85 ? 1 : Math.max(0, (1.15 - u) / 0.3); if (a <= 0) return;
+  const s = 1 + 0.35 * Math.exp(-7 * u) * Math.cos(16 * u);
+  ctx.save(); ctx.globalAlpha = a; ctx.font = `900 ${size}px Archivo, 'Arial Black', sans-serif`; const sp = ctx.measureText(" ").width;
+  const L = wrapW(words(text.toUpperCase()).map(w => ({ tx: w, w: ctx.measureText(w).width + sp })), Math.min(CW * 0.74, 1300));
+  const lh = size * 1.18, pad = size * 0.5, bw = Math.max(...L.map(l => l.reduce((x, z) => x + z.w, 0) - sp)) + pad * 2, bh = L.length * lh + pad * 1.2, by = y;
+  ctx.translate(CW / 2, by + bh / 2); ctx.scale(s, s); ctx.rotate(-0.035); ctx.translate(-CW / 2, -(by + bh / 2));
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); (ctx.roundRect ? ctx.roundRect((CW - bw) / 2 + 10, by + 12, bw, bh, 22) : ctx.rect((CW - bw) / 2 + 10, by + 12, bw, bh)); ctx.fill();
+  ctx.fillStyle = bg; ctx.beginPath(); (ctx.roundRect ? ctx.roundRect((CW - bw) / 2, by, bw, bh, 22) : ctx.rect((CW - bw) / 2, by, bw, bh)); ctx.fill();
+  ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; L.forEach((l, i) => ctx.fillText(l.map(x => x.tx).join(" "), CW / 2, by + pad + size * 0.82 + i * lh)); ctx.restore();
+}
+const HOOK_T = 2.4;
+function drawHook(p, t) { if (p.kind === "long" || p.mode !== "explainer" || t > HOOK_T || !p.scenes[0]) return; const c = (p.look && p.look.card) || CARDS[0]; stamp(p.title || p.scenes[0].narration, t / HOOK_T * 1.15 * (t > HOOK_T - 0.3 ? 1 : 0.7), 290, c[0], c[1], 64); }
+function drawEmphasis(p, seg, t) {
+  const e = seg.s.emphasis; if (!e || darkMode(p) || (p.kind !== "long" && t < HOOK_T + 0.1)) return;
+  if (p.kind === "long" && p.timeline.chapters && p.timeline.chapters.some(c => t >= c.t && t < c.t + 3.6)) return;
+  const u = (t - seg.vStart) / 1.4; if (u < 0 || u > 1.15) return;
+  const c = (p.look && p.look.card) || CARDS[1]; stamp(e, u, ORI === "h" ? 120 : 330, c[0], c[1], ORI === "h" ? 64 : 78);
+}
+function drawChapterCard(p, t) {
+  if (p.kind !== "long" || !p.timeline.chapters) return;
+  const ch = p.timeline.chapters.find(c => t >= c.t && t < c.t + 3.4); if (!ch) return;
+  const u = (t - ch.t) / 3.4, a = u < 0.12 ? u / 0.12 : u > 0.85 ? (1 - u) / 0.15 : 1, slide = (1 - ease(Math.min(1, u / 0.18))) * 60;
+  ctx.save(); ctx.globalAlpha = clamp(a, 0, 1);
+  if (ch.i === 0) {
+    ctx.fillStyle = "rgba(11,18,32,.62)"; ctx.fillRect(0, 0, CW, CH);
+    ctx.textAlign = "center"; ctx.fillStyle = "#FFFFFF"; ctx.font = "800 96px Syne, 'Bricolage Grotesque', sans-serif";
+    const L = wrapW(words((p.title || "").toUpperCase()).map(w => ({ tx: w, w: ctx.measureText(w + " ").width })), 1500);
+    L.forEach((l, i) => ctx.fillText(l.map(x => x.tx).join(" "), CW / 2, CH / 2 - (L.length - 1) * 55 + i * 110 + slide * 0.3));
+    ctx.font = "600 28px 'JetBrains Mono', monospace"; ctx.fillStyle = (p.look && p.look.hi) || "#5CE1E6"; ctx.fillText("UNRAVEL THEORY STUDIOS", CW / 2, CH / 2 + L.length * 60 + 50);
+  } else {
+    const x = 110 - slide, y = CH * 0.2;
+    ctx.fillStyle = (p.look && p.look.hi) || "#5CE1E6"; ctx.fillRect(x, y - 70, 6, 150);
+    ctx.textAlign = "left"; ctx.font = "600 30px 'JetBrains Mono', monospace"; ctx.fillText("CHAPTER " + (ch.i + 1), x + 30, y - 30);
+    ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 24; ctx.fillStyle = "#FFFFFF"; ctx.font = "800 78px Syne, 'Bricolage Grotesque', sans-serif"; ctx.fillText(ch.title, x + 30, y + 60);
+  }
+  ctx.restore();
+}
+const TRANS = { fade: 0.45, dip: 0.6, whip: 0.24, zoom: 0.26, punch: 0, flash: 0, none: 0 };
+let lastScene = -1;
+function drawFrame(p, t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#07060a"; ctx.fillRect(0, 0, CW, CH);
+  const tl = p.timeline, shots = tl.shots;
+  let i = shots.findIndex(s => t < s.t1); if (i < 0) i = shots.length - 1;
+  const cur = shots[i], nx = shots[i + 1], T = TRANS[cur.trans] || 0;
+  if (cur.si !== lastScene) { lastScene = cur.si; prefetch(p, cur.si); }
+  const inZ = cur.inPunch ? 0.12 * Math.max(0, 1 - (t - cur.t0) / 0.2) : 0;
+  if (nx && T > 0 && t > cur.t1 - T) {
+    const u = (t - (cur.t1 - T)) / T, e = ease(u);
+    if (cur.trans === "fade") { renderShot(p, cur, t, inZ); ctx.globalAlpha = e; renderShot(p, nx, t); ctx.globalAlpha = 1; }
+    else if (cur.trans === "dip") { if (u < 0.5) { renderShot(p, cur, t, inZ); ctx.fillStyle = `rgba(0,0,0,${u * 2})`; } else { renderShot(p, nx, t); ctx.fillStyle = `rgba(0,0,0,${(1 - u) * 2})`; } ctx.fillRect(0, 0, CW, CH); }
+    else if (cur.trans === "zoom") { renderShot(p, cur, t, inZ + e * e * 0.7); ctx.globalAlpha = e * e; renderShot(p, nx, t, (1 - e) * 0.25); ctx.globalAlpha = 1; }
+    else if (cur.trans === "whip") {
+      for (let j = 3; j >= 0; j--) { ctx.save(); ctx.globalAlpha = j ? 0.28 : 1; ctx.translate(-e * CW - j * 34, 0); renderShot(p, cur, t); ctx.restore(); }
+      for (let j = 3; j >= 0; j--) { ctx.save(); ctx.globalAlpha = j ? 0.28 : 1; ctx.translate((1 - e) * CW + j * 34, 0); renderShot(p, nx, t); ctx.restore(); }
+    }
+  } else renderShot(p, cur, t, inZ);
+  const seg = tl.segs[cur.si];
+  drawFx(p, seg.s.fx || (darkMode(p) ? "dust" : "none"), t, cur.focus || { x: 0.5, y: 0.4 });
+  grade(p, t);
+  if (cur.inFlash && t - cur.t0 < 0.12) { ctx.fillStyle = `rgba(255,255,255,${0.55 * (1 - (t - cur.t0) / 0.12)})`; ctx.fillRect(0, 0, CW, CH); }
+  if (!(p.kind !== "long" && p.mode === "explainer" && t <= HOOK_T)) drawCaption(p, seg, t);
+  drawEmphasis(p, seg, t);
+  drawHook(p, t);
+  drawChapterCard(p, t);
+}
+function buildTimeline(p, clips) {
+  const long = p.kind === "long", gap = MODES[p.mode].gap; let t = long ? 0.6 : 0.25; const segs = [];
+  p.scenes.forEach((s, i) => { if (long && s.chStart && i) t += 0.9; if (long && i === 0) t += 3.2; const d = clips[i].length / 24000; segs.push({ s, i, vStart: t, vEnd: t + d, start: 0, end: 0 }); t += d + gap; });
+  const total = t + (long ? 1.6 : 0.6);
+  segs.forEach((sg, i) => { sg.start = i === 0 ? 0 : (segs[i - 1].vEnd + sg.vStart) / 2; });
+  segs.forEach((sg, i) => { sg.end = i < segs.length - 1 ? segs[i + 1].start : total; });
+  const dark = darkMode(p), cyc = long ? ["fade", "fade", "fade"] : dark ? ["fade", "fade", "dip"] : TSETS[(p.look && p.look.tset) || 0];
+  const shots = [];
+  segs.forEach((sg, i) => {
+    const d = sg.end - sg.start, m = sg.s.motion;
+    const n = long ? clamp(Math.round(d / 3.6), 1, 4) : (d > 5.4 ? 3 : d > 2.7 ? 2 : 1);
+    const base = ["wide", "close", "medium", "close"], order = n === 1 ? ["wide"] : (i % 2 ? base.slice(0, n).reverse() : base.slice(0, n));
+    for (let j = 0; j < n; j++) {
+      const pan = m === "pan-left" ? -1 : m === "pan-right" ? 1 : ((i + j) % 2 ? 1 : -1) * 0.6;
+      const dir = m === "zoom-out" ? -1 : m === "zoom-in" ? 1 : ((i + j) % 2 ? 1 : -1);
+      const nextScene = segs[i + 1];
+      const trans = j < n - 1 ? (dark || long ? "fade" : "punch") : (!nextScene ? "none" : long && nextScene.s.chStart ? "dip" : cyc[i % cyc.length]);
+      shots.push({ calm: long, sid: sg.s.id, si: i, kind: order[j], t0: sg.start + d * j / n, t1: sg.start + d * (j + 1) / n, pan: j ? -pan : pan, dir: j ? -dir : dir, focus: { x: 0.5, y: 0.4 }, trans });
+    }
+  });
+  shots.forEach((s, k) => { const prev = shots[k - 1]; if (prev && prev.trans === "punch") s.inPunch = true; if (prev && prev.trans === "flash") s.inFlash = true; });
+  let chapters = null;
+  if (long && p.chapters) chapters = p.chapters.map((c, ci) => { const sg = segs.find(x => x.s.ch === ci); return { i: ci, title: c.title, t: ci === 0 ? 0 : (sg ? sg.vStart - 0.8 : 0) }; });
+  return { segs, shots, total, chapters };
+}
+function drawStill(p) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = "#0b0910"; ctx.fillRect(0, 0, CW, CH);
+  const ready = p.scenes ? p.scenes.filter(s => arts.has(s.id)) : [];
+  if (ready.length) { const now = performance.now() / 1000, idx = Math.floor(now / 2.2) % ready.length, s = ready[idx]; const sh = { sid: s.id, si: p.scenes.indexOf(s), kind: idx % 2 ? "close" : "wide", t0: Math.floor(now / 2.2) * 2.2, t1: Math.floor(now / 2.2) * 2.2 + 2.2, pan: 1, dir: 1, focus: arts.get(s.id).focus }; renderShot(p, sh, now); drawFx(p, s.fx || "dust", now, sh.focus); grade(p, now); }
+  else { const t = performance.now() / 1000; ctx.strokeStyle = p.kind === "long" ? "#5CE1E6" : "#FFB547"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.beginPath(); for (let x = 0; x <= CW; x += 12) { const y = CH / 2 + Math.sin(x / 120 + t * 2) * 60 * Math.sin(t + x / 400); x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+    ctx.fillStyle = "rgba(238,241,248,.75)"; ctx.font = "700 46px Syne, sans-serif"; ctx.textAlign = "center"; ctx.fillText("UNRAVELLING…", CW / 2, CH / 2 + 180); }
+}
+/* Thumbnail for long-form: strongest frame + 2 to 4 big words */
+async function makeThumb(p, pickIdx) {
+  const c = mk(1280, 720), g = c.getContext("2d");
+  const cands = p.scenes.filter(s => arts.has(s.id)); if (!cands.length) return null;
+  const s = cands[(pickIdx || 0) % cands.length], art = arts.get(s.id);
+  const layers = art.canvas ? [art.canvas] : art.imgs;
+  const z = 1.18, w = 1280 * z, hh = 720 * z, fx = art.focus.x, fy = art.focus.y;
+  const ox = clamp(640 - fx * w, 1280 - w, 0), oy = clamp(360 - fy * hh, 720 - hh, 0);
+  layers.forEach(im => g.drawImage(im, ox, oy, w, hh));
+  const gr = g.createLinearGradient(0, 0, 1280, 0); gr.addColorStop(0, "rgba(0,0,0,.78)"); gr.addColorStop(0.62, "rgba(0,0,0,.1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, 1280, 720);
+  const text = (p.thumbText || p.title || "").toUpperCase(), ws = words(text).slice(0, 5);
+  let size = 132; g.font = `900 ${size}px Archivo, 'Arial Black', sans-serif`;
+  let lines; for (;;) { lines = wrapW(ws.map(w2 => ({ tx: w2, w: g.measureText(w2 + " ").width })), 700); if (lines.length <= 3 || size < 80) break; size -= 10; g.font = `900 ${size}px Archivo, 'Arial Black', sans-serif`; }
+  const hi = (p.look && p.look.hi) || "#5CE1E6", y0 = 360 - (lines.length - 1) * size * 0.52;
+  g.textAlign = "left"; g.lineJoin = "round";
+  lines.forEach((ln, li) => { let x = 60; const y = y0 + li * size * 1.04 + size * 0.34; ln.forEach((it, k) => { const last = li === lines.length - 1 && k === ln.length - 1; g.lineWidth = 16; g.strokeStyle = "#000"; g.strokeText(it.tx, x, y); g.fillStyle = last ? hi : "#FFFFFF"; g.fillText(it.tx, x, y); x += it.w; }); });
+  return await new Promise(r => c.toBlob(r, "image/png"));
+}
+
+/* ================= Storage (account sync when available, this device otherwise) ================= */
+function makeStore(coll, lsKey, onChange) {
+  return {
+    col: null, list: LS.get(lsKey, []),
+    attach(db, id) {
+      this.col = db.collection("data/users/" + id + "/" + coll + "/items");
+      this.col.orderBy("updatedAt", "desc").limit(150).onSnapshot(snap => {
+        const remote = snap.docs.map(d => d.data()).filter(Boolean), ids = new Set(remote.map(x => x.id));
+        this.list = remote.concat(this.list.filter(x => !ids.has(x.id) && x._local)); onChange();
+      }, () => { this.col = null; });
+    },
+    async save(doc) {
+      doc = Object.assign({}, doc, { updatedAt: Date.now() }); delete doc._local;
+      const rest = this.list.filter(x => x.id !== doc.id); this.list = [Object.assign({ _local: true }, doc)].concat(rest).slice(0, 80);
+      LS.set(lsKey, this.list.slice(0, 15).map(x => Object.assign({}, x, x.scenes ? { scenes: x.scenes.map(s => Object.assign({}, s, { svg: "" })) } : {})));
+      onChange();
+      if (this.col) { try { await this.col.doc(doc.id).set(JSON.parse(JSON.stringify(doc))); } catch { $("#sync").textContent = "Sync failed"; } }
+    }
+  };
+}
+const lib = makeStore("videos", "lib2", () => renderLib());
+const seriesStore = makeStore("series", "series2", () => { renderSeries(); if (typeof renderSeriesTrends === "function" && trends) renderSeriesTrends(); });
+async function initSync() {
+  try {
+    const [db, user] = await Promise.all([cap("db"), cap("user")]); if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    lib.attach(db, id); seriesStore.attach(db, id); $("#sync").textContent = "Synced";
+    db.doc("trends/current").onSnapshot(s => { trends = s.exists ? s.data() : null; applyTrends(); }, () => {});
+    db.collection("daily").orderBy("date", "desc").limit(7).onSnapshot(snap => { dailyList = snap.docs.map(d => d.data()).filter(x => x && x.title); dailyIdx = 0; renderDaily(); }, () => {});
+  } catch {}
+}
+function projDoc(p) {
+  const d = { id: p.id, kind: p.kind, mode: p.mode, topic: p.topic, title: p.title, palette: p.palette, character: p.character || "", art: p.art, cap: p.cap, voice: p.voice, length: p.length, look: p.look,
+    chapters: p.chapters || null, thumbText: p.thumbText || "", seriesId: p.seriesId || "", episode: p.episode || 0, summary: p.summary || "", cliffhanger: p.cliffhanger || "",
+    scenes: p.scenes.map(s => ({ id: s.id, narration: s.narration, visual: s.visual, motion: s.motion, fx: s.fx || "", emphasis: s.emphasis || "", ch: s.ch == null ? null : s.ch, chStart: !!s.chStart, svg: s.svg || "" })), kit: p.kit, thumb: p.thumb || "", dur: p.timeline ? Math.round(p.timeline.total) : 0, artAsset: p.artAsset || null, videoAsset: p.videoAsset || null, thumbAsset: p.thumbAsset || null };
+  if (JSON.stringify(d).length > 240000) d.scenes.forEach(s => s.svg = "");
+  return d;
+}
+
+/* Local video cache: keep the newest 10 so storage never fills up */
+async function saveVideoLocal(id, blob) {
+  await idb.put("video:" + id, blob);
+  const keys = LS.get("vidKeys", []).filter(k => k !== id); keys.unshift(id);
+  for (const old of keys.slice(10)) idb.del("video:" + old);
+  LS.set("vidKeys", keys.slice(0, 10));
+}
+/* Cloud copies (assets): art bundle always, video when under 20 MB, long-form thumbnail */
+let assetsP; const assetsCap = () => assetsP || (assetsP = cap("assets"));
+async function uploadToCloud(P) {
+  const assets = await assetsCap(); if (!assets) return;
+  const patch = {};
+  try { const bundle = {}; P.scenes.forEach(s => { if (s.svg) bundle[s.id] = s.svg; });
+    if (Object.keys(bundle).length) { const r = await assets.upload(new Blob([JSON.stringify(bundle)], { type: "application/json" })); patch.artAsset = { id: r.id, url: r.url }; } } catch {}
+  try { if (P.video && P.video.size < 19.5 * 1048576) { const r = await assets.upload(P.video); patch.videoAsset = { id: r.id, url: r.url, type: P.video.type }; } } catch {}
+  try { if (P.thumbBlob) { const r = await assets.upload(P.thumbBlob); patch.thumbAsset = { id: r.id, url: r.url }; } } catch {}
+  if (Object.keys(patch).length) { Object.assign(P, patch); await lib.save(projDoc(P)); }
+}
+/* ================= Navigation ================= */
+const VIEWS = ["shorts", "long", "series", "library"];
+function go(v) {
+  if (!VIEWS.includes(v)) v = "shorts";
+  view = v; document.body.dataset.view = v;
+  VIEWS.forEach(x => $("#v-" + x).hidden = x !== v); $("#v-make").hidden = true;
+  $$("[data-go]").forEach(b => b.setAttribute("aria-current", b.dataset.go === v ? "page" : "false"));
+  $("#gobar").hidden = !(v === "shorts" || v === "long");
+  updateGo(); updateBusy(); window.scrollTo({ top: 0 });
+  if (location.hash.slice(1) !== v) { try { location.hash = v; } catch {} }
+}
+function showMake(kind) { VIEWS.forEach(x => $("#v-" + x).hidden = true); $("#v-make").hidden = false; batchDoneUnseen = false; setTimeout(updateBusy, 0); $("#gobar").hidden = true; document.body.dataset.view = kind === "long" ? "long" : (P && P.seriesId ? "series" : "shorts"); window.scrollTo({ top: 0 }); }
+$$("[data-go]").forEach(b => b.addEventListener("click", () => { if (!$("#v-make").hidden && busyRun) { /* allow browsing while work runs */ } go(b.dataset.go); }));
+window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (VIEWS.includes(v) && v !== view) go(v); });
+
+/* ================= Shorts view ================= */
+function fill(sel, opts, val) { sel.replaceChildren(...opts.map(([v, l]) => h("option", { value: v, text: l }))); sel.value = val; }
+function renderShorts() {
+  $("#sfExplainer").setAttribute("aria-pressed", String(S.mode === "explainer")); $("#sfStory").setAttribute("aria-pressed", String(S.mode === "story"));
+  const sn = nichesFor(S.mode);
+  $("#sNiches").replaceChildren(...sn.all.map(n => h("button", { class: "chip" + (sn.hot.has(n) ? " hot" : ""), title: sn.hot.has(n) ? "Trending this week" : null, "aria-pressed": String(n === S.niche), onclick: () => { S.niche = n; saveSettings(); renderShorts(); loadSIdeas(true); } }, n)));
+  $("#sLen").value = String(S.length);
+  fill($("#sVoice"), VOICES, S.voice); fill($("#sArt"), Object.entries(ARTS).filter(([k]) => k !== "signature").map(([k, a]) => [k, a.label]), S.art); $("#sCap").value = S.cap;
+  renderVList($("#sVList"), S.voice, id => { S.voice = id; saveSettings(); renderShorts(); });
+  renderSIdeas(); updateGo();
+}
+function renderSIdeas(loading) {
+  const box = $("#sIdeas");
+  if (loading) { box.replaceChildren(...[0, 1, 2, 3].map(() => h("div", { class: "skel" }))); return; }
+  const extra = picks.filter(x => !sIdeas.some(i => i.title === x.title));
+  box.replaceChildren(...extra.concat(sIdeas).map(i => { const k = picks.findIndex(x => x.title === i.title); return h("button", { class: "idea", "aria-pressed": String(k >= 0), onclick: () => togglePick(Object.assign({ mode: S.mode }, i)) },
+    h("b", { text: i.title }), h("i", {}, i.trend ? h("span", { class: "tr", text: "Trending" }) : null, i.daily ? (i.mode === "story" ? "Story" : "Explainer") + " · idea of the day" : "“" + i.hook + "”"), h("span", { class: "tick", text: k >= 0 ? String(k + 1) : "" })); }));
+  $("#sPickCount").textContent = Math.min(3, picks.length + ($("#sOwn").value.trim() ? 1 : 0)) + " of 3 picked";
+}
+function togglePick(x) {
+  const k = picks.findIndex(p => p.title === x.title);
+  if (k >= 0) picks.splice(k, 1);
+  else if (picks.length + ($("#sOwn").value.trim() ? 1 : 0) >= 3) { toast("You can make 3 at a time"); return; }
+  else { picks.push(x); warmVoice(); }
+  renderSIdeas(); updateGo(); renderDaily();
+}
+function setSMode(m) { if (S.mode === m) return; const d = MODES[m]; S.mode = m; S.niche = d.niches[0]; S.voice = d.voice; S.art = d.art; S.cap = d.cap; picks = picks.filter(x => x.daily); sIdeas = []; saveSettings(); if (!useTrendIdeas("s")) { renderShorts(); loadSIdeas(true); } else renderShorts(); }
+$("#sfExplainer").onclick = () => setSMode("explainer"); $("#sfStory").onclick = () => setSMode("story");
+$("#sLen").onchange = e => { S.length = +e.target.value; saveSettings(); updateGo(); };
+$("#sVoice").onchange = e => { S.voice = e.target.value; saveSettings(); updateGo(); };
+$("#sArt").onchange = e => { S.art = e.target.value; saveSettings(); };
+$("#sCap").onchange = e => { S.cap = e.target.value; saveSettings(); };
+$("#sOwn").addEventListener("input", () => { if ($("#sOwn").value.trim() && picks.length >= 3) picks.pop(); renderSIdeas(); updateGo(); });
+$("#sMore").onclick = () => loadSIdeas(true);
+$("#sPick3").onclick = () => { for (const i of sIdeas) { if (picks.length >= 3) break; if (!picks.some(x => x.title === i.title)) picks.push(Object.assign({ mode: S.mode }, i)); } renderSIdeas(); updateGo(); warmVoice(); };
+let sBusy = false;
+async function loadSIdeas(force) {
+  if (sBusy) return; const key = S.mode + "|" + S.niche;
+  if (!force && sIdeas.length && (LS.get("sIdeasKey", "") === key || LS.get("sIdeasKey", "").startsWith("T|"))) { renderSIdeas(); return; }
+  sBusy = true; renderSIdeas(true); $("#sNote").textContent = ""; $("#sNote").className = "note";
+  try {
+    const avoid = force ? sIdeas.map(i => i.title).join("; ") : "";
+    const r = await askJSON(`You find YouTube Shorts ideas that grow faceless AI channels in late 2026, when YouTube rewards original, character-led or point-of-view content and demonetizes templated slop. Format: ${S.mode === "story" ? "original short fiction narrated over illustrations" : "one surprising, true idea explained in under a minute"}. Niche: ${S.niche}.
+Give 6 ideas with a strong curiosity gap that are easy to illustrate. ${S.mode === "explainer" ? "Only topics with solid, checkable answers." : "Original premises only."}
+${GUARD}
+${trendNote()}
+${avoid ? "Do not repeat: " + avoid : ""}
+Reply with ONLY a JSON array: [{"title":"short punchy title","hook":"opening line, 12 words max","angle":"why viewers stay to the end"}]`, "quick");
+    if (!Array.isArray(r) || !r.length) throw { code: "invalid_json" };
+    sIdeas = r.filter(i => i && i.title).slice(0, 6).map(i => ({ title: String(i.title), hook: String(i.hook || ""), angle: String(i.angle || "") }));
+    picks = picks.filter(x => x.daily); LS.set("sIdeas", sIdeas); LS.set("sIdeasKey", key);
+  } catch (e) { $("#sNote").textContent = aiErr(e) + " You can also type your own idea."; $("#sNote").className = "note err"; }
+  sBusy = false; renderSIdeas(); updateGo();
+}
+
+/* ================= Long-form view ================= */
+function renderLong() {
+  $("#lfDoc").setAttribute("aria-pressed", String(S.lmode === "doc")); $("#lfStory").setAttribute("aria-pressed", String(S.lmode === "lstory"));
+  const ln = nichesFor(S.lmode);
+  $("#lNiches").replaceChildren(...ln.all.map(n => h("button", { class: "chip" + (ln.hot.has(n) ? " hot" : ""), title: ln.hot.has(n) ? "Trending this week" : null, "aria-pressed": String(n === S.lniche), onclick: () => { S.lniche = n; saveSettings(); renderLong(); loadLIdeas(true); } }, n)));
+  $("#lLen").value = String(S.llen); fill($("#lVoice"), VOICES, S.lvoice); $("#lSubs").value = S.lsubs;
+  renderVList($("#lVList"), S.lvoice, id => { S.lvoice = id; saveSettings(); renderLong(); });
+  renderLIdeas(); updateGo();
+}
+function renderLIdeas(loading) {
+  const box = $("#lIdeas");
+  if (loading) { box.replaceChildren(...[0, 1, 2].map(() => h("div", { class: "skel" }))); return; }
+  box.replaceChildren(...lIdeas.map(i => { const k = lPicks.findIndex(x => x.title === i.title); return h("button", { class: "idea", "aria-pressed": String(k >= 0), onclick: () => toggleLPick(i) },
+    h("b", { text: i.title }), h("i", {}, i.trend ? h("span", { class: "tr", text: "Trending" }) : null, i.angle), h("span", { class: "tick", text: k >= 0 ? String(k + 1) : "" })); }));
+  $("#lPickCount").textContent = Math.min(3, lPicks.length + ($("#lOwn").value.trim() ? 1 : 0)) + " of 3 picked";
+}
+function toggleLPick(i) {
+  const k = lPicks.findIndex(x => x.title === i.title);
+  if (k >= 0) lPicks.splice(k, 1);
+  else if (lPicks.length + ($("#lOwn").value.trim() ? 1 : 0) >= 3) { toast("You can make 3 long-form videos at a time"); return; }
+  else { lPicks.push(i); warmVoice(); }
+  renderLIdeas(); updateGo();
+}
+function setLMode(m) { if (S.lmode === m) return; const d = MODES[m]; S.lmode = m; S.lniche = d.niches[0]; S.lvoice = d.voice; S.lart = d.art; lPicks = []; lIdeas = []; saveSettings(); if (!useTrendIdeas("l")) { renderLong(); loadLIdeas(true); } else renderLong(); }
+$("#lfDoc").onclick = () => setLMode("doc"); $("#lfStory").onclick = () => setLMode("lstory");
+$("#lLen").onchange = e => { S.llen = +e.target.value; saveSettings(); updateGo(); };
+$("#lVoice").onchange = e => { S.lvoice = e.target.value; saveSettings(); };
+
+$("#lSubs").onchange = e => { S.lsubs = e.target.value; saveSettings(); };
+$("#lOwn").addEventListener("input", () => { if ($("#lOwn").value.trim() && lPicks.length >= 3) lPicks.pop(); renderLIdeas(); updateGo(); });
+$("#lPick3").onclick = () => { for (const i of lIdeas) { if (lPicks.length >= 3) break; if (!lPicks.some(x => x.title === i.title)) lPicks.push(i); } renderLIdeas(); updateGo(); warmVoice(); };
+$("#lMore").onclick = () => loadLIdeas(true);
+let lBusy = false;
+async function loadLIdeas(force) {
+  if (lBusy) return; const key = S.lmode + "|" + S.lniche;
+  if (!force && lIdeas.length && (LS.get("lIdeasKey", "") === key || LS.get("lIdeasKey", "").startsWith("T|"))) { renderLIdeas(); return; }
+  lBusy = true; renderLIdeas(true); $("#lNote").textContent = ""; $("#lNote").className = "note";
+  try {
+    const r = await askJSON(`Suggest 5 topics for a ${S.llen}-minute faceless YouTube ${S.lmode === "doc" ? "documentary" : "narrated story"} in the niche "${S.lniche}". Each must sustain several chapters, have a clear payoff, and be easy to illustrate. ${S.lmode === "doc" ? "True topics with checkable facts." : "Original premises only."}
+${GUARD}
+${trendNote()}
+Reply with ONLY a JSON array: [{"title":"working title","angle":"one sentence on the promise and payoff"}]`, "quick");
+    if (!Array.isArray(r) || !r.length) throw { code: "invalid_json" };
+    lIdeas = r.filter(i => i && i.title).slice(0, 5).map(i => ({ title: String(i.title), angle: String(i.angle || "") })); lPicks = [];
+    LS.set("lIdeas", lIdeas); LS.set("lIdeasKey", key);
+  } catch (e) { $("#lNote").textContent = aiErr(e) + " You can also type your own topic."; $("#lNote").className = "note err"; }
+  lBusy = false; renderLIdeas(); updateGo();
+}
+
+
+/* ================= Voice gallery: instant prerecorded samples ================= */
+const VPREV = new Audio(); let vPlaying = null;
+const PLAY_I = '<svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg>', STOP_I = '<svg viewBox="0 0 10 10"><rect x="2" y="2" width="6" height="6" rx="1"/></svg>';
+function refreshV() { $$(".vplay").forEach(b => { const on = b.dataset.v === vPlaying; b.classList.toggle("playing", on); b.innerHTML = on ? STOP_I : PLAY_I; }); }
+function playSample(v) {
+  if (vPlaying === v && !VPREV.paused) { VPREV.pause(); vPlaying = null; refreshV(); return; }
+  VPREV.src = "./voices-preview/" + v + ".wav"; vPlaying = v; refreshV();
+  VPREV.play().catch(() => { vPlaying = null; refreshV(); toast("Couldn't play that sample. Tap again."); });
+}
+VPREV.onended = () => { vPlaying = null; refreshV(); };
+function renderVList(box, current, onUse) {
+  box.replaceChildren(...VOICES.map(([id, l]) => { const [name, desc] = l.split(" · ");
+    const pb = h("button", { class: "vplay", "data-v": id, "aria-label": "Play " + name, onclick: () => playSample(id) }); pb.innerHTML = vPlaying === id ? STOP_I : PLAY_I;
+    return h("div", { class: "vitem" + (id === current ? " cur" : "") }, pb, h("div", { class: "vtx" }, h("b", { text: name }), h("span", { text: desc })),
+      id === current ? h("span", { class: "vuse", text: "Selected" }) : h("button", { class: "btn sm", text: "Use", onclick: () => onUse(id) })); }));
+}
+
+/* ================= Voice preview ================= */
+async function previewVoice(btn, voice, line, speed) {
+  if (btn.dataset.busy) return; btn.dataset.busy = "1"; const keep = btn.innerHTML; btn.replaceChildren(h("span", { class: "spin" }));
+  const note = $("#voiceNote"), old = note.textContent;
+  try {
+    const tts = await loadVoice((f, c) => { if (!c) note.textContent = "Downloading the voice once: " + Math.round(f * 100) + "%"; });
+    await tick(); const audio = await speak(tts, line, voice, speed);
+    const a = getAC(); await a.resume(); const buf = a.createBuffer(1, audio.length, 24000); buf.copyToChannel(audio, 0);
+    const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(); note.textContent = old;
+  } catch (err) { toast("The voice couldn't start here: " + ((err && err.message) || err)); }
+  btn.innerHTML = keep; delete btn.dataset.busy;
+}
+$("#sVPrev").onclick = () => playSample(S.voice);
+$("#lVPrev").onclick = () => playSample(S.lvoice);
+
+/* ================= Dictation (speak an idea) ================= */
+let dict = null, dictTarget = null, dictBase = "";
+cap("dictation").then(d => {
+  dict = d; if (!d) return;
+  [["#sMic", "#sOwn"], ["#lMic", "#lOwn"], ["#nsMic", "#nsPremise"]].forEach(([b2, inp]) => { const btn = $(b2); btn.hidden = false;
+    btn.onclick = () => {
+      if (dictTarget && dict.active && dict.active()) { dict.stop().catch(() => {}); return; }
+      dictTarget = $(inp); dictBase = dictTarget.value ? dictTarget.value.replace(/\s*$/, " ") : "";
+      dict.start().catch(e => { if (e && e.code === "not_granted") { toast("Microphone is off for this page"); $$(".btn.mic").forEach(m => m.hidden = true); } });
+    }; });
+  d.onPartial(({ text }) => { if (dictTarget) { dictTarget.value = dictBase + text; } });
+  d.onFinal(({ text }) => { if (dictTarget) { dictBase = dictBase + text + " "; dictTarget.value = dictBase.trim(); dictTarget.dispatchEvent(new Event("input")); } });
+  d.onState(({ state }) => { const on = state === "listening"; $$(".btn.mic").forEach(m => m.classList.toggle("on", !!(on && dictTarget && m.previousElementSibling === dictTarget))); if (!on) dictTarget = null; });
+});
+/* ================= Go bar ================= */
+function longSpecs() { const s = lPicks.map(x => ({ kind: "long", mode: S.lmode, topic: x.title + (x.angle ? ". " + x.angle : "") })); const own = $("#lOwn").value.trim(); if (own && s.length < 3) s.push({ kind: "long", mode: S.lmode, topic: own }); return s.slice(0, 3); }
+function shortSpecs() { const s = picks.map(x => ({ kind: "short", mode: x.mode || S.mode, topic: x.title + (x.angle ? ". Angle: " + x.angle : "") })); const own = $("#sOwn").value.trim(); if (own && s.length < 3) s.push({ kind: "short", mode: S.mode, topic: own }); return s; }
+function updateGo() {
+  const g = $("#go"), sub = $("#goSub");
+  if (view === "long") {
+    const n = longSpecs().length;
+    g.disabled = !n || busyRun; g.textContent = n > 1 ? "Generate " + n + " long-form videos" : "Generate " + S.llen + "-min video";
+    sub.textContent = busyRun ? "Working…" : n ? n + " × " + S.llen + " min · about " + Math.round(n * S.llen * 6 + 10) + "+ min total" : "Pick up to 3 topics";
+  } else {
+    const n = Math.min(3, shortSpecs().length);
+    g.disabled = !n || busyRun; g.textContent = n > 1 ? "Generate " + n + " Shorts" : "Generate Short";
+    sub.textContent = busyRun ? "Working on your videos…" : n ? n + " × " + S.length + "s · about " + (n * 3 + 2) + "–" + (n * 4 + 3) + " min" : "Pick up to 3 ideas";
+  }
+  $("#sPickCount").textContent = Math.min(3, picks.length + ($("#sOwn").value.trim() ? 1 : 0)) + " of 3 picked";
+}
+$("#go").onclick = () => {
+  if (view === "long") { const s = longSpecs(); if (s.length) startBatch(s); }
+  else { const s = shortSpecs(); if (s.length) startBatch(s); }
+};
+
+/* ================= Pipeline ================= */
+const STAGES = [["script", "Script"], ["voice", "Voice"], ["art", "Art"], ["music", "Music"], ["render", "Render"]];
+const WEIGHT = { script: 0.08, voice: 0.17, art: 0.5, music: 0.05, render: 0.2 };
+let busyRun = false, jobs = [], rendering = false;
+function mutex() { let last = Promise.resolve(); return fn => { const r = last.then(fn, fn); last = r.catch(() => {}); return r; }; }
+const cpuLock = mutex();
+let artFree = 3; const artWait = [];
+async function artSlot(pri, fn) {
+  if (artFree <= 0) await new Promise(r => { artWait.push({ pri, r }); artWait.sort((a, b) => a.pri - b.pri); }); else artFree--;
+  try { return await fn(); } finally { const n = artWait.shift(); if (n) n.r(); else artFree++; }
+}
+function newProject(spec) {
+  const id = uid();
+  if (spec.kind === "long") return { id, kind: "long", mode: spec.mode, topic: spec.topic, length: S.llen, voice: S.lvoice, art: "signature", cap: S.lsubs, scenes: [], palette: HOUSE_PAL.slice(), kit: {} };
+  if (spec.series) { const se = spec.series, n = (se.episodes || []).length + 1;
+    return { id, kind: "short", mode: se.mode, topic: `Episode ${n} of the series "${se.name}"${se.plan && se.plan[n - 1] ? ": " + se.plan[n - 1] : ""}`, length: se.length, voice: se.voice, art: se.art, cap: se.mode === "story" ? "story" : "pop", character: se.character, palette: se.palette, seriesId: se.id, episode: n, scenes: [], kit: {} }; }
+  const same = spec.mode === S.mode, d = MODES[spec.mode];
+  return { id, kind: "short", mode: spec.mode, topic: spec.topic, length: S.length, voice: same ? S.voice : d.voice, art: same ? S.art : d.art, cap: same ? S.cap : d.cap, scenes: [], palette: [], kit: {} };
+}
+function makeJob(spec, idx) {
+  const p = spec.existing || newProject(spec); if (!p.look) p.look = makeLook(p);
+  const job = { id: p.id, idx, p, spec, st: {}, fr: {}, detail: "Waiting…", status: "queued", err: "" };
+  STAGES.forEach(([k]) => { job.st[k] = p.scenes.length && k === "script" ? "done" : ""; job.fr[k] = job.st[k] === "done" ? 1 : 0; });
+  job.stage = (k, state, detail, frac) => { if (state) job.st[k] = state; if (state === "done") job.fr[k] = 1; if (frac != null) job.fr[k] = frac; if (detail != null) job.detail = detail; paintJob(job); };
+  return job;
+}
+const jobPct = j => STAGES.reduce((a, [k]) => a + WEIGHT[k] * (j.st[k] === "done" ? 1 : (j.fr[k] || 0)), 0);
+function updateBusy() {
+  const pill = $("#busyPill"); if (!pill) return;
+  const onMake = !$("#v-make").hidden;
+  if (!jobs.length || (!busyRun && !batchDoneUnseen) || onMake) { pill.hidden = true; return; }
+  pill.hidden = false; pill.classList.toggle("done", !busyRun);
+  const pct = Math.round(jobs.reduce((a2, j) => a2 + (j.status === "done" ? 1 : jobPct(j)), 0) / jobs.length * 100);
+  $("#busyText").textContent = busyRun ? "Making " + jobs.length + " · " + pct + "%" : jobs.filter(j => j.status === "done").length + " ready · view";
+}
+let batchDoneUnseen = false;
+$("#busyPill").onclick = () => { batchDoneUnseen = false; const done1 = !busyRun && jobs.length === 1 && jobs[0].status === "done"; if (done1) { P = jobs[0].p; showResult(); } else { showMake(jobs[0].p.kind); setFormat(jobs[0].p.kind); $("#result").hidden = true; $("#track").hidden = false; jobs.forEach(paintJob); } updateBusy(); };
+function paintJob(j) {
+  updateBusy();
+  const el = j.el; if (!el) return; const p = j.p, first = p.scenes.length && thumbs.get(p.scenes[0].id);
+  el.className = "job" + (p.kind === "long" ? " h" : "") + (j.status === "rendering" ? " on" : "") + (j.status === "fail" ? " fail" : "");
+  el.replaceChildren(first ? h("img", { class: "jt", src: first, alt: "" }) : h("span", { class: "jt", text: String(j.idx + 1) }),
+    h("div", { class: "jb" },
+      h("small", { class: "jm", text: (p.kind === "long" ? "Long-form · " + p.length + " min" : (p.seriesId ? "Series ep " + p.episode : p.mode === "story" ? "Story" : "Explainer") + " · " + p.length + "s") + (j.status === "rendering" ? " · on screen now" : "") }),
+      h("b", { class: "jtitle", text: p.title || p.topic }),
+      h("div", { class: "pips" }, ...STAGES.map(([k, l]) => h("span", { class: "pip " + (j.st[k] || "") }, h("i"), l))),
+      h("span", { class: "jd" + (j.status === "fail" ? " err" : ""), text: j.status === "fail" ? j.err : j.detail }),
+      j.status === "done" || j.status === "fail" ? null : h("div", { class: "jbar" }, h("i", { style: "width:" + Math.round(jobPct(j) * 100) + "%" })),
+      j.status === "done" ? h("div", { class: "jacts" }, h("button", { class: "btn sm sig", text: "Watch and save", onclick: () => { P = j.p; showResult(); } })) : null,
+      j.status === "fail" && !busyRun ? h("div", { class: "jacts" }, h("button", { class: "btn sm", text: "Try again", onclick: () => startBatch([{ existing: j.p }]) })) : null));
+}
+let previewRAF = 0, previewOn = false;
+function startPreview() { previewOn = true; const loop = () => { if (!previewOn) return; if (!rendering) { const j = [...jobs].reverse().find(x => x.p.scenes.some(s => arts.has(s.id))) || jobs[0]; if (j) drawStill(j.p); } previewRAF = requestAnimationFrame(loop); }; loop(); }
+function stopPreview() { previewOn = false; cancelAnimationFrame(previewRAF); }
+async function startBatch(specs) {
+  if (busyRun || !specs.length) return; busyRun = true; updateGo();
+  jobs = specs.slice(0, 3).map(makeJob); P = jobs[0].p;
+  const kind = jobs[0].p.kind; setFormat(kind); showMake(kind);
+  $("#result").hidden = true; $("#track").hidden = false; $("#vid").hidden = true; cv.hidden = false;
+  const n = jobs.length, re = !!specs[0].existing;
+  $("#mkTitle").textContent = kind === "long" ? (n > 1 ? "Making " + n + " long-form videos" : (re ? "Re-making" : "Making") + " a " + jobs[0].p.length + "-min video") : n > 1 ? "Making " + n + " Shorts" : (re ? "Re-making your Short" : jobs[0].p.seriesId ? "Making episode " + jobs[0].p.episode : "Making your Short");
+  $("#mkSub").textContent = kind === "long" ? (n > 1 ? "All " + n + " are written, voiced and drawn side by side; the first one renders while the others are still being drawn. Keep this screen open and plugged in." : "Chapters are written in parallel, then voiced, drawn and rendered in real time. Keep this screen open and plugged in.") : n > 1 ? "All " + n + " are written, voiced and drawn side by side, then rendered one after another. Keep this screen open." : "Keep this screen open. It usually takes four to six minutes.";
+  $("#jobs").replaceChildren(...jobs.map(j => (j.el = h("div", { class: "job" }), paintJob(j), j.el)));
+  startPreview();
+  let wake = null; try { wake = await navigator.wakeLock.request("screen"); } catch {}
+  await Promise.allSettled(jobs.map(runJob));
+  try { wake && wake.release(); } catch {}
+  stopPreview(); busyRun = false; batchDoneUnseen = $("#v-make").hidden; updateBusy();
+  const ok = jobs.filter(j => j.status === "done").length;
+  if (!re) { if (kind === "long") { lPicks = []; $("#lOwn").value = ""; renderLIdeas(); } else { picks = []; $("#sOwn").value = ""; renderSIdeas(); renderDaily(); } }
+  updateGo(); jobs.forEach(paintJob);
+  if (n === 1 && ok === 1 && !$("#v-make").hidden) { P = jobs[0].p; showResult(); return; }
+  $("#mkTitle").textContent = ok === n ? "All " + n + " are ready" : ok + " of " + n + " ready";
+  $("#mkSub").replaceChildren(h("span", { text: ok ? "Open each one to watch it, save it and copy its upload kit. " : "" }), h("button", { class: "btn sm", text: "Make more", onclick: () => go(kind === "long" ? "long" : "shorts") }));
+}
+function parseScenes(arr, P, ch) {
+  return arr.filter(s => s && s.narration).map((s, k) => ({ id: uid(), narration: String(s.narration).trim(), visual: String(s.visual || s.narration), motion: ["zoom-in", "zoom-out", "pan-left", "pan-right"].includes(s.motion) ? s.motion : "zoom-in", fx: ["rain", "snow", "fog", "embers", "sparks", "stars", "rays", "dust", "none"].includes(s.fx) ? s.fx : (darkMode(P) ? "dust" : "none"), emphasis: s.emphasis && !darkMode(P) ? String(s.emphasis).split(/\s+/).slice(0, 3).join(" ") : "", ch: ch == null ? null : ch, chStart: ch != null && k === 0 }));
+}
+const goodPal = (a, dark) => { const p = (Array.isArray(a) ? a : []).filter(c => /^#[0-9a-f]{3,8}$/i.test(c)).slice(0, 5); return p.length >= 3 ? p : dark ? ["#07070d", "#1b1630", "#3d2f5c", "#b06a3b", "#f4c27a"] : ["#0d1030", "#2337a8", "#4f8cff", "#ffb547", "#fff3d6"]; };
+async function writeScript(job) {
+  const P = job.p, st = job.stage;
+  if (P.kind === "long") {
+    st("script", "active", "Planning the chapters…", 0.05);
+    const o = await askJSON(outlinePrompt(P));
+    if (!o || !Array.isArray(o.chapters) || o.chapters.length < 2) throw { code: "invalid_json" };
+    o.chapters = o.chapters.filter(c => c && c.title).map(c => ({ title: String(c.title), beats: String(c.beats || "") }));
+    P.title = String(o.title || P.topic); P.character = String(o.character || ""); P.thumbText = String(o.thumbText || "");
+    P.palette = HOUSE_PAL.slice(); P.art = "signature"; P.chapters = o.chapters.map(c => ({ title: c.title }));
+    P.kit = { titles: (o.titles || []).map(String).slice(0, 3), description: String(o.description || ""), hashtags: String(o.hashtags || ""), pinned: String(o.pinnedComment || "") };
+    let done = 0; st("script", null, "Writing " + o.chapters.length + " chapters…", 0.15);
+    const parts = await Promise.all(o.chapters.map((c, ci) => artSlot(job.idx, async () => {
+      let r = null; for (let a = 0; a < 2 && !r; a++) { try { r = await askJSON(chapterPrompt(P, o, ci)); if (!r || !Array.isArray(r.scenes) || !r.scenes.length) r = null; } catch (e) { if (e && (e.code === "not_granted" || e.code === "unavailable")) throw e; } }
+      if (!r) throw { code: "invalid_json" };
+      done++; st("script", null, "Chapter " + done + " of " + o.chapters.length + " written", 0.15 + 0.85 * done / o.chapters.length);
+      return parseScenes(r.scenes, P, ci);
+    })));
+    P.scenes = parts.flat();
+  } else {
+    st("script", "active", P.seriesId ? "Picking up from the last cliffhanger…" : "Writing the script…");
+    let extra = "";
+    if (P.seriesId) { const se = seriesStore.list.find(x => x.id === P.seriesId) || job.spec.series;
+      extra = `This is episode ${P.episode} of an ongoing series "${se.name}". Logline: ${se.logline}
+Recurring character (keep exactly): ${se.character}
+${(se.episodes || []).slice(-4).map(e => "Episode " + e.n + " (" + e.title + "): " + e.summary + " It ended on: " + e.cliffhanger).join("\n")}
+${(se.episodes || []).length ? "Open by picking up directly from the last cliffhanger in one punchy line new viewers can follow. Move the overall mystery forward, then end on a new cliffhanger." : "This is the pilot: hook hard, introduce the character through action, end on a cliffhanger."}`; }
+    const r = await askJSON(scriptPrompt(P, extra));
+    if (!r || !Array.isArray(r.scenes) || !r.scenes.length) throw { code: "invalid_json" };
+    P.title = String(r.title || P.topic); P.character = P.seriesId ? P.character : String(r.character || "");
+    P.palette = P.seriesId && P.palette && P.palette.length ? P.palette : goodPal(r.palette, darkMode(P));
+    P.scenes = parseScenes(r.scenes, P, null); P.summary = String(r.summary || ""); P.cliffhanger = String(r.cliffhanger || "");
+    P.kit = { titles: (r.titles || []).map(String).slice(0, 3), description: String(r.description || ""), hashtags: String(r.hashtags || "#shorts"), pinned: String(r.pinnedComment || "") };
+    if (P.seriesId) P.kit.titles = P.kit.titles.map(t => t.includes("Part") ? t : t + " (Part " + P.episode + ")");
+  }
+}
+async function runJob(job) {
+  const P = job.p, st = job.stage, ori = P.kind === "long" ? "h" : "v";
+  job.status = "working";
+  try {
+    if (!P.scenes.length) await writeScript(job);
+    st("script", "done", P.scenes.length + " scenes written"); paintJob(job);
+    const voiceJob = (async () => {
+      st("voice", "active", "Recording the voiceover…", 0);
+      const tts = await cpuLock(() => loadVoice((f, c) => st("voice", null, c ? "Voice loaded" : "Downloading the voice once · " + Math.round(f * 100) + "%", f * 0.5)));
+      const clips = [];
+      for (let i = 0; i < P.scenes.length; i++) { st("voice", null, P.kind === "long" ? "Line " + (i + 1) + " of " + P.scenes.length : null, 0.5 + 0.5 * i / P.scenes.length); await tick(); clips.push(await cpuLock(() => speak(tts, P.scenes[i].narration, P.voice, MODES[P.mode].speed))); }
+      st("voice", "done"); return clips;
+    })();
+    const artJob = (async () => {
+      const need = P.scenes.filter(s => !arts.has(s.id)); let done = P.scenes.length - need.length;
+      st("art", "active", "Drawing " + P.scenes.length + " scenes…", done / P.scenes.length);
+      let qi = 0;
+      const worker = async () => {
+        while (qi < need.length) {
+          const s = need[qi++], i = P.scenes.indexOf(s); let c = null;
+          if (s.svg) { try { c = await buildArt(cleanSvg(s.svg, ori), ori); } catch {} }
+          for (let a = 0; !c && a < 2; a++) {
+            try { const raw = await artSlot(job.idx, () => askText(svgPrompt(P, s, i))); const svg = cleanSvg(raw, ori); if (svg) { c = await buildArt(svg, ori); s.svg = svg; } }
+            catch (e) { if (e && (e.code === "not_granted" || e.code === "unavailable")) throw e; if (e && e.code === "rate_limited") await sleep(5000); }
+          }
+          if (!c) c = fallbackArt(P, i);
+          arts.set(s.id, c); thumbs.set(s.id, thumbOfArt(c)); done++;
+          st("art", null, "Scene " + done + " of " + P.scenes.length + " drawn", done / P.scenes.length);
+        }
+      };
+      await Promise.all([worker(), worker(), worker()]); st("art", "done");
+    })();
+    const [clips] = await Promise.all([voiceJob, artJob]);
+    P.timeline = buildTimeline(P, clips);
+    st("music", "active", "Scoring the music…");
+    const mix = await mixAudio(P, clips);
+    st("music", "done", rendering ? "Ready. Waiting for its turn to render" : "Ready to render");
+    const blob = await cpuLock(async () => {
+      job.status = "rendering"; rendering = true; paintJob(job);
+      try { setFormat(P.kind); for (const sc of P.scenes.slice(0, 3)) { const a = arts.get(sc.id); if (a) { rasterize(a); await tick(); } } lastScene = -1; return await render(P, mix, st); }
+      finally { rendering = false; }
+    });
+    P.thumb = thumbs.get(P.scenes[0].id) || ""; P.video = blob;
+    if (P.kind === "long") {
+      P.kit.description = (P.kit.description || "").replace(/\n\nChapters[\s\S]*$/, "") + "\n\nChapters\n" + P.timeline.chapters.map(c => fmtTime(c.t) + " " + c.title).join("\n");
+      try { P.thumbBlob = await makeThumb(P, 0); } catch {}
+    }
+    P.scenes.forEach((s, i) => { if (i % 6 === 0) return; const a = arts.get(s.id); if (a && a.imgs) a.imgs.forEach(im => URL.revokeObjectURL(im.src)); if (a) a.ras = null; arts.delete(s.id); });
+    if (blob.size < 150e6) saveVideoLocal(P.id, blob);
+    job.status = "done"; st("render", "done", "Ready · " + fmtTime(P.timeline.total) + " · " + (blob.size / 1048576).toFixed(1) + " MB");
+    await lib.save(projDoc(P));
+    uploadToCloud(P);
+    if (P.seriesId) { const se = seriesStore.list.find(x => x.id === P.seriesId); if (se) { const eps = (se.episodes || []).filter(e => e.pid !== P.id); eps.push({ n: P.episode, pid: P.id, title: P.title, summary: P.summary, cliffhanger: P.cliffhanger }); eps.sort((a, b) => a.n - b.n); await seriesStore.save(Object.assign({}, se, { episodes: eps })); } }
+  } catch (e) {
+    job.status = "fail"; job.err = aiErr(e);
+    const k = STAGES.map(x => x[0]).find(k => job.st[k] === "active"); if (k) job.st[k] = "fail"; paintJob(job);
+  }
+}
+function pickMime() { if (!window.MediaRecorder) return null; return ["video/mp4;codecs=avc1.42E01F,mp4a.40.2", "video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(m => { try { return MediaRecorder.isTypeSupported(m); } catch { return false; } }) || ""; }
+async function render(p, mix, st) {
+  st("render", "active", "Rendering · on screen now", 0);
+  const mime = pickMime(); if (mime === null || !cv.captureStream) throw new Error("This browser can't record video. Try Chrome or Safari on a computer.");
+  try { await Promise.all([document.fonts.load("900 94px Archivo"), document.fonts.load("700 68px 'Bricolage Grotesque'"), document.fonts.load("600 56px Inter"), document.fonts.load("800 80px Syne")]); } catch {}
+  const a = getAC(); try { await a.resume(); } catch {}
+  const dest = a.createMediaStreamDestination(); const vs = cv.captureStream(30);
+  const stream = new MediaStream([...vs.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const vbr = p.kind === "long" ? 5000000 : 9000000;
+  let rec; try { rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: vbr, audioBitsPerSecond: 160000 }, mime ? { mimeType: mime } : {})); } catch { rec = new MediaRecorder(stream); }
+  const chunks = []; rec.ondataavailable = e => e.data && e.data.size && chunks.push(e.data); const stopped = new Promise(r => rec.onstop = r);
+  $("#tag").hidden = false; drawFrame(p, 0); rec.start(1000);
+  const src = a.createBufferSource(); src.buffer = mix; src.connect(dest); const t0 = a.currentTime + 0.15; src.start(t0);
+  const total = p.timeline.total + 0.2; let ended = false, lastPaint = 0;
+  const finish = () => { if (ended) return; ended = true; try { src.stop(); } catch {} try { rec.stop(); } catch {} };
+  const loop = () => { if (ended) return; const t = a.currentTime - t0; drawFrame(p, Math.max(0, Math.min(t, p.timeline.total))); if (t - lastPaint > 0.5) { lastPaint = t; st("render", null, p.kind === "long" ? "Rendering " + fmtTime(Math.max(0, t)) + " of " + fmtTime(total) : null, Math.min(1, t / total)); } if (t >= total) return finish(); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop); const iv = setInterval(() => { if (a.currentTime - t0 >= total) finish(); }, 400);
+  await stopped; clearInterval(iv); vs.getTracks().forEach(t => t.stop()); $("#tag").hidden = true;
+  return new Blob(chunks, { type: rec.mimeType || mime || "video/webm" });
+}
+
+/* ================= Result ================= */
+let thumbPick = 0;
+function showResult() {
+  setFormat(P.kind); showMake(P.kind);
+  $("#track").hidden = true; $("#result").hidden = false; $("#rTitle").textContent = P.title || P.topic;
+  $("#bBoard").hidden = !(jobs.length > 1 && jobs.some(j => j.p === P));
+  $("#bNext").hidden = !P.seriesId;
+  const v = $("#vid"); if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+  if (P.video) { v.dataset.url = URL.createObjectURL(P.video); v.src = v.dataset.url; v.hidden = false; cv.hidden = true; } else { v.hidden = true; cv.hidden = false; if (P.timeline) drawFrame(P, 0.1); }
+  $("#saveNote").textContent = P.video ? "" : "This video was made on another device or was too large to keep. Re-make it here to get the file.";
+  $("#bSave").disabled = !P.video;
+  thumbPick = 0; showThumb();
+  const k = P.kit || {}, long = P.kind === "long";
+  $("#kit").replaceChildren(h("h3", { text: "Upload kit" }),
+    ...(k.titles || []).map((t, i) => kitRow(i ? "" : "Title options", t)),
+    kitRow("Description", (k.description || "") + (k.hashtags ? "\n\n" + k.hashtags : "")), kitRow("Pinned comment", k.pinned || ""),
+    h("p", { class: "note", text: long ? "Chapters are already timestamped in the description. Upload the thumbnail as a custom thumbnail. These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage." : "These are illustrations, so YouTube counts them as animated: turn on \"altered or synthetic content\" only if a scene could pass for real footage. YouTube says the label alone doesn't change reach." }));
+  renderLines();
+}
+function kitRow(label, text) { return h("div", { class: "kr" }, h("div", { style: "min-width:0" }, label ? h("div", { class: "lbl", text: label }) : null, h("p", { text })), h("button", { class: "btn sm", text: "Copy", onclick: () => copy(text) })); }
+async function showThumb() {
+  const box = $("#thumbbox"); if (P.kind !== "long") { box.hidden = true; return; }
+  if (!P.thumbBlob && P.scenes.some(s => arts.has(s.id))) { try { P.thumbBlob = await makeThumb(P, thumbPick); } catch {} }
+  if (!P.thumbBlob) { box.hidden = true; return; }
+  const img = $("#thumbImg"); if (img.dataset.url) URL.revokeObjectURL(img.dataset.url); img.dataset.url = URL.createObjectURL(P.thumbBlob); img.src = img.dataset.url; box.hidden = false;
+}
+$("#bThumbRe").onclick = async () => { thumbPick += 3; P.thumbBlob = null; await showThumb(); };
+async function saveFile(name, blob, note) {
+  const dl = await cap("downloads"); if (!dl) { note.textContent = "Saving isn't available in this view. Open the page in claude.ai."; return; }
+  try { await dl.save({ filename: name, data: blob }); note.textContent = "Saved."; } catch (e) { note.textContent = e && e.code === "declined" ? "Not saved." : e && e.code === "too_large" ? "That file is too large for this app. Save it from a computer browser." : "Couldn't save here. Try again on a computer."; }
+}
+const slug = s => ((s || "video").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase().slice(0, 60) || "video");
+$("#bSave").onclick = () => { if (P.video) saveFile(slug(P.title) + "." + (P.video.type.includes("mp4") ? "mp4" : "webm"), P.video, $("#saveNote")); };
+$("#bThumb").onclick = () => { if (P.thumbBlob) saveFile(slug(P.title) + "-thumbnail.png", P.thumbBlob, $("#saveNote")); };
+$("#bBoard").onclick = () => { $("#result").hidden = true; $("#track").hidden = false; jobs.forEach(paintJob); window.scrollTo({ top: 0 }); };
+$("#bRemake").onclick = () => { if (busyRun) { toast("Wait for the current videos to finish"); return; } P.video = null; P.thumbBlob = null; startBatch([{ existing: P }]); };
+$("#bBack").onclick = () => go(P && P.kind === "long" ? "long" : P && P.seriesId ? "series" : view === "long" ? "long" : view);
+$("#bNext").onclick = () => { const se = seriesStore.list.find(x => x.id === P.seriesId); if (se) makeEpisode(se); };
+function renderLines() {
+  $("#lines").replaceChildren(...P.scenes.map((s, i) => h("div", { class: "line" }, h("img", { src: thumbs.get(s.id) || "", alt: "Scene " + (i + 1) }),
+    h("div", {}, h("textarea", { "aria-label": "Line " + (i + 1), value: s.narration, oninput: e => { s.narration = e.target.value; } }),
+      h("div", { class: "la" }, h("button", { class: "btn sm", text: "Redraw", onclick: e => { arts.delete(s.id); s.svg = ""; e.currentTarget.textContent = "Will redraw"; e.currentTarget.disabled = true; } }))))),
+    h("p", { class: "note", text: "Press Re-make to apply your edits." }));
+}
+async function openSaved(x) {
+  P = JSON.parse(JSON.stringify(x)); delete P._local; jobs = [];
+  setFormat(P.kind || "short"); showMake(P.kind);
+  $("#track").hidden = true; $("#result").hidden = true; cv.hidden = false;
+  const ori = P.kind === "long" ? "h" : "v";
+  P.video = await idb.get("video:" + P.id);
+  if (!P.video && P.videoAsset && P.videoAsset.url) { $("#mkTitle").textContent = "Loading from your account…"; try { const r = await fetch(P.videoAsset.url); if (r.ok) P.video = new Blob([await r.arrayBuffer()], { type: P.videoAsset.type || "video/mp4" }); } catch {} }
+  if (P.artAsset && P.artAsset.url && P.scenes.some(s => !s.svg)) { try { const r = await fetch(P.artAsset.url); if (r.ok) { const bundle = await r.json(); P.scenes.forEach(s => { if (!s.svg && bundle[s.id]) s.svg = bundle[s.id]; }); } } catch {} }
+  if (P.kind === "long" && P.thumbAsset && P.thumbAsset.url) { try { const r = await fetch(P.thumbAsset.url); if (r.ok) P.thumbBlob = await r.blob(); } catch {} }
+  for (const s of P.scenes) if (s.svg && !arts.has(s.id)) { try { const c = await buildArt(cleanSvg(s.svg, ori), ori); arts.set(s.id, c); thumbs.set(s.id, thumbOfArt(c)); } catch {} }
+  if (!P.look) P.look = makeLook(P);
+  const fake = P.scenes.map(s => new Float32Array(Math.round(Math.max(1, words(s.narration).length) * 24000 / 2.6)));
+  P.timeline = buildTimeline(P, fake);
+  showResult();
+}
+
+/* ================= Series ================= */
+function renderSeries() {
+  const box = $("#slist");
+  $("#nsStory").setAttribute("aria-pressed", String(S.nsmode === "story")); $("#nsExplainer").setAttribute("aria-pressed", String(S.nsmode === "explainer"));
+  if (!seriesStore.list.length) { box.replaceChildren(h("div", { class: "empty", text: "No series yet. Describe a premise below and the AI builds the character, look and first five episode ideas." })); return; }
+  box.replaceChildren(...seriesStore.list.map(se => { const eps = se.episodes || [], n = eps.length + 1;
+    return h("div", { class: "scard" }, h("span", { class: "smeta", text: (se.mode === "story" ? "Story" : "Explainer") + " series · " + se.length + "s episodes" }), h("h3", { text: se.name }), h("p", { text: se.logline }),
+      h("div", { class: "eps" }, ...eps.map(e => h("span", { text: "Ep " + e.n })), h("span", { class: "next", text: "Ep " + n + " next" })),
+      eps.length ? h("p", { text: "Last cliffhanger: " + eps[eps.length - 1].cliffhanger }) : null,
+      h("div", { class: "row" }, h("button", { class: "btn sm sig", text: "Make episode " + n, onclick: () => makeEpisode(se) }),
+        eps.length ? h("button", { class: "btn sm", text: "Watch latest", onclick: () => { const last = lib.list.find(x => x.id === eps[eps.length - 1].pid); if (last) openSaved(last); else toast("That episode isn't in your library on this device"); } }) : null)); }));
+}
+function makeEpisode(se) { if (busyRun) { toast("Wait for the current videos to finish"); return; } startBatch([{ series: se }]); }
+$("#nsStory").onclick = () => { S.nsmode = "story"; saveSettings(); renderSeries(); fillNs(); };
+$("#nsExplainer").onclick = () => { S.nsmode = "explainer"; saveSettings(); renderSeries(); fillNs(); };
+function fillNs() { const d = MODES[S.nsmode]; fill($("#nsVoice"), VOICES, d.voice); fill($("#nsArt"), Object.entries(ARTS).filter(([k]) => k !== "signature").map(([k, a]) => [k, a.label]), d.art); renderNsV(); }
+function renderNsV() { renderVList($("#nsVList"), $("#nsVoice").value, id => { $("#nsVoice").value = id; renderNsV(); }); }
+$("#nsVoice").addEventListener("change", renderNsV);
+async function createSeries(premise, mode, b, opts = {}) {
+  const note = $("#nsNote"); note.textContent = ""; note.className = "note";
+  const label = b.textContent; b.disabled = true; b.replaceChildren(h("span", { class: "spin" }), "Building…");
+  try {
+    const r = await askJSON(`Create a series bible for a YouTube Shorts ${mode === "story" ? "story series" : "explainer series hosted by a recurring illustrated character"}. Recurring characters and numbered parts are what grow channels now.
+Premise: ${premise}
+${GUARD}
+Reply with ONLY JSON: {"name":"series name, 2 to 4 words","logline":"one sentence","character":"exact visual description of the recurring character used in every illustration: species or age, build, clothing, colors, one signature detail","palette":["5 hex colors dark to light"],"plan":["5 episode titles that escalate the central mystery"]}`);
+    if (!r || !r.name || !r.character) throw { code: "invalid_json" };
+    const d = MODES[mode];
+    const se = { id: uid(), name: String(r.name), logline: String(r.logline || premise), premise, mode, character: String(r.character), palette: goodPal(r.palette, mode === "story"), plan: (r.plan || []).map(String), length: opts.length || 30, voice: opts.voice || d.voice, art: opts.art || d.art, episodes: [] };
+    await seriesStore.save(se); toast("Series created: " + se.name); renderSeriesTrends(); window.scrollTo({ top: 0, behavior: "smooth" });
+    return se;
+  } catch (err) { note.textContent = aiErr(err); note.className = "note err"; toast(aiErr(err)); b.disabled = false; b.textContent = label; }
+}
+$("#nsCreate").onclick = async e => {
+  const premise = $("#nsPremise").value.trim(); if (!premise) { $("#nsNote").textContent = "Describe the premise first."; $("#nsNote").className = "note err"; return; }
+  const b = e.currentTarget, se = await createSeries(premise, S.nsmode, b, { length: +$("#nsLen").value, voice: $("#nsVoice").value, art: $("#nsArt").value });
+  if (se) $("#nsPremise").value = ""; b.disabled = false; b.textContent = "Create series";
+};
+
+/* ================= Library ================= */
+const SERIES_C = { short: "#C98420", long: "#14A0A8", series: "#E0406A" }; /* validated: dark surface, CVD-safe */
+const SERIES_L = { short: "Shorts", long: "Long-form", series: "Series" };
+let statsTable = false;
+function renderStats() {
+  const box = $("#stats"), list = lib.list;
+  if (!list.length) { box.replaceChildren(); return; }
+  const kindOf = x => x.seriesId ? "series" : (x.kind || "short");
+  const weekStart = d => { const t = new Date(d); t.setHours(0, 0, 0, 0); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return t.getTime(); };
+  const now = weekStart(Date.now()), W = 8, weeks = Array.from({ length: W }, (_, i) => ({ t: now - (W - 1 - i) * 7 * 864e5, short: 0, long: 0, series: 0 }));
+  list.forEach(x => { const w = weeks.find(k => k.t === weekStart(x.updatedAt || 0)); if (w) w[kindOf(x)]++; });
+  const secs = list.reduce((s, x) => s + (x.dur || (x.kind === "long" ? x.length * 60 : x.length || 0)), 0), mins = secs < 600 ? (secs / 60).toFixed(1) : Math.round(secs / 60);
+  const thisWeek = weeks[W - 1].short + weeks[W - 1].long + weeks[W - 1].series;
+  const eps = list.filter(x => x.seriesId).length;
+  const tile = (v, k) => h("div", { class: "tile" }, h("b", { text: String(v) }), h("span", { text: k }));
+  const tiles = h("div", { class: "tiles" }, tile(list.length, "Videos made"), tile(thisWeek, "This week"), tile(mins, "Minutes of video"), tile(eps, "Series episodes"));
+  const keys = ["short", "long", "series"], max = Math.max(1, ...weeks.map(w => w.short + w.long + w.series));
+  const VW = 640, VH = 200, L = 30, B = 26, T = 8, bw = (VW - L) / W, scaleY = v => (VH - B - T) * v / max;
+  const fmt = t => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const step = max <= 4 ? 1 : Math.ceil(max / 4);
+  let svg = `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Videos made per week, last 8 weeks, by type">`;
+  for (let v = 0; v <= max; v += step) { const y = VH - B - scaleY(v); svg += `<line x1="${L}" x2="${VW}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="JetBrains Mono, monospace">${v}</text>`; }
+  weeks.forEach((w, i) => {
+    const x = L + i * bw + bw * 0.22, wd = bw * 0.56; let y = VH - B;
+    keys.forEach(k => { if (!w[k]) return; const hh = scaleY(w[k]) - 2; const top = keys.slice(keys.indexOf(k) + 1).every(k2 => !w[k2]);
+      svg += top ? `<path d="M${x} ${y} V${y - hh + 4} Q${x} ${y - hh} ${x + 4} ${y - hh} H${x + wd - 4} Q${x + wd} ${y - hh} ${x + wd} ${y - hh + 4} V${y} Z" fill="${SERIES_C[k]}"/>` : `<rect x="${x}" y="${y - hh}" width="${wd}" height="${hh}" fill="${SERIES_C[k]}"/>`;
+      y -= hh + 2; });
+    svg += `<text x="${x + wd / 2}" y="${VH - 8}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="JetBrains Mono, monospace">${fmt(w.t)}</text>`;
+    svg += `<rect class="hit" data-i="${i}" x="${L + i * bw}" y="0" width="${bw}" height="${VH - B}" fill="transparent"/>`;
+  });
+  svg += `</svg>`;
+  const tip = h("div", { class: "tip", hidden: true });
+  const plot = h("div", { style: "position:relative" }); plot.innerHTML = svg; plot.append(tip);
+  plot.addEventListener("pointermove", e => { const r = e.target.closest && e.target.closest(".hit"); if (!r) { tip.hidden = true; return; } const w = weeks[+r.dataset.i];
+    tip.innerHTML = ""; tip.append(h("b", { text: "Week of " + fmt(w.t) }), ...keys.map(k => h("div", { text: SERIES_L[k] + ": " + w[k] })));
+    const pr = plot.getBoundingClientRect(), rr = r.getBoundingClientRect(); tip.style.left = (rr.left - pr.left + rr.width / 2) + "px"; tip.style.top = (rr.top - pr.top + 4) + "px"; tip.hidden = false; });
+  plot.addEventListener("pointerleave", () => tip.hidden = true);
+  const table = h("table", {}, h("thead", {}, h("tr", {}, h("th", { text: "Week of" }), ...keys.map(k => h("th", { text: SERIES_L[k] })))), h("tbody", {}, ...weeks.slice().reverse().map(w => h("tr", {}, h("td", { text: fmt(w.t) }), ...keys.map(k => h("td", { text: String(w[k]) }))))));
+  const legend = h("div", { class: "legend" }, ...keys.map(k => h("span", {}, h("i", { style: "background:" + SERIES_C[k] }), SERIES_L[k])));
+  const toggle = h("button", { class: "btn sm ghost", text: statsTable ? "Show chart" : "Show table", onclick: () => { statsTable = !statsTable; renderStats(); } });
+  box.replaceChildren(tiles, h("div", { class: "chartbox" }, h("div", { class: "ch" }, h("h3", { text: "Videos per week" }), legend, toggle), statsTable ? table : plot));
+}
+let libFilter = "all";
+function renderLib() {
+  renderStats();
+  const F = [["all", "All"], ["short", "Shorts"], ["long", "Long-form"], ["series", "Series"]];
+  $("#libFilter").replaceChildren(...F.map(([k, l]) => h("button", { class: "chip", "aria-pressed": String(libFilter === k), onclick: () => { libFilter = k; renderLib(); } }, l)));
+  const list = lib.list.filter(x => libFilter === "all" || (libFilter === "series" ? x.seriesId : (x.kind || "short") === libFilter && !(libFilter === "short" && x.seriesId)));
+  const box = $("#lib");
+  if (!list.length) { box.replaceChildren(h("div", { class: "empty", text: "Finished videos appear here with their titles, descriptions and hashtags." })); return; }
+  box.replaceChildren(...list.map(x => { const L = x.kind === "long"; return h("button", { class: "vid" + (L ? " h" : ""), onclick: () => { if (busyRun) { toast("Wait for the current videos to finish"); return; } openSaved(x); } },
+    x.thumb ? h("img", { src: x.thumb, alt: "" }) : h("span", { class: "ph" }),
+    h("div", {}, h("small", { class: L ? "l" : x.seriesId ? "r" : "s", text: (L ? "Long-form · " + x.length + " min" : x.seriesId ? "Series · ep " + x.episode : "Short · " + x.length + "s") + " · " + new Date(x.updatedAt).toLocaleDateString() }), h("b", { text: x.title || x.topic }))); }));
+}
+
+
+/* ================= Trends (written daily by the scout) ================= */
+let trends = null;
+const tList = (k, m) => (trends && trends[k] && Array.isArray(trends[k][m])) ? trends[k][m] : [];
+function nichesFor(m) { const hot = tList("niches", m).map(String); const all = [...new Set(hot.concat(MODES[m].niches))].slice(0, 10); return { all, hot: new Set(hot) }; }
+function trendNote() { if (!trends || !Array.isArray(trends.hot)) return ""; return "What is working on YouTube this week (use as inspiration, never copy): " + trends.hot.slice(0, 5).map(x => x.name + " (" + x.why + ")").join("; ") + (Array.isArray(trends.avoid) && trends.avoid.length ? ". Avoid: " + trends.avoid.map(x => x.name).join(", ") + "." : ""); }
+function useTrendIdeas(which) {
+  if (!trends) return false; const tag = "T|" + trends.updated;
+  if (which === "s") { const ti = tList("ideas", S.mode); if (!ti.length) return false; sIdeas = ti.slice(0, 6).map(i => ({ title: String(i.title), hook: String(i.hook || ""), angle: String(i.angle || ""), trend: true })); LS.set("sIdeas", sIdeas); LS.set("sIdeasKey", tag + "|" + S.mode); return true; }
+  const tl = tList("ideas", S.lmode); if (!tl.length) return false; lIdeas = tl.slice(0, 5).map(i => ({ title: String(i.title), angle: String(i.angle || ""), trend: true })); LS.set("lIdeas", lIdeas); LS.set("lIdeasKey", tag + "|" + S.lmode); return true;
+}
+function applyTrends() {
+  if (!trends) { $("#radar").hidden = true; $("#sTrend").hidden = true; return; }
+  const tag = "T|" + trends.updated;
+  const ti = tList("ideas", S.mode);
+  if (ti.length && !picks.length && LS.get("sIdeasKey", "") !== tag + "|" + S.mode) { sIdeas = ti.slice(0, 6).map(i => ({ title: String(i.title), hook: String(i.hook || ""), angle: String(i.angle || ""), trend: true })); LS.set("sIdeas", sIdeas); LS.set("sIdeasKey", tag + "|" + S.mode); }
+  const tl = tList("ideas", S.lmode);
+  if (tl.length && !lPicks.length && LS.get("lIdeasKey", "") !== tag + "|" + S.lmode) { lIdeas = tl.slice(0, 5).map(i => ({ title: String(i.title), angle: String(i.angle || ""), trend: true })); LS.set("lIdeas", lIdeas); LS.set("lIdeasKey", tag + "|" + S.lmode); }
+  renderShorts(); renderLong(); renderRadar(); renderSeriesTrends();
+}
+function renderRadar() {
+  const r = $("#radar"); if (!trends) { r.hidden = true; return; } r.hidden = false;
+  let when = trends.updated; try { when = new Date(trends.updated + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch {}
+  $("#radarWhen").textContent = "Updated " + when + " · " + (trends.hot || []).length + " rising formats";
+  const item = (x, cls) => h("div", { class: "ritem" + (cls ? " " + cls : "") }, h("b", { text: x.name }), x.fit ? h("span", { class: "fit " + x.fit, text: x.fit === "long" ? "Long-form" : x.fit === "series" ? "Series" : "Shorts" }) : null, h("p", { text: x.why }), x.source && x.source.url ? h("a", { href: x.source.url, target: "_blank", rel: "noopener", text: x.source.title || x.source.url }) : null);
+  $("#radarBody").replaceChildren(
+    trends.summary ? h("p", { class: "rsum", text: trends.summary }) : null,
+    h("span", { class: "rlbl", text: "Rising now" }), h("div", { class: "rlist" }, ...(trends.hot || []).map(x => item(x))),
+    (trends.avoid || []).length ? h("span", { class: "rlbl", text: "Losing reach or pay" }) : null,
+    (trends.avoid || []).length ? h("div", { class: "rlist" }, ...trends.avoid.map(x => item(x, "avoid"))) : null);
+}
+function renderSeriesTrends() {
+  const list = trends && Array.isArray(trends.series) ? trends.series : [];
+  $("#sTrend").hidden = !list.length;
+  let when = trends && trends.updated; try { when = new Date(trends.updated + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch {}
+  $("#sTrendWhen").textContent = when ? "Fresh ideas every day · " + when : "";
+  $("#sTrendList").replaceChildren(...list.map(x => { const made = seriesStore.list.some(s => s.premise === x.premise);
+    return h("div", { class: "sidea" },
+      h("span", { class: "fit " + (x.mode === "explainer" ? "shorts" : "series"), text: x.mode === "explainer" ? "Explainer series" : "Story series" }),
+      x.title ? h("b", { text: x.title }) : null, h("p", { class: "pr", text: x.premise }), h("p", { text: "Why now: " + x.why }),
+      h("div", { class: "row" }, h("button", { class: "btn sm sig", text: made ? "Created" : "Create series", disabled: made, onclick: e => createSeries(x.premise, x.mode === "explainer" ? "explainer" : "story", e.currentTarget) }),
+        h("button", { class: "btn sm ghost", text: "Edit first", onclick: () => { $("#nsPremise").value = x.premise; S.nsmode = x.mode === "explainer" ? "explainer" : "story"; saveSettings(); renderSeries(); fillNs(); $("#nsPremise").scrollIntoView({ behavior: "smooth", block: "center" }); } }))); }));
+}
+/* ================= Idea of the day ================= */
+let dailyList = [], dailyIdx = 0;
+function renderDaily() {
+  const box = $("#daily"), d = dailyList[dailyIdx]; if (!d) { box.hidden = true; return; } box.hidden = false;
+  const when = (() => { try { return new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch { return d.date; } })();
+  const isToday = d.date === new Date().toISOString().slice(0, 10), mode = MODES[d.mode] && (d.mode === "story" || d.mode === "explainer") ? d.mode : "explainer";
+  const spec = { title: d.title, hook: d.hook || "", angle: d.angle || "", mode, daily: true }, added = picks.some(x => x.title === d.title);
+  box.replaceChildren(
+    h("div", { class: "eb" }, isToday ? "Idea of the day" : "Idea from " + when, h("i", { text: (mode === "story" ? "Story" : "Explainer") + (isToday ? " · " + when : "") })),
+    h("h2", { text: d.title }), d.hook ? h("p", { class: "hk", text: "“" + d.hook + "”" }) : null, d.why ? h("p", { class: "why", text: "Why now: " + d.why }) : null,
+    (d.sources && d.sources.length) ? h("div", { class: "src" }, ...d.sources.slice(0, 3).map(x => h("a", { href: x.url, target: "_blank", rel: "noopener", text: x.title || x.url }))) : null,
+    h("div", { class: "row" }, h("button", { class: "btn sig", text: "Make this Short", onclick: () => startBatch([{ kind: "short", mode, topic: d.title + (d.angle ? ". Angle: " + d.angle : "") }]) }),
+      h("button", { class: "btn", text: added ? "In your batch" : "Add to batch", onclick: () => { if (!added) togglePick(spec); } })),
+    dailyList.length > 1 ? h("div", { class: "past" }, ...dailyList.map((x, i) => h("button", { "aria-pressed": String(i === dailyIdx), title: x.title, text: (i === 0 ? "Latest" : x.date.slice(5)) + " · " + x.title, onclick: () => { dailyIdx = i; renderDaily(); } }))) : null);
+}
+
+/* ================= Boot ================= */
+(function clock() { const el = $("#tcode"), t0 = performance.now(), slow = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setInterval(() => { const s = (performance.now() - t0) / 1000, f = Math.floor((s % 1) * 30); el.textContent = [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60, f].map(n => String(n).padStart(2, "0")).join(":"); }, slow ? 1000 : 100); })();
+renderShorts(); renderLong(); fillNs(); renderSeries(); renderLib();
+go(location.hash.slice(1) || "shorts");
+initSync();
+sampler().then(s => { if (!s) { $("#sNote").textContent = AI_ERR.unavailable; $("#sNote").className = "note err"; } else { loadSIdeas(); if (!lIdeas.length) loadLIdeas(); } });
+idb.get("kokoro-q8-v1").then(c => { if (c && c.model) $("#voiceNote").textContent = "The voice is downloaded and runs on this device."; });
+})();
+</script>

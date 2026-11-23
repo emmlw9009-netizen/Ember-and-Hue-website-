@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lantern Slides frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#E4B86A}a:hover{color:#F4E7CC}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #0C0A08; color: #F4E7CC; font-family: 'IM Fell English', Georgia, serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <radialGradient id="vig7" cx="50%" cy="48%" r="55%"><stop offset="0.75" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.85"/></radialGradient>
+      <linearGradient id="sky7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A889"/><stop offset="1" stop-color="#8C7B5E"/></linearGradient>
+      <filter id="grain7"><feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="27"/><feColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.8 0 0 0 0 0.6 0 0 0 0.1 0"/></filter>
+      <clipPath id="slide7"><rect x="250" y="70" width="780" height="470" rx="60"/></clipPath>
+    </defs>
+    <path d="M0 360 L250 90 L250 520 Z" fill="#E4D3A8" opacity="0.05"/>
+    <rect x="236" y="56" width="808" height="498" rx="70" fill="#1A140E"/>
+    <g clip-path="url(#slide7)">
+      <rect x="250" y="70" width="780" height="470" fill="url(#sky7)"/>
+      <path d="M250 380 C 400 350 560 370 720 352 C 860 338 960 360 1030 350 V540 H250 Z" fill="#E9E2D2"/>
+      <path d="M250 450 C 420 430 640 450 1030 430 V540 H250 Z" fill="#F3EEE2"/>
+      <g fill="#5A4A36"><path d="M330 380 l3 -60 M350 384 l3 -66 M372 380 l3 -58" stroke="#5A4A36" stroke-width="5"/></g>
+      <g transform="translate(640 250)">
+        <path d="M-30 20 C -32 80 -28 140 -26 190 H26 C 28 140 32 80 30 20 Z" fill="#6B4A2E"/>
+        <path d="M-30 20 C -10 6 10 6 30 20 L 26 70 H -26 Z" fill="#9C3D2A" opacity="0.85"/>
+        <circle cx="0" cy="-2" r="20" fill="#D9B48C"/>
+        <path d="M-38 -14 H38 L 30 -22 H -30 Z M-22 -22 C -20 -48 20 -48 22 -22 Z" fill="#3B2A1A"/>
+        <path d="M30 40 L 78 150" stroke="#3B2A1A" stroke-width="6" stroke-linecap="round"/><path d="M70 140 L 96 170 L 80 178 Z" fill="#7C7C7C"/>
+        <path d="M-26 190 H -6 V 204 H -30 Z M 6 190 H 26 V 204 H 4 Z" fill="#2A1E12"/>
+      </g>
+      <g fill="#FFFFFF" opacity="0.7"><circle cx="300" cy="120" r="2.5"/><circle cx="420" cy="180" r="2"/><circle cx="560" cy="110" r="2.5"/><circle cx="760" cy="160" r="2"/><circle cx="880" cy="100" r="2.5"/><circle cx="960" cy="220" r="2"/><circle cx="500" cy="260" r="2"/><circle cx="820" cy="280" r="2.5"/></g>
+      <rect x="250" y="70" width="780" height="470" filter="url(#grain7)"/>
+    </g>
+    <rect x="236" y="56" width="808" height="498" rx="70" fill="none" stroke="#3A2C1E" stroke-width="12"/>
+    <rect width="1280" height="720" fill="url(#vig7)"/>
+    <g transform="translate(40 470)"><rect x="0" y="40" width="150" height="110" rx="10" fill="#3B2A1A" stroke="#B48A4A" stroke-width="3"/><circle cx="150" cy="95" r="34" fill="#20160C" stroke="#B48A4A" stroke-width="4"/><circle cx="150" cy="95" r="16" fill="#E4D3A8" opacity="0.7"/><rect x="60" y="0" width="30" height="40" fill="#3B2A1A" stroke="#B48A4A" stroke-width="3"/></g>
+  </svg>
+  <div style="position: absolute; left: 236px; top: 566px; width: 808px; display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; color: #B48A4A"><span>SLIDE 7 · SUMMER, 1816</span><span>D7 · LANTERN SLIDES</span></div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 40px; display: flex; justify-content: center">
+    <span style="font-style: italic; font-size: 30px; color: #F4E7CC">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

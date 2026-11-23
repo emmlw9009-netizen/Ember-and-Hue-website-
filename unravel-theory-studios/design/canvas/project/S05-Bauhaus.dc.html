@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bauhaus Shapes frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4E9C}a:hover{color:#151515}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #EAE4D6; color: #151515; font-family: Jost, Futura, 'Century Gothic', sans-serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <rect x="0" y="560" width="1280" height="160" fill="#151515"/>
+    <path d="M120 560 L400 150 L680 560 Z" fill="#1F4E9C"/>
+    <path d="M400 150 A 120 120 0 0 1 520 270 L400 270 Z" fill="#D63A2F"/>
+    <path d="M400 150 A 80 80 0 0 0 320 70 L320 150 Z" fill="#D63A2F"/>
+    <circle cx="930" cy="250" r="150" fill="#F2B630"/>
+    <rect x="900" y="160" width="230" height="230" fill="#151515"/>
+    <g fill="#151515"><circle cx="760" cy="430" r="7"/><circle cx="820" cy="470" r="7"/><circle cx="880" cy="430" r="7"/><circle cx="940" cy="470" r="7"/><circle cx="1000" cy="430" r="7"/><circle cx="1060" cy="470" r="7"/><circle cx="1120" cy="430" r="7"/><circle cx="1180" cy="470" r="7"/></g>
+    <path d="M740 520 H1220" stroke="#151515" stroke-width="3"/>
+    <path d="M1150 40 V120" stroke="#151515" stroke-width="3"/>
+  </svg>
+  <div style="position: absolute; left: 1166px; top: 40px; font-size: 14px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.3">No. 5<br>Bauhaus</div>
+  <div style="position: absolute; left: 72px; top: 56px; display: flex; flex-direction: column; gap: 0">
+    <span style="font-size: 18px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase">Chapter 01</span>
+    <span style="font-size: 96px; font-weight: 700; line-height: 0.9; letter-spacing: -0.02em">1816</span>
+  </div>
+  <div style="position: absolute; left: 748px; top: 540px; font-size: 16px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #EAE4D6">The year without a summer</div>
+  <div style="position: absolute; left: 72px; bottom: 44px; background: #F2B630; color: #151515; font-size: 27px; font-weight: 500; padding: 8px 18px">In 1816, snow fell in July across New England.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

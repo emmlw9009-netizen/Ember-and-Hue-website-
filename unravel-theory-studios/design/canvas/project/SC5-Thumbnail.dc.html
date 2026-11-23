@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scene 5 Thumbnail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Special+Elite&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C8281E}a:hover{color:#111}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #111111; font-family: 'Archivo Black', Impact, sans-serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" role="img" aria-label="Thumbnail: the Archivist and Pip scream at a pinned photo of snow on a summer cornfield, under the title Snow in July">
+    <defs><pattern id="ht" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="2" fill="#111"/></pattern>
+    <filter id="sh" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="6" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.35"/></filter></defs>
+    <g transform="rotate(5 640 470)" filter="url(#sh)">
+      <rect x="500" y="290" width="300" height="340" fill="#F2EEE4"/>
+      <rect x="520" y="310" width="260" height="240" fill="#BFD7E6"/>
+      <path d="M520 470 C 600 440 680 460 780 440 V550 H520 Z" fill="#FFFFFF"/>
+      <path d="M560 470 l2 -70 M590 474 l2 -76 M620 468 l2 -66" stroke="#2E5A2A" stroke-width="6" stroke-linecap="round"/>
+      <g fill="#FFFFFF" stroke="#111" stroke-width="1.5"><circle cx="560" cy="350" r="5"/><circle cx="640" cy="330" r="6"/><circle cx="720" cy="360" r="5"/><circle cx="690" cy="410" r="5"/><circle cx="600" cy="400" r="4"/></g>
+    </g>
+    <path d="M0 40 C 300 120 520 200 650 300" stroke="#C8281E" stroke-width="5" fill="none"/>
+    <circle cx="650" cy="300" r="14" fill="#C8281E"/>
+    <sc-for list="{{ chars }}" as="c" hint-placeholder-count="2">
+      <g transform="{{ c.t }}">
+        <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="12">
+          <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+        </sc-for>
+      </g>
+    </sc-for>
+  </svg>
+  <div style="position: absolute; left: 0; right: 0; top: 18px; display: flex; justify-content: center; gap: 28px; font-size: 128px; line-height: 1; letter-spacing: -0.02em">
+    <span>SNOW IN</span><span style="color: #C8281E">JULY?!</span>
+  </div>
+  <div style="position: absolute; left: 568px; top: 584px; transform: rotate(5deg); transform-origin: left top; font-family: 'Special Elite', monospace; font-size: 24px; color: #111111">Vermont, 1816</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+  const K = '#111111', R = '#D9363E', W = '#FFFFFF', B = '#5BB8F0', P = '#F08AA0', N = 'none';
+  const f = (d, fill, stroke, sw) => ({ d, fill: fill || N, stroke: stroke || N, sw: sw || 0 });
+  const capsule = (x, y, w, h) => 'M' + x + ' ' + (y + w / 2) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + w + ' 0 v' + (h - w) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + (-w) + ' 0 z';
+  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 z';
+  const drop = (x, y, s) => 'M' + x + ' ' + y + ' C ' + (x + s) + ' ' + (y + 1.6 * s) + ' ' + (x + s) + ' ' + (y + 2.4 * s) + ' ' + x + ' ' + (y + 2.4 * s) + ' C ' + (x - s) + ' ' + (y + 2.4 * s) + ' ' + (x - s) + ' ' + (y + 1.6 * s) + ' ' + x + ' ' + y + ' Z';
+  const eyes = (w, h, y) => [f(capsule(182 - w, y, w, h), K), f(capsule(218, y, w, h), K)];
+  const shine = (y) => [f(circ(166, y, 7), W), f(circ(236, y, 7), W)];
+  const openMouth = (y, w, h) => [f('M' + (200 - w / 2) + ' ' + y + ' h' + w + ' q0 ' + h + ' ' + (-w / 2) + ' ' + h + ' q' + (-w / 2) + ' 0 ' + (-w / 2) + ' ' + (-h) + ' z', R, K, 8), f('M' + (200 - w / 2 + 6) + ' ' + (y + 4) + ' l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8) + ' -14 l' + (w / 8) + ' 14 l' + (w / 8 - 12) + ' -14 z', W)];
+  const FACES = {
+    scream: [...eyes(46, 84, 122), ...shine(148), ...openMouth(222, 110, 64), f('M64 96 l-26 -22 M336 96 l26 -22 M54 176 h-34 M346 176 h34', N, K, 8)],
+    terrified: [f(circ(166, 166, 34), W, K, 8), f(circ(234, 166, 34), W, K, 8), f(circ(172, 172, 7), K), f(circ(240, 172, 7), K), f('M178 224 q22 -6 44 0 q8 34 -22 58 q-30 -24 -22 -58 z', R, K, 8), f(drop(312, 96, 14), B, K, 4)]
+  };
+  const POSES = {
+    armsUp: ['M200 300 V430 M200 350 L124 256 M200 350 L276 256 M200 430 L160 524 M200 430 L240 524', 'M262 268 l16 6'],
+    shiver: ['M200 300 V430 M200 350 C 156 370 156 404 188 404 M200 350 C 244 370 244 404 212 404 M200 430 L184 524 M200 430 L216 524', 'M212 396 l10 14']
+  };
+  const HATS = {
+    cap: [f('M92 132 C 100 50 300 50 308 132 C 250 110 150 110 92 132 Z', '#D9A441', K, 8), f('M70 142 C 140 112 250 110 318 132 C 250 128 150 132 70 142 Z', '#B9852C', K, 8), f(circ(200, 72, 9), K)],
+    beanie: [f('M98 138 C 98 36 302 36 302 138 Z', '#4C9A5B', K, 8), f('M90 128 h220 v26 h-220 z', '#3C7D49', K, 8), f(circ(200, 40, 20), '#4C9A5B', K, 7)]
+  };
+  const person = (face, pose, hat, wrist) => [f(POSES[pose][0], N, K, 24), ...(wrist ? [f(POSES[pose][1], N, '#C8281E', 12)] : []), f(circ(200, 180, 120), W, K, 11), f('M98 238 C 140 306 260 306 302 238 C 296 280 252 298 200 298 C 148 298 104 280 98 238 Z', '#E9E9E9'), ...HATS[hat], ...FACES[face]];
+  return { chars: [
+    { t: 'translate(-20 170) scale(1.35)', shapes: person('scream', 'armsUp', 'cap', true) },
+    { t: 'translate(1290 250) scale(-1.05 1.05)', shapes: person('terrified', 'shiver', 'beanie', false) }
+  ] };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Microfiche frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Old+Standard+TT:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F2B544}a:hover{color:#BFE8C9}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #151917; color: #BFE8C9; font-family: 'IBM Plex Mono', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <pattern id="scan3" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#000" fill-opacity="0.22"/></pattern>
+      <radialGradient id="glow3" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#173A2F"/><stop offset="1" stop-color="#07130F"/></radialGradient>
+    </defs>
+    <rect x="70" y="60" width="1140" height="470" rx="18" fill="url(#glow3)" stroke="#2C3530" stroke-width="10"/>
+    <g fill="#BFE8C9" fill-opacity="0.9">
+      <rect x="130" y="110" width="500" height="8"/><rect x="130" y="130" width="500" height="3" fill-opacity="0.5"/>
+      <rect x="130" y="150" width="236" height="4" fill-opacity="0.55"/><rect x="130" y="162" width="236" height="4" fill-opacity="0.55"/><rect x="130" y="174" width="200" height="4" fill-opacity="0.55"/><rect x="130" y="186" width="236" height="4" fill-opacity="0.55"/><rect x="130" y="198" width="220" height="4" fill-opacity="0.55"/><rect x="130" y="210" width="236" height="4" fill-opacity="0.55"/><rect x="130" y="222" width="180" height="4" fill-opacity="0.55"/>
+      <rect x="394" y="150" width="236" height="150" fill-opacity="0.18"/>
+      <path d="M394 300 L470 240 L520 270 L580 220 L630 300 Z" fill-opacity="0.7"/>
+      <rect x="130" y="320" width="500" height="4" fill-opacity="0.55"/><rect x="130" y="332" width="460" height="4" fill-opacity="0.55"/><rect x="130" y="344" width="500" height="4" fill-opacity="0.55"/><rect x="130" y="356" width="420" height="4" fill-opacity="0.55"/>
+    </g>
+    <rect x="680" y="140" width="460" height="300" fill="none" stroke="#F2B544" stroke-width="2" stroke-dasharray="8 6"/>
+    <path d="M910 120 V460 M660 290 H1160" stroke="#BFE8C9" stroke-opacity="0.35" stroke-width="1"/>
+    <rect x="70" y="60" width="1140" height="470" rx="18" fill="url(#scan3)"/>
+    <rect x="70" y="560" width="1140" height="110" fill="#0B0E0C"/>
+    <g fill="#1E2A25" stroke="#3A4A43"><rect x="96" y="580" width="150" height="70"/><rect x="262" y="580" width="150" height="70"/><rect x="428" y="580" width="150" height="70" stroke="#F2B544" stroke-width="2"/><rect x="594" y="580" width="150" height="70"/><rect x="760" y="580" width="150" height="70"/><rect x="926" y="580" width="150" height="70"/><rect x="1092" y="580" width="100" height="70"/></g>
+    <g fill="#0B0E0C"><rect x="90" y="566" width="8" height="8"/><rect x="190" y="566" width="8" height="8"/><rect x="290" y="566" width="8" height="8"/><rect x="390" y="566" width="8" height="8"/><rect x="490" y="566" width="8" height="8"/><rect x="590" y="566" width="8" height="8"/><rect x="690" y="566" width="8" height="8"/><rect x="790" y="566" width="8" height="8"/><rect x="890" y="566" width="8" height="8"/><rect x="990" y="566" width="8" height="8"/><rect x="1090" y="566" width="8" height="8"/></g>
+  </svg>
+  <div style="position: absolute; left: 700px; top: 160px; width: 420px; font-family: 'Old Standard TT', Georgia, serif; font-weight: 700; font-size: 40px; line-height: 1.05; color: #BFE8C9">“A COLD AND CHEERLESS SEASON”</div>
+  <div style="position: absolute; left: 700px; top: 290px; width: 420px; font-size: 16px; line-height: 1.5; color: #BFE8C9">ROLL 1816-B · FRAME 0412<br>New England farm reports, July</div>
+  <div style="position: absolute; left: 86px; top: 22px; font-size: 13px; letter-spacing: 0.16em; color: #6F8C7C">READER 03 · D3 MICROFICHE</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 162px; display: flex; justify-content: center">
+    <span style="background: rgba(7,19,15,0.88); color: #F2B544; font-size: 24px; font-weight: 500; padding: 7px 16px; border: 1px solid #F2B544">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

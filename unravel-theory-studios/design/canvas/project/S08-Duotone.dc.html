@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Duotone Cinema frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Inter:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#E8833A}a:hover{color:#F5E9DC}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #050708; color: #F5E9DC; font-family: Inter, system-ui, sans-serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky8" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B1E23"/><stop offset="1" stop-color="#1D4048"/></linearGradient>
+      <radialGradient id="lamp8"><stop offset="0" stop-color="#E8833A" stop-opacity="0.75"/><stop offset="1" stop-color="#E8833A" stop-opacity="0"/></radialGradient>
+      <filter id="grain8"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="11"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.09 0"/></filter>
+    </defs>
+    <rect y="90" width="1280" height="540" fill="url(#sky8)"/>
+    <path d="M0 430 C 260 410 520 420 780 405 C 980 395 1140 410 1280 400 V630 H0 Z" fill="#2E5A62"/>
+    <path d="M0 500 C 300 480 700 500 1280 470 V630 H0 Z" fill="#46747B"/>
+    <path d="M930 404 L990 366 L1050 404 V440 H930 Z" fill="#0B1E23"/>
+    <rect x="976" y="410" width="14" height="12" fill="#E8833A"/>
+    <circle cx="330" cy="470" r="90" fill="url(#lamp8)"/>
+    <path d="M300 540 C 302 500 312 470 322 462 C 332 470 344 500 346 540 Z" fill="#0B1E23"/>
+    <circle cx="322" cy="450" r="12" fill="#0B1E23"/>
+    <path d="M346 492 L362 478" stroke="#0B1E23" stroke-width="5"/>
+    <rect x="356" y="470" width="14" height="18" rx="3" fill="#E8833A"/>
+    <path d="M323 540 C 400 548 520 552 700 556" stroke="#0B1E23" stroke-opacity="0.5" stroke-width="10" stroke-linecap="round"/>
+    <g stroke="#F5E9DC" stroke-opacity="0.35" stroke-width="1.5">
+      <path d="M100 140 l-8 22M220 200 l-8 22M360 120 l-8 22M480 230 l-8 22M610 150 l-8 22M760 210 l-8 22M880 130 l-8 22M1010 220 l-8 22M1150 160 l-8 22M170 320 l-8 22M540 330 l-8 22M820 300 l-8 22M1110 310 l-8 22M400 380 l-8 22M700 380 l-8 22"/>
+    </g>
+    <rect y="90" width="1280" height="540" filter="url(#grain8)"/>
+  </svg>
+  <div style="position: absolute; left: 64px; top: 30px; display: flex; gap: 18px; align-items: baseline">
+    <span style="font-family: 'Bebas Neue', Impact, sans-serif; font-size: 34px; letter-spacing: 0.08em; color: #E8833A">01</span>
+    <span style="font-family: 'Bebas Neue', Impact, sans-serif; font-size: 34px; letter-spacing: 0.08em">The year without a summer</span>
+  </div>
+  <div style="position: absolute; right: 64px; top: 40px; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: #9FB3B5">No. 8 · Duotone Cinema</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 26px; display: flex; justify-content: center">
+    <span style="font-size: 26px; font-weight: 500; letter-spacing: 0.01em">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

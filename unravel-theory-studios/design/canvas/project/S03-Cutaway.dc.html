@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cutaway frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#C4532D}a:hover{color:#2D3A45}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #E9E6DF; color: #2D3A45; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <pattern id="strata" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><path d="M0 5H10" stroke="#2D3A45" stroke-width="0.9" stroke-opacity="0.45"/></pattern>
+      <pattern id="dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.1" fill="#2D3A45" fill-opacity="0.5"/></pattern>
+    </defs>
+    <path d="M60 560 L380 300 Q420 270 460 300 L780 560 Z" fill="#D5D0C6" stroke="#2D3A45" stroke-width="2.5"/>
+    <path d="M60 560 H780 V660 H60 Z" fill="url(#strata)" stroke="#2D3A45" stroke-width="2.5"/>
+    <path d="M140 495 L780 495" stroke="#2D3A45" stroke-width="1.2" stroke-dasharray="6 5"/>
+    <path d="M210 440 L640 440" stroke="#2D3A45" stroke-width="1.2" stroke-dasharray="6 5"/>
+    <ellipse cx="420" cy="612" rx="140" ry="34" fill="#C4532D" stroke="#2D3A45" stroke-width="2.5"/>
+    <path d="M410 580 L404 300 L436 300 L430 580 Z" fill="#C4532D" stroke="#2D3A45" stroke-width="2"/>
+    <path d="M404 300 C 360 220 330 150 360 80 C 380 40 460 40 480 80 C 510 150 480 220 436 300 Z" fill="url(#dots)" stroke="#2D3A45" stroke-width="2"/>
+    <path d="M360 80 C 300 40 220 60 150 40 M480 80 C 560 40 700 60 1220 36" fill="none" stroke="#2D3A45" stroke-width="2" stroke-dasharray="3 5"/>
+    <g font-family="IBM Plex Mono, monospace" font-size="13" fill="#2D3A45">
+      <path d="M560 612 H860" stroke="#2D3A45" stroke-width="1.2"/><circle cx="560" cy="612" r="4" fill="#2D3A45"/>
+      <path d="M436 440 L660 380 H860" fill="none" stroke="#2D3A45" stroke-width="1.2"/><circle cx="436" cy="440" r="4" fill="#2D3A45"/>
+      <path d="M470 140 L660 220 H860" fill="none" stroke="#2D3A45" stroke-width="1.2"/><circle cx="470" cy="140" r="4" fill="#2D3A45"/>
+      <path d="M760 52 L860 110" fill="none" stroke="#2D3A45" stroke-width="1.2"/><circle cx="760" cy="52" r="4" fill="#2D3A45"/>
+    </g>
+    <path d="M1180 520 V80" stroke="#2D3A45" stroke-width="1.2"/><path d="M1172 80 H1188 M1172 520 H1188" stroke="#2D3A45" stroke-width="1.2"/>
+  </svg>
+  <div style="position: absolute; left: 868px; top: 92px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #C4532D">04</span><span style="font-size: 22px; font-weight: 600">Sulfate veil in the stratosphere</span></div>
+  <div style="position: absolute; left: 868px; top: 202px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #C4532D">03</span><span style="font-size: 22px; font-weight: 600">Eruption column</span></div>
+  <div style="position: absolute; left: 868px; top: 362px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #C4532D">02</span><span style="font-size: 22px; font-weight: 600">Conduit</span></div>
+  <div style="position: absolute; left: 868px; top: 594px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #C4532D">01</span><span style="font-size: 22px; font-weight: 600">Magma chamber</span></div>
+  <div style="position: absolute; left: 1196px; top: 286px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; transform: rotate(90deg); transform-origin: left top; white-space: nowrap">ABOUT 40 KM</div>
+  <div style="position: absolute; left: 60px; top: 48px; display: flex; flex-direction: column; gap: 2px">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.12em">FIG. 1.3 · NO. 3 CUTAWAY</span>
+    <span style="font-size: 34px; font-weight: 700; letter-spacing: -0.01em">Section through Tambora, April 1815</span>
+  </div>
+  <div style="position: absolute; left: 60px; bottom: 28px; background: #2D3A45; color: #E9E6DF; font-size: 25px; font-weight: 500; padding: 9px 16px">In 1816, snow fell in July across New England.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

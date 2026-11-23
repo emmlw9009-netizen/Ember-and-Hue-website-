@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Card Catalog frame</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&amp;family=Libre+Caslon+Text:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#9E3B26}a:hover{color:#2B1D12}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #3E2716; color: #2B1D12; font-family: 'Courier Prime', 'Courier New', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" aria-hidden="true">
+    <defs>
+      <filter id="wood5"><feTurbulence type="fractalNoise" baseFrequency="0.01 0.35" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 0.25 0 0 0 0 0.14 0 0 0 0 0.06 0 0 0 0.45 0"/></filter>
+      <filter id="sh5" x="-10%" y="-10%" width="130%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.45"/></filter>
+    </defs>
+    <rect width="1280" height="720" fill="#6E4527"/>
+    <g stroke="#3E2716" stroke-width="6" fill="none">
+      <path d="M0 180 H1280 M0 360 H1280 M0 540 H1280"/><path d="M256 0 V720 M512 0 V720 M768 0 V720 M1024 0 V720"/>
+    </g>
+    <g fill="#C8A35A" stroke="#7D5F27" stroke-width="2">
+      <rect x="98" y="70" width="60" height="32" rx="3"/><rect x="354" y="70" width="60" height="32" rx="3"/><rect x="866" y="70" width="60" height="32" rx="3"/><rect x="1122" y="70" width="60" height="32" rx="3"/>
+      <rect x="98" y="430" width="60" height="32" rx="3"/><rect x="866" y="430" width="60" height="32" rx="3"/><rect x="1122" y="430" width="60" height="32" rx="3"/>
+      <rect x="98" y="610" width="60" height="32" rx="3"/><rect x="354" y="610" width="60" height="32" rx="3"/><rect x="866" y="610" width="60" height="32" rx="3"/><rect x="1122" y="610" width="60" height="32" rx="3"/>
+    </g>
+    <g fill="#7D5F27"><circle cx="128" cy="130" r="9"/><circle cx="384" cy="130" r="9"/><circle cx="896" cy="130" r="9"/><circle cx="1152" cy="130" r="9"/><circle cx="128" cy="490" r="9"/><circle cx="896" cy="490" r="9"/><circle cx="1152" cy="490" r="9"/></g>
+    <rect width="1280" height="720" filter="url(#wood5)"/>
+    <g filter="url(#sh5)">
+      <path d="M300 300 H980 L1030 560 H250 Z" fill="#5A381F"/>
+      <rect x="360" y="250" width="560" height="60" fill="#EFE7D4"/>
+      <rect x="350" y="232" width="560" height="60" fill="#F3ECDB"/>
+      <g transform="rotate(-3 640 220)"><rect x="380" y="90" width="520" height="300" fill="#FBF6E8"/><path d="M380 140 H900" stroke="#C9472F" stroke-width="1.6"/><path d="M380 180 H900 M380 212 H900 M380 244 H900 M380 276 H900 M380 308 H900 M380 340 H900" stroke="#A9BFCF" stroke-width="1"/><circle cx="640" cy="372" r="8" fill="#5A381F"/></g>
+    </g>
+  </svg>
+  <div style="position: absolute; left: 400px; top: 102px; width: 480px; transform: rotate(-3deg); transform-origin: 240px 118px; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; justify-content: space-between; font-size: 16px"><span style="font-weight: 700">551.6 W38</span><span>No. 1816-07</span></div>
+    <span style="font-size: 23px; line-height: 32px; margin-top: 8px">WEATHER — New England — 1816.<br>Snow and frost in July; crops lost.<br>See also: Tambora (volcano), 1815.</span>
+  </div>
+  <div style="position: absolute; left: 96px; top: 74px; font-family: 'Libre Caslon Text', Georgia, serif; font-size: 13px; font-weight: 700; color: #3E2716; width: 64px; text-align: center">WA–WE</div>
+  <div style="position: absolute; left: 352px; top: 74px; font-family: 'Libre Caslon Text', Georgia, serif; font-size: 13px; font-weight: 700; color: #3E2716; width: 64px; text-align: center">WF–WI</div>
+  <div style="position: absolute; left: 24px; top: 206px; font-family: 'Libre Caslon Text', Georgia, serif; font-size: 14px; letter-spacing: 0.18em; color: #E8D3A6">D5 · CARD CATALOG</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 44px; display: flex; justify-content: center">
+    <span style="background: #FBF6E8; border-top: 2px solid #C9472F; font-size: 25px; padding: 8px 18px">In 1816, snow fell in July across New England.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

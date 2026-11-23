@@ -1,0 +1,204 @@
+{
+  "avoid": [
+    {
+      "name": "Narrated Reddit threads or articles you didn't write",
+      "why": "Listed among formats that get channels demonetized as reused content."
+    },
+    {
+      "name": "AI doctors, lawyers or money experts",
+      "why": "AI personas giving health, legal or financial advice are a named non-monetized category since July 2026."
+    },
+    {
+      "name": "Shock compilations and fake realistic events",
+      "why": "Compilations of unrelated AI clips and realistic footage of events that never happened are being demonetized or removed."
+    }
+  ],
+  "hot": [
+    {
+      "fit": "series",
+      "name": "Serialized AI microdramas",
+      "source": {
+        "title": "YouTube Blog: the evolution of web series on YouTube, microdramas",
+        "url": "https://blog.youtube/culture-and-trends/the-evolution-of-web-series-on-youtube-microdramas/"
+      },
+      "why": "Recurring characters, ongoing plot, a hook ending each episode. YouTube reports microdramas passed 6.5B views in H1 2026, and its Shorts series feature now groups episodes into seasons."
+    },
+    {
+      "fit": "series",
+      "name": "AI animal and food-character dramas",
+      "source": {
+        "title": "C21Media: AI microdramas set to surge",
+        "url": "https://www.c21media.net/news/fruit-love-island-takes-social-media-by-storm-as-ai-microdramas-set-to-surge/"
+      },
+      "why": "Pet dramas and talking-food soap operas (like the Fruit Love Island format) keep pulling huge view counts; an original cast and a cliffhanger are what carry them."
+    },
+    {
+      "fit": "shorts",
+      "name": "Talking-object explainers",
+      "source": {
+        "title": "Miraflow: AI Shorts formats that go viral in 2026",
+        "url": "https://miraflow.ai/blog/ai-shorts-formats-that-go-viral-2026"
+      },
+      "why": "An everyday object narrates its own secret in under 45 seconds. Trend guides list talking-object skits among the visual concepts the feed keeps rewarding."
+    },
+    {
+      "fit": "shorts",
+      "name": "What happens to your body",
+      "source": {
+        "title": "Revid: AI YouTube Shorts guide 2026",
+        "url": "https://www.revid.ai/blog/ai-youtube-shorts"
+      },
+      "why": "Body-science explainers with a curious hook and a checkable payoff; seasonal angles (cold, holidays, sleep) are doing well this month."
+    },
+    {
+      "fit": "long",
+      "name": "Untold-story history deep dives",
+      "source": {
+        "title": "Autonolab: faceless history channels 2026",
+        "url": "https://blog.autonolab.com/niches/2025-12-10-faceless-youtube-history/"
+      },
+      "why": "Long-form history that zooms in on one specific, little-known story beats broad recaps; one creator reports 2.8x click-through after switching to unsolved-mystery framing."
+    },
+    {
+      "fit": "shorts",
+      "name": "Friend-group POV skits",
+      "source": {
+        "title": "Anijam: YouTube Shorts trends November 2026",
+        "url": "https://www.anijam.ai/blog/youtube-shorts-trends/"
+      },
+      "why": "A fixed cast where every character has one clear role; works best as a recurring series rather than one-offs."
+    }
+  ],
+  "ideas": {
+    "doc": [
+      {
+        "angle": "How a thriving desert town disappeared in one generation, and what was found when the dunes moved.",
+        "title": "The Town That Vanished Under Sand"
+      },
+      {
+        "angle": "1816, a volcano half a world away, and the frozen harvests that changed history.",
+        "title": "The Year Without a Summer"
+      },
+      {
+        "angle": "In 1518 hundreds of people danced for weeks; what historians think really happened.",
+        "title": "The Mystery of the Dancing Plague"
+      }
+    ],
+    "explainer": [
+      {
+        "angle": "The fridge explains its switch, why it hums at night, and the one shelf that's colder than the freezer.",
+        "hook": "Your fridge has been lying to you every time you open it.",
+        "title": "Your Fridge Light Has a Secret"
+      },
+      {
+        "angle": "How the nose warms and wets every breath, and why the extra water spills out when it's cold.",
+        "hook": "Your nose is a radiator, and winter breaks it.",
+        "title": "Why Cold Air Makes Your Nose Run"
+      },
+      {
+        "angle": "Bust the tryptophan myth and reveal what actually knocks you out after a big meal.",
+        "hook": "It's not the turkey. It never was.",
+        "title": "The Real Reason Turkey Makes You Sleepy"
+      },
+      {
+        "angle": "The battery narrates why heat and 100% charge age it, with one easy habit to fix it.",
+        "hook": "Your battery hates the thing you do every night.",
+        "title": "What Your Phone Battery Wants You to Know"
+      }
+    ],
+    "lstory": [
+      {
+        "angle": "A passenger realizes every stop is a year of his own life, and the last one is tonight.",
+        "title": "The Night Train to Nowhere"
+      },
+      {
+        "angle": "An original folktale about a bargain, told in chapters with a bittersweet twist.",
+        "title": "The Weaver Who Sold Her Shadow"
+      },
+      {
+        "angle": "A survival story where every chapter strips away one more thing the narrator thought they needed.",
+        "title": "Seven Days on the Ice"
+      }
+    ],
+    "story": [
+      {
+        "angle": "A one-eared cat escorts a night-shift nurse home; a photo reveals why he chose her.",
+        "hook": "Every night at 2 a.m., one stray cat waits for the last bus.",
+        "title": "The Stray Who Meets the Last Bus"
+      },
+      {
+        "angle": "A band of holiday leftovers plots to get eaten before trash day; a midnight snack saves one.",
+        "hook": "In this fridge, Sunday cleanout means nobody gets out alive.",
+        "title": "The Leftovers Have Until Sunday"
+      },
+      {
+        "angle": "A slow-building winter mystery with a warm twist instead of a scare.",
+        "hook": "Every morning, the snowman is one step closer to my door.",
+        "title": "The Snowman Who Moved One Step"
+      },
+      {
+        "angle": "An original folktale-style mystery with a twist about who the visitor really is.",
+        "hook": "No boat had come in forty years. Tonight, someone knocked.",
+        "title": "The Lighthouse Keeper's Last Visitor"
+      }
+    ]
+  },
+  "niches": {
+    "doc": [
+      "Untold history",
+      "Unsolved mysteries",
+      "Non-Western history",
+      "Disasters"
+    ],
+    "explainer": [
+      "Talking objects",
+      "Body science",
+      "History POV",
+      "Winter science"
+    ],
+    "lstory": [
+      "Folktales",
+      "Holiday ghost stories",
+      "Survival"
+    ],
+    "story": [
+      "Animal microdrama",
+      "Food-character drama",
+      "Holiday mystery",
+      "Revenge & justice"
+    ]
+  },
+  "series": [
+    {
+      "mode": "story",
+      "premise": "A one-eared stray cat escorts a different lonely stranger home every night, and each episode reveals one more clue about who he used to belong to.",
+      "why": "Animal microdramas with a recurring hero and an ongoing mystery are the fastest-growing serialized format."
+    },
+    {
+      "mode": "explainer",
+      "premise": "Everyday objects in one apartment confess their secrets, hosted by a grumpy old padlock who has seen it all.",
+      "why": "Talking-object explainers work better with a recurring host character and a running cast."
+    }
+  ],
+  "sources": [
+    {
+      "title": "YouTube Blog: microdramas",
+      "url": "https://blog.youtube/culture-and-trends/the-evolution-of-web-series-on-youtube-microdramas/"
+    },
+    {
+      "title": "TubeFilter: Shorts series and microdramas",
+      "url": "https://www.tubefilter.com/2026/09/24/made-on-youtube-shorts-series-microdramas/amp/"
+    },
+    {
+      "title": "Revid: AI YouTube Shorts guide",
+      "url": "https://www.revid.ai/blog/ai-youtube-shorts"
+    },
+    {
+      "title": "Miraflow: AI Shorts formats 2026",
+      "url": "https://miraflow.ai/blog/ai-shorts-formats-that-go-viral-2026"
+    }
+  ],
+  "summary": "Serialized, character-led AI content is the strongest lane: YouTube says microdramas passed 6.5B views in the first half of 2026 and Shorts now supports seasons and episodes. Talking-object and body-science explainers keep spreading, while reused-content and fake-expert formats get demonetized.",
+  "updated": "2026-11-23",
+  "updatedAt": 1795430000000
+}

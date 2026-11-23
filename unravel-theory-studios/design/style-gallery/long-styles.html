@@ -1,0 +1,129 @@
+<title>Long-Form Style Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a contact sheet. Ten numbered plates of the same scene, two per row, picked by number. Single dark look to match the studio app. */
+:root{
+  --bg:#06080E; --panel:#111623; --line:#222A3D; --ink:#EEF1F8; --muted:#8F98AF; --cyan:#5CE1E6; --amber:#FFB547;
+  --f-display:"Syne","Avenir Next",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-direction:column;gap:8px}
+.eb{font-family:var(--f-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan)}
+h1{margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(34px,6vw,58px);line-height:.95;text-transform:uppercase;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:62ch}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.plate{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.plate svg{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
+.info{padding:14px 16px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:start}
+.num{grid-row:1/4;font-family:var(--f-display);font-weight:800;font-size:40px;line-height:1;color:var(--cyan);font-variant-numeric:tabular-nums}
+.info h2{margin:0;font-family:var(--f-display);font-size:20px;font-weight:700;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.info h2 small{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 50%,var(--line));border-radius:6px;padding:1px 6px;font-weight:500}
+.info p{margin:0;color:var(--muted);font-size:14px}
+.best{font-size:13px;color:var(--ink)}
+.best b{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-right:6px}
+footer{color:var(--muted);font-size:13px}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eb">Unravel Theory Studios · long-form house style</span>
+    <h1>Pick your look</h1>
+    <p>The same scene drawn in ten styles: a lone figure on a cliff watching a lighthouse at night. Every long-form video would use the style you pick, so your channel looks like one studio. Reply with a number, or combine two.</p>
+  </header>
+  <div class="grid" id="grid"></div>
+  <footer>These are hand-built previews of each style's palette, shapes and texture. In the app, Claude draws every scene of your video in the chosen style, then the engine adds camera motion, subtitles and chapter cards.</footer>
+</div>
+
+<script>
+(() => {
+const W = 640, H = 360;
+const sea = (y0, n, col, sw, op, amp) => Array.from({ length: n }, (_, i) => { const y = y0 + i * (140 / n); return `<path d="M0 ${y} C 160 ${y - amp} 320 ${y + amp} 480 ${y - amp / 2} S 600 ${y + amp / 2} 640 ${y}" stroke="${col}" stroke-width="${sw}" fill="none" opacity="${op}"/>`; }).join("");
+const CLIFF = "M0 360 L0 228 L140 212 L210 226 L248 252 L268 360Z";
+const tower = (body, cap, lamp) => `<polygon points="170,222 192,222 187,148 175,148" fill="${body}"/><rect x="172" y="138" width="18" height="10" fill="${cap}"/><rect x="176" y="141" width="10" height="6" fill="${lamp}"/><polygon points="169,138 193,138 181,128" fill="${cap}"/>`;
+const person = (c) => `<circle cx="118" cy="199" r="4.2" fill="${c}"/><path d="M114 204 Q118 201 122 204 L123 219 L113 219Z" fill="${c}"/>`;
+const stars = (c, n, seed) => { let s = seed, out = ""; for (let i = 0; i < n; i++) { s = (s * 9301 + 49297) % 233280; const x = s / 233280 * 640; s = (s * 9301 + 49297) % 233280; const y = s / 233280 * 150; out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(0.6 + (i % 3) * 0.4).toFixed(1)}" fill="${c}" opacity=".7"/>`; } return out; };
+
+const STYLES = [
+ { name: "Unravel Signature", tag: "Current", desc: "Ink navy and amber editorial vector. Calm, premium and consistent, with fine contour lines for texture.", best: "History, science, mysteries",
+   svg: () => `<defs><linearGradient id="a1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16233A"/><stop offset="1" stop-color="#0B1220"/></linearGradient></defs>
+   <rect width="640" height="360" fill="url(#a1)"/>${stars("#F4EDE1", 26, 7)}<circle cx="470" cy="92" r="34" fill="#F4EDE1"/>
+   <rect y="222" width="640" height="138" fill="#0B1220"/>${sea(232, 9, "#2C4466", 1.4, .8, 6)}
+   <polygon points="186,142 640,104 640,176" fill="#E8A33D" opacity=".16"/><path d="${CLIFF}" fill="#16233A"/>${tower("#2C4466", "#2C4466", "#E8A33D")}${person("#F4EDE1")}` },
+ { name: "Paper Diorama", desc: "Layered paper cutouts with soft shadows between layers. Warm, tactile and handmade.", best: "Folktales, gentle history, nature",
+   svg: () => `<defs><filter id="d2" x="-5%" y="-5%" width="110%" height="120%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#3B2A1E" flood-opacity=".35"/></filter></defs>
+   <rect width="640" height="360" fill="#F2DDBB"/><circle cx="470" cy="104" r="40" fill="#E07A3F" filter="url(#d2)"/>
+   <path d="M0 200 C 120 170 260 190 380 175 S 560 160 640 180 L640 360 L0 360Z" fill="#D9A86C" filter="url(#d2)"/>
+   <path d="M0 232 C 100 220 220 240 340 226 S 540 216 640 230 L640 360 L0 360Z" fill="#6E9E9B" filter="url(#d2)"/>
+   <path d="M0 268 C 120 256 260 276 400 262 S 560 254 640 266 L640 360 L0 360Z" fill="#4E7F7E" filter="url(#d2)"/>
+   <path d="${CLIFF}" fill="#8A6A47" filter="url(#d2)"/><g filter="url(#d2)"><polygon points="170,222 192,222 187,148 175,148" fill="#F6EEDC"/><rect x="172" y="170" width="18" height="10" fill="#C9533C"/><rect x="171" y="196" width="20" height="10" fill="#C9533C"/><rect x="172" y="138" width="18" height="10" fill="#C9533C"/><polygon points="169,138 193,138 181,128" fill="#C9533C"/></g>${person("#3B2A1E")}` },
+ { name: "Riso Print", desc: "Two-ink risograph look: cobalt blue and fluoro pink, slightly misregistered, with halftone dots and paper grain.", best: "Pop science, culture, quirky explainers",
+   svg: () => `<defs><pattern id="h3" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.6" fill="#FF4FA3"/></pattern><pattern id="l3" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="3" fill="#2B59C3"/></pattern><filter id="g3"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .2 0 0 0 0 .2 0 0 0 0 .2 0 0 0 .18 0"/></filter></defs>
+   <rect width="640" height="360" fill="#F3EEE4"/><g style="mix-blend-mode:multiply"><circle cx="470" cy="96" r="44" fill="url(#h3)"/><circle cx="473" cy="99" r="44" fill="none" stroke="#FF4FA3" stroke-width="3"/>
+   <rect y="222" width="640" height="138" fill="url(#l3)" opacity=".75"/><path d="${CLIFF}" fill="#2B59C3"/><polygon points="173,222 195,222 190,148 178,148" fill="#FF4FA3"/><polygon points="170,222 192,222 187,148 175,148" fill="#2B59C3" opacity=".55"/>
+   <polygon points="188,142 640,110 640,168" fill="#FF4FA3" opacity=".5"/>${person("#2B59C3")}</g><rect width="640" height="360" filter="url(#g3)"/>` },
+ { name: "Blueprint", desc: "White technical line drawings on blueprint blue, with measurement marks and a drafting grid.", best: "Inventions, engineering, how things work",
+   svg: () => `<defs><pattern id="g4" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#3A72B0" stroke-width=".7"/></pattern></defs>
+   <rect width="640" height="360" fill="#0F3D73"/><rect width="640" height="360" fill="url(#g4)" opacity=".6"/>
+   <g fill="none" stroke="#D6ECFF" stroke-width="1.6"><circle cx="470" cy="92" r="34"/><path d="M430 92H510M470 52V132" stroke-width=".8" stroke-dasharray="3 3"/>
+   <path d="M0 222H640" /><path d="M0 250H640M0 282H640M0 316H640" stroke-dasharray="10 8" opacity=".6"/>
+   <path d="${CLIFF}"/><polygon points="170,222 192,222 187,148 175,148"/><rect x="172" y="138" width="18" height="10"/><polygon points="169,138 193,138 181,128"/>
+   <path d="M205 128V222M200 128H210M200 222H210" stroke-width=".9"/><path d="M188 143L640 112M188 143L640 172" stroke-dasharray="4 4" opacity=".7"/>
+   <circle cx="118" cy="199" r="4.2"/><path d="M114 204 Q118 201 122 204 L123 219 L113 219Z"/></g>` },
+ { name: "Mid-Century", desc: "1950s flat shapes in mustard, teal and rust, with geometric stars and clean arcs.", best: "Space race, inventions, retro topics",
+   svg: () => `<rect width="640" height="360" fill="#EFE1C4"/><circle cx="470" cy="110" r="46" fill="#E3A13B"/>${Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1 + i / 8); return `<path d="M${470 + Math.cos(a) * 56} ${110 + Math.sin(a) * 56}L${470 + Math.cos(a) * 74} ${110 + Math.sin(a) * 74}" stroke="#E3A13B" stroke-width="4" stroke-linecap="round"/>`; }).join("")}
+   ${[[90, 60], [300, 40], [560, 50], [380, 120]].map(([x, y]) => `<path d="M${x} ${y - 7}L${x + 3} ${y}L${x} ${y + 7}L${x - 3} ${y}Z" fill="#23384A"/>`).join("")}
+   <rect y="222" width="640" height="138" fill="#2E7D78"/>${[250, 290, 330].map(y => `<path d="M300 ${y} q20 -10 40 0 q20 10 40 0" stroke="#EFE1C4" stroke-width="3" fill="none"/>`).join("")}
+   <path d="${CLIFF}" fill="#C65A3A"/><polygon points="170,222 192,222 187,148 175,148" fill="#23384A"/><rect x="171" y="168" width="20" height="9" fill="#EFE1C4"/><rect x="170" y="194" width="22" height="9" fill="#EFE1C4"/><rect x="172" y="138" width="18" height="10" fill="#23384A"/><rect x="176" y="141" width="10" height="6" fill="#E3A13B"/><polygon points="169,138 193,138 181,128" fill="#23384A"/>${person("#23384A")}` },
+ { name: "Ink Noir", desc: "Stark black and white with a single red accent and hard shadows. Moody and graphic.", best: "Mysteries, dark history, suspense stories",
+   svg: () => `<defs><linearGradient id="a6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#202020"/><stop offset="1" stop-color="#050505"/></linearGradient></defs>
+   <rect width="640" height="360" fill="url(#a6)"/><circle cx="470" cy="100" r="58" fill="#EDEDED"/><rect y="222" width="640" height="138" fill="#050505"/>
+   <path d="M420 230 H520 M430 246 H510 M445 264 H495 M455 284 H485" stroke="#EDEDED" stroke-width="3" opacity=".8"/>
+   <g stroke="#FFFFFF" stroke-width="1" opacity=".12">${Array.from({ length: 40 }, (_, i) => `<path d="M${(i * 53) % 640} ${(i * 37) % 200} l-6 22"/>`).join("")}</g>
+   <polygon points="186,142 640,112 640,170" fill="#E0263B" opacity=".22"/><path d="${CLIFF}" fill="#000"/><g stroke="#EDEDED" stroke-width="1.2">${tower("#000", "#000", "#E0263B")}</g>${person("#000")}<path d="M112 219 L124 219" stroke="#EDEDED" stroke-width="1"/>` },
+ { name: "Woodcut", desc: "Old engraving style: black ink hatching on parchment, like a page from an antique book.", best: "Legends, medieval and ancient history",
+   svg: () => `<defs><pattern id="hx7" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V5" stroke="#2A1C12" stroke-width="1.4"/></pattern><pattern id="hy7" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 3H6" stroke="#2A1C12" stroke-width=".8"/></pattern><pattern id="xx7" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><path d="M0 0V5" stroke="#2A1C12" stroke-width="1.2"/></pattern></defs>
+   <rect width="640" height="360" fill="#EFE2C6"/><rect width="640" height="222" fill="url(#hy7)" opacity=".55"/><circle cx="470" cy="92" r="34" fill="#EFE2C6" stroke="#2A1C12" stroke-width="2"/>
+   ${Array.from({ length: 16 }, (_, i) => { const a = i / 16 * Math.PI * 2; return `<path d="M${470 + Math.cos(a) * 40} ${92 + Math.sin(a) * 40}L${470 + Math.cos(a) * 52} ${92 + Math.sin(a) * 52}" stroke="#2A1C12" stroke-width="1.5"/>`; }).join("")}
+   <rect y="222" width="640" height="138" fill="#EFE2C6"/>${sea(230, 12, "#2A1C12", 1.3, .9, 5)}
+   <path d="${CLIFF}" fill="url(#hx7)" stroke="#2A1C12" stroke-width="2"/><path d="${CLIFF}" fill="url(#xx7)" opacity=".5"/>
+   <polygon points="170,222 192,222 187,148 175,148" fill="#EFE2C6" stroke="#2A1C12" stroke-width="2"/><rect x="171" y="170" width="20" height="9" fill="#2A1C12"/><rect x="170" y="196" width="22" height="9" fill="#2A1C12"/><rect x="172" y="138" width="18" height="10" fill="#2A1C12"/><polygon points="169,138 193,138 181,128" fill="#2A1C12"/><path d="M190 143 L640 118 M190 143 L640 166" stroke="#2A1C12" stroke-width="1" stroke-dasharray="2 4"/>${person("#2A1C12")}` },
+ { name: "Low-Poly", desc: "Faceted geometric shapes with flat-shaded triangles. Clean, modern and slightly 3D.", best: "Space, technology, the future",
+   svg: () => { let s = 11; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280; let tri = "";
+     const fan = (x0, y0, x1, y1, cols, cell) => { for (let y = y0; y < y1; y += cell) for (let x = x0; x < x1; x += cell) { const c1 = cols[Math.floor(r() * cols.length)], c2 = cols[Math.floor(r() * cols.length)]; tri += `<polygon points="${x},${y} ${x + cell},${y} ${x},${y + cell}" fill="${c1}"/><polygon points="${x + cell},${y} ${x + cell},${y + cell} ${x},${y + cell}" fill="${c2}"/>`; } };
+     fan(0, 0, 640, 222, ["#1B1E3F", "#22264D", "#2A2E5C", "#1F2347"], 37); fan(0, 222, 640, 360, ["#0F4C5C", "#13586A", "#0C4251", "#16627A"], 35);
+     return `${tri}<polygon points="470,56 501,74 501,110 470,128 439,110 439,74" fill="#E9E4F2"/><polygon points="470,56 501,74 470,92" fill="#FFFFFF"/>
+     <polygon points="0,360 0,228 70,218 140,212 210,226 248,252 268,360" fill="#3C2F2A"/><polygon points="0,228 70,218 60,280" fill="#4A3B33"/><polygon points="140,212 210,226 160,270" fill="#55443A"/><polygon points="210,226 248,252 200,300" fill="#2F2520"/>
+     <polygon points="170,222 192,222 187,148 175,148" fill="#D8D4E4"/><polygon points="181,148 187,148 192,222 181,222" fill="#B6B1C8"/><rect x="172" y="138" width="18" height="10" fill="#B6B1C8"/><rect x="176" y="141" width="10" height="6" fill="#FFC857"/><polygon points="169,138 193,138 181,128" fill="#B6B1C8"/><polygon points="188,143 640,112 640,170" fill="#FFC857" opacity=".15"/>${person("#E9E4F2")}`; } },
+ { name: "Woodblock Wave", desc: "Inspired by traditional Japanese woodblock prints: flat indigo waves with curling foam, vermilion sun, paper texture.", best: "Sea stories, nature, calm narration",
+   svg: () => `<defs><filter id="p9"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="3" seed="9"/><feColorMatrix values="0 0 0 0 .45 0 0 0 0 .35 0 0 0 0 .2 0 0 0 .12 0"/></filter></defs>
+   <rect width="640" height="360" fill="#F1E6CF"/><circle cx="470" cy="96" r="38" fill="#C8463B"/><path d="M0 70 C 140 60 260 80 380 66" stroke="#A8B3C4" stroke-width="10" stroke-linecap="round" fill="none" opacity=".5"/>
+   <rect y="222" width="640" height="138" fill="#23396B"/>
+   ${[[300, 236], [400, 262], [520, 244], [350, 300], [470, 312]].map(([x, y]) => `<path d="M${x - 50} ${y + 14} C ${x - 30} ${y - 10} ${x} ${y - 16} ${x + 16} ${y} C ${x + 8} ${y - 4} ${x} ${y + 2} ${x + 4} ${y + 8}" stroke="#F1E6CF" stroke-width="3" fill="none"/><circle cx="${x + 18}" cy="${y - 2}" r="3" fill="#F1E6CF"/><circle cx="${x + 10}" cy="${y - 10}" r="2.4" fill="#F1E6CF"/>`).join("")}
+   <path d="${CLIFF}" fill="#6F6A5E" stroke="#2B2B2B" stroke-width="2"/><polygon points="170,222 192,222 187,148 175,148" fill="#F1E6CF" stroke="#2B2B2B" stroke-width="1.6"/><rect x="172" y="138" width="18" height="10" fill="#2B2B2B"/><rect x="176" y="141" width="10" height="6" fill="#C8463B"/><polygon points="169,138 193,138 181,128" fill="#2B2B2B"/>${person("#2B2B2B")}<rect width="640" height="360" filter="url(#p9)"/>` },
+ { name: "Line & Light", desc: "Minimal black line art on warm white with one glowing amber accent. Quiet and thoughtful.", best: "Psychology, philosophy, big ideas",
+   svg: () => `<defs><radialGradient id="r10"><stop offset="0" stop-color="#F2A93B" stop-opacity=".55"/><stop offset="1" stop-color="#F2A93B" stop-opacity="0"/></radialGradient></defs>
+   <rect width="640" height="360" fill="#F6F4EF"/><circle cx="181" cy="143" r="70" fill="url(#r10)"/><polygon points="188,143 640,114 640,172" fill="#F2A93B" opacity=".14"/>
+   <g fill="none" stroke="#151515" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="470" cy="92" r="30"/><path d="M0 222H640"/><path d="M300 250 q30 -6 60 0 M420 276 q30 -6 60 0 M330 306 q30 -6 60 0" stroke-width="1.6"/>
+   <path d="${CLIFF}"/><polygon points="170,222 192,222 187,148 175,148"/><rect x="172" y="138" width="18" height="10"/><polygon points="169,138 193,138 181,128"/><circle cx="118" cy="199" r="4.2"/><path d="M114 204 Q118 201 122 204 L123 219 L113 219Z"/></g>
+   <rect x="176" y="141" width="10" height="6" fill="#F2A93B"/>` }
+];
+const grid = document.getElementById("grid");
+STYLES.forEach((s, i) => {
+  const el = document.createElement("article"); el.className = "plate";
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${s.name} style preview"></svg>`;
+  el.querySelector("svg").innerHTML = s.svg();
+  const info = document.createElement("div"); info.className = "info";
+  const num = document.createElement("span"); num.className = "num"; num.textContent = String(i + 1);
+  const h2 = document.createElement("h2"); h2.textContent = s.name; if (s.tag) { const t = document.createElement("small"); t.textContent = s.tag; h2.append(t); }
+  const p = document.createElement("p"); p.textContent = s.desc;
+  const best = document.createElement("div"); best.className = "best"; const bb = document.createElement("b"); bb.textContent = "Best for"; best.append(bb, s.best);
+  info.append(num, h2, p, best); el.append(info); grid.append(el);
+});
+})();
+</script>

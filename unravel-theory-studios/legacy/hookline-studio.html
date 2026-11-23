@@ -1,0 +1,1118 @@
+<title>Hookline Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: editing-suite split. Workflow panes on the left, a 9:16 monitor docked on the right (its own tab on phones). */
+:root{
+  --bg:#F2F3F7; --surface:#FFFFFF; --sunk:#E8EAF1; --line:#D7DAE5;
+  --ink:#121420; --muted:#5A6075; --accent:#3446F0; --accent-ink:#FFFFFF; --accent-soft:#E3E6FF;
+  --tally:#E0393F; --ok:#1F8A55; --warn:#B86E00;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C0E15; --surface:#151824; --sunk:#10131C; --line:#262B3C;
+  --ink:#ECEEF6; --muted:#9097AE; --accent:#7D8AFF; --accent-ink:#0C0E15; --accent-soft:#1F2547;
+  --tally:#FF5E64; --ok:#4CC88A; --warn:#F2B34A; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C0E15; --surface:#151824; --sunk:#10131C; --line:#262B3C;
+  --ink:#ECEEF6; --muted:#9097AE; --accent:#7D8AFF; --accent-ink:#0C0E15; --accent-soft:#1F2547;
+  --tally:#FF5E64; --ok:#4CC88A; --warn:#F2B34A; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{max-width:1320px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:18px 12px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand .rec{width:12px;height:12px;border-radius:50%;background:var(--tally);box-shadow:0 0 0 4px color-mix(in srgb,var(--tally) 20%,transparent)}
+.brand h1{font-size:22px;font-weight:850;font-stretch:125%;letter-spacing:-.01em}
+.brand small{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+.sync{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.seg{display:inline-flex;background:var(--sunk);border:1px solid var(--line);border-radius:99px;padding:3px}
+.seg button{border:0;background:transparent;padding:7px 16px;border-radius:99px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);max-width:1320px;margin:0 auto;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs-inner{display:flex;gap:4px;min-width:max-content}
+.tabs button{border:0;background:none;padding:12px 14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;display:flex;gap:8px;align-items:baseline}
+.tabs button .n{font-family:var(--f-mono);font-size:11px;opacity:.7}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .tab-video{display:none}
+
+.app{max-width:1320px;margin:20px auto 0;display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+@media (min-width:1000px){
+  .app{grid-template-columns:minmax(0,1fr) 400px}
+  .dock{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+}
+@media (max-width:999px){
+  .tabs .tab-video{display:flex}
+  .dock{display:none}
+  body[data-tab="video"] .dock{display:block}
+}
+.pane{display:none;flex-direction:column;gap:18px;min-width:0}
+.pane.on{display:flex}
+.pane-head h2{font-size:26px;font-weight:800;font-stretch:115%}
+.pane-head p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card h3{font-size:15px;font-weight:700;font-stretch:110%;letter-spacing:.01em}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label,.lbl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-width:0}
+textarea{resize:vertical;line-height:1.45}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.rec{background:var(--tally);color:#fff;border-color:var(--tally)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover,.chip.on{border-color:var(--accent);color:var(--accent)}
+.note{font-size:13px;color:var(--muted);margin:0}
+.note.err{color:var(--tally)}
+.badge{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted)}
+.badge.ex{border-color:var(--warn);color:var(--warn)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.idea{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.idea:hover{border-color:var(--accent)}
+.idea b{font-family:var(--f-display);font-stretch:110%;font-size:15px}
+.idea span{font-size:13px;color:var(--muted)}
+.idea i{font-style:normal;font-size:13px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.stat{background:var(--sunk);border-radius:8px;padding:10px 12px}
+.stat .v{font-family:var(--f-mono);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.checks{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.checks li{display:flex;gap:10px;align-items:baseline;font-size:14px}
+.checks .dot{flex:none;width:8px;height:8px;border-radius:50%;transform:translateY(-1px)}
+.checks .ok .dot{background:var(--ok)} .checks .warn .dot{background:var(--warn)}
+.checks small{color:var(--muted)}
+.script-read{background:var(--sunk);border-radius:8px;padding:14px;font-size:16px;line-height:1.6;max-width:68ch;white-space:pre-wrap}
+.hooks{display:flex;flex-direction:column;gap:6px}
+.hook-opt{display:flex;gap:10px;align-items:baseline;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 12px;cursor:pointer}
+.hook-opt:hover{border-color:var(--accent)}
+.hook-opt .badge{flex:none}
+
+.scenes{display:flex;flex-direction:column;gap:12px}
+.scene{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.scene.playing{border-color:var(--accent)}
+.thumb{width:96px;aspect-ratio:9/16;max-width:100%;border-radius:6px;background:var(--sunk);border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--muted);cursor:pointer;overflow:hidden;position:relative;padding:4px}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb.has{border-style:solid}
+.scene-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.scene-top .num{font-family:var(--f-display);font-weight:850;font-stretch:120%;font-size:18px}
+.scene-top .tc{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.scene-top .sp{margin-left:auto;display:flex;gap:2px}
+.scene-body{display:flex;flex-direction:column;gap:8px;min-width:0}
+.scene textarea.narr{font-size:16px;font-weight:500}
+.scene textarea.prm{font-size:13px;color:var(--muted)}
+.scene .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.scene select{width:auto;padding:5px 8px;font-size:13px}
+@media (max-width:520px){.scene{grid-template-columns:72px minmax(0,1fr);padding:12px;gap:10px}.thumb{width:72px}}
+
+.dock .card{gap:12px}
+.monitor{position:relative;width:100%;max-width:360px;margin:0 auto;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--line)}
+.monitor canvas{width:100%;height:100%;display:block}
+.monitor .rec-tag{position:absolute;top:10px;left:10px;font-family:var(--f-mono);font-size:11px;color:#fff;background:var(--tally);border-radius:4px;padding:2px 7px}
+.transport{display:flex;align-items:center;gap:10px}
+.transport .tc{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.play{width:40px;height:40px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center}
+.play svg{width:16px;height:16px;fill:currentColor}
+.spec{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.toggle{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.progress{height:6px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.progress div{height:100%;width:0;background:var(--tally)}
+video.result{width:100%;max-width:260px;border-radius:10px;background:#000;align-self:center}
+.file-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.file-row .name{font-size:13px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.plist{display:flex;flex-direction:column;gap:8px}
+.pitem{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.pitem.cur{border-color:var(--accent)}
+.pitem .t{font-weight:600;min-width:0;flex:1 1 200px;overflow-wrap:anywhere}
+.pitem .m{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.confirm{display:flex;gap:6px;align-items:center;font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:14px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+details summary{cursor:pointer;font-weight:600}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="rec" aria-hidden="true"></span><div><h1>Hookline Studio</h1><small>9:16 · 1080×1920 · 30 FPS</small></div></div>
+  <span class="sync" id="sync">Saved on this device</span>
+  <div class="seg" role="group" aria-label="Video format">
+    <button id="modeExplainer" aria-pressed="true">Explainer</button>
+    <button id="modeStory" aria-pressed="false">Story</button>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Steps"><div class="tabs-inner" role="tablist">
+  <button role="tab" data-tab="idea" aria-selected="true"><span class="n">1</span>Idea</button>
+  <button role="tab" data-tab="script" aria-selected="false"><span class="n">2</span>Script</button>
+  <button role="tab" data-tab="scenes" aria-selected="false"><span class="n">3</span>Scenes</button>
+  <button role="tab" data-tab="video" aria-selected="false" class="tab-video"><span class="n">4</span>Video</button>
+  <button role="tab" data-tab="projects" aria-selected="false">Projects</button>
+</div></nav>
+
+<div class="app">
+<main>
+  <!-- IDEA -->
+  <section class="pane on" id="pane-idea">
+    <div class="pane-head"><h2 id="ideaTitle">Find an idea worth 60 seconds</h2><p id="ideaSub">Pick a niche, pull ideas, then set the format. The script writer follows Shorts retention rules for you.</p></div>
+    <div class="card">
+      <div class="field"><label for="niche">Niche</label><input type="text" id="niche" placeholder="e.g. weird science"><div class="chips" id="nicheChips"></div></div>
+      <div class="row"><button class="btn" id="btnIdeas">Get 10 ideas</button><span class="note" id="ideasNote"></span></div>
+      <div class="ideas" id="ideas"></div>
+    </div>
+    <div class="card">
+      <div class="field"><label for="topic" id="topicLabel">Topic</label><textarea id="topic" rows="3" placeholder="What is the video about?"></textarea></div>
+      <div class="grid">
+        <div class="field"><label for="length">Length</label><select id="length"><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></div>
+        <div class="field"><label for="tone">Tone</label><select id="tone"></select></div>
+        <div class="field"><label for="ending">Ending</label><select id="ending"><option value="loop">Loop back to the start</option><option value="cliffhanger">Cliffhanger for Part 2</option><option value="twist">Twist reveal</option><option value="question">Question for comments</option></select></div>
+        <div class="field" id="perspField"><label for="persp">Narrator</label><select id="persp"><option value="first">First person ("I")</option><option value="second">Second person ("You")</option><option value="third">Storyteller (third person)</option></select></div>
+        <div class="field"><label for="style">Visual style</label><select id="style"></select></div>
+      </div>
+      <div class="row"><button class="btn primary" id="btnWrite">Write script</button><span class="note" id="writeNote"></span></div>
+    </div>
+  </section>
+
+  <!-- SCRIPT -->
+  <section class="pane" id="pane-script">
+    <div class="pane-head"><h2>Script</h2><p>Tune the hook first. Most viewers decide in the first two seconds whether to swipe.</p></div>
+    <div class="card">
+      <div class="field"><label for="hook">Hook (scene 1)</label><textarea id="hook" rows="2"></textarea></div>
+      <div class="row"><button class="btn" id="btnHooks">Give me 5 better hooks</button><span class="note" id="hooksNote"></span></div>
+      <div class="hooks" id="hookOpts"></div>
+    </div>
+    <div class="card">
+      <div class="stats" id="stats"></div>
+      <ul class="checks" id="checks"></ul>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h3>Full script</h3>
+        <div class="row"><button class="btn small" id="btnRead">Read aloud</button><button class="btn small" id="btnCopyScript">Copy</button><button class="btn small" id="btnPart2">Write Part 2</button></div></div>
+      <div class="script-read" id="scriptRead"></div>
+      <details><summary>Use my own script instead</summary>
+        <div class="field" style="margin-top:10px"><label for="ownScript">Paste a script. It is split into scenes by sentence.</label><textarea id="ownScript" rows="6"></textarea></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="btnSplit">Split into scenes</button></div>
+      </details>
+    </div>
+    <div class="card">
+      <h3>Upload kit</h3>
+      <div class="field"><span class="lbl">Title options</span><div class="hooks" id="titles"></div></div>
+      <div class="field"><label for="desc">Description</label><textarea id="desc" rows="3"></textarea></div>
+      <div class="field"><label for="tags">Hashtags</label><input type="text" id="tags"></div>
+      <div class="field"><label for="pinned">Pinned comment</label><input type="text" id="pinned"></div>
+      <div class="row"><button class="btn small" id="btnCopyKit">Copy description and hashtags</button></div>
+      <p class="note">When you upload, mark the video as altered or synthetic content if it shows realistic AI-made people or events.</p>
+    </div>
+  </section>
+
+  <!-- SCENES -->
+  <section class="pane" id="pane-scenes">
+    <div class="pane-head"><h2>Scenes</h2><p>One line per scene, about 3 seconds each. Copy each image prompt into your image generator, then add the image to its scene.</p></div>
+    <div class="card">
+      <div class="field"><label for="styleText">Style added to every prompt</label><input type="text" id="styleText"></div>
+      <div class="field" id="charField"><label for="character">Recurring character (kept identical in every prompt)</label><input type="text" id="character" placeholder="e.g. a tired night-shift nurse, 30s, short black hair, teal scrubs"></div>
+      <div class="row"><button class="btn small" id="btnCopyPrompts">Copy all image prompts</button><label class="btn small" for="bulkImg">Add images in order</label><input type="file" id="bulkImg" class="hidden-file" accept="image/*" multiple></div>
+    </div>
+    <div class="scenes" id="scenes"></div>
+    <div class="row"><button class="btn" id="btnAddScene">Add scene</button></div>
+  </section>
+
+  <!-- VIDEO (controls; monitor lives in the dock) -->
+  <section class="pane" id="pane-video">
+    <div class="pane-head"><h2>Video</h2><p>Add a voiceover and music, preview it, then render a vertical video ready for Shorts.</p></div>
+    <div class="card">
+      <h3>Audio</h3>
+      <div class="field"><span class="lbl">Voiceover</span>
+        <div class="file-row"><label class="btn small" for="voiceIn">Add voiceover</label><input type="file" id="voiceIn" class="hidden-file" accept="audio/*,video/mp4"><span class="name" id="voiceName">None. Scenes are timed at the reading speed below.</span><button class="btn small ghost" id="voiceDel" hidden>Remove</button></div>
+        <p class="note">Record it with your phone's voice memos, or export it from a voice generator, then add the file here. Scene timing follows its length.</p>
+      </div>
+      <div class="field"><span class="lbl">Background music</span>
+        <div class="file-row"><label class="btn small" for="musicIn">Add music</label><input type="file" id="musicIn" class="hidden-file" accept="audio/*"><span class="name" id="musicName">None</span><button class="btn small ghost" id="musicDel" hidden>Remove</button></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label for="musicVol">Music volume <span class="mono" id="musicVolV"></span></label><input type="range" id="musicVol" min="0" max="0.6" step="0.01"></div>
+        <div class="field"><label for="wps">Reading speed <span class="mono" id="wpsV"></span></label><input type="range" id="wps" min="1.8" max="3.6" step="0.1"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Captions and overlays</h3>
+      <div class="grid">
+        <div class="field"><label for="capStyle">Caption style</label><select id="capStyle"><option value="pop">Bold pop (word by word)</option><option value="clean">Clean subtitle</option><option value="story">Story (soft, mixed case)</option><option value="none">No captions</option></select></div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="hookOverlay"> Show the hook as a title card for the first 2.5 seconds</label>
+      <label class="toggle"><input type="checkbox" id="safeZone"> Show where the Shorts buttons and title cover the frame (preview only)</label>
+    </div>
+    <div class="card">
+      <h3>Render</h3>
+      <p class="note" id="renderNote">Rendering runs in real time, so a 45-second video takes about 45 seconds. Keep this screen open until it finishes.</p>
+      <div class="row"><button class="btn rec" id="btnRender">Render video</button><button class="btn" id="btnCancel" hidden>Stop</button></div>
+      <div class="progress" id="prog" hidden><div></div></div>
+      <video class="result" id="result" controls playsinline hidden></video>
+      <div class="row" id="saveRow" hidden><button class="btn primary" id="btnSave">Save video</button><span class="note" id="saveNote"></span></div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="pane" id="pane-projects">
+    <div class="pane-head"><h2>Projects</h2><p id="projSub">Every script you write is kept here.</p></div>
+    <div class="row"><button class="btn primary" id="btnNew">New project</button></div>
+    <div class="plist" id="plist"></div>
+  </section>
+</main>
+
+<aside class="dock" aria-label="Preview">
+  <div class="card">
+    <div class="spec"><span id="dockTitle">Preview</span><span>9:16</span></div>
+    <div class="monitor"><canvas id="cv" width="1080" height="1920"></canvas><span class="rec-tag" id="recTag" hidden>REC</span></div>
+    <div class="transport">
+      <button class="play" id="btnPlay" aria-label="Play"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4 2l10 6-10 6z"/></svg></button>
+      <input type="range" id="scrub" min="0" max="10" step="0.01" value="0" aria-label="Playhead">
+      <span class="tc" id="tc">00:00.0 / 00:00.0</span>
+    </div>
+    <div class="row" style="justify-content:space-between"><span class="note" id="dockNote"></span><button class="btn small" id="btnGoVideo">Render</button></div>
+  </div>
+</aside>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "value" || k === "checked" || k === "disabled" || k === "hidden") el[k] = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) { if (kid == null || kid === false) continue; el.append(kid.nodeType ? kid : document.createTextNode(String(kid))); }
+  return el;
+}
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const words = s => (s || "").trim().split(/\s+/).filter(Boolean);
+const fmt = t => { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = t - m * 60; return String(m).padStart(2, "0") + ":" + s.toFixed(1).padStart(4, "0"); };
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2200); }
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); toast("Copied"); }
+  catch { const ta = h("textarea", { value: text }); document.body.append(ta); ta.select(); try { document.execCommand("copy"); toast("Copied"); } catch { toast("Select the text and copy it"); } ta.remove(); }
+}
+
+/* ---------- Presets ---------- */
+const STYLES = [
+  { id: "cinematic", label: "Cinematic photo", text: "cinematic photograph, 35mm film look, dramatic lighting, shallow depth of field, vertical 9:16, no text" },
+  { id: "darkpaint", label: "Dark oil painting", text: "dark moody oil painting, heavy brush strokes, chiaroscuro lighting, muted palette, vertical 9:16, no text" },
+  { id: "anime", label: "Anime", text: "detailed anime illustration, cel shading, vivid rim light, vertical 9:16, no text" },
+  { id: "soft3d", label: "Soft 3D render", text: "soft stylized 3D render, clay-like materials, warm studio lighting, vertical 9:16, no text" },
+  { id: "archival", label: "Archival documentary", text: "vintage archival photograph, heavy film grain, faded color, documentary style, vertical 9:16, no text" },
+  { id: "comic", label: "Graphic novel", text: "graphic novel panel, bold ink lines, halftone shading, limited palette, vertical 9:16, no text" },
+  { id: "infographic", label: "Clean infographic", text: "clean minimal 3D infographic illustration, simple shapes, bright solid background, vertical 9:16, no text" }
+];
+const MODES = {
+  explainer: {
+    niches: ["Weird science", "Psychology", "Human body", "Space", "History facts", "Money", "Animals", "Tech explained"],
+    tones: ["Curious and fast", "Mind-blown", "Calm and clear", "Funny", "Urgent warning"],
+    title: "Find an idea worth 60 seconds", topicLabel: "Topic or question",
+    topicPh: "e.g. Why can't you tickle yourself?", wps: 2.7, ending: "loop", style: "cinematic"
+  },
+  story: {
+    niches: ["Creepy encounters", "Unsolved mysteries", "Revenge and drama", "Sci-fi twist", "Historical legends", "Survival", "Wholesome"],
+    tones: ["Suspenseful", "Creepy", "Emotional", "Epic", "Dark humor"],
+    title: "Find a story people can't swipe away from", topicLabel: "Story premise",
+    topicPh: "e.g. A night guard notices the museum mannequins face a different way every hour", wps: 2.4, ending: "cliffhanger", style: "darkpaint"
+  }
+};
+const MOTIONS = [["zoom-in", "Zoom in"], ["zoom-out", "Zoom out"], ["pan-left", "Pan left"], ["pan-right", "Pan right"], ["static", "Hold"]];
+
+function newProject(mode = "explainer") {
+  const m = MODES[mode];
+  return { id: uid(), mode, topic: "", niche: "", length: 45, tone: m.tones[0], ending: m.ending, persp: "first",
+    style: m.style, styleText: "", character: "", hook: "", scenes: [], titles: [], description: "", hashtags: "", pinned: "",
+    capStyle: mode === "story" ? "story" : "pop", hookOverlay: mode === "explainer", wps: m.wps, musicVol: 0.18,
+    ideas: [], hookOptions: [], createdAt: Date.now(), updatedAt: Date.now() };
+}
+function exampleProject() {
+  const p = newProject("explainer");
+  const S = (narration, prompt, motion) => ({ id: uid(), narration, prompt, motion });
+  Object.assign(p, { example: true, niche: "Weird science", topic: "Why can't you tickle yourself?", length: 30,
+    hook: "Try tickling yourself right now. Nothing happens.",
+    scenes: [
+      S("Try tickling yourself right now. Nothing happens.", "extreme close-up of a hand hovering over a person's own ribs, puzzled face in soft focus behind", "zoom-in"),
+      S("That's not a fluke. Your brain is blocking it on purpose.", "translucent glowing human brain inside a dark head silhouette, a red stop signal pulsing at the back", "zoom-out"),
+      S("A region at the back of your brain predicts every move you make.", "the cerebellum at the back of a brain glowing blue, faint motion trails of a moving arm behind it", "pan-right"),
+      S("It sends a spoiler of what your own touch will feel like.", "a glowing spark racing along a nerve from brain to fingertip, neon light trails, dark background", "pan-left"),
+      S("The real feeling matches the spoiler, so your brain turns it down.", "an old audio mixing desk with one slider pulled down, dramatic side light", "zoom-in"),
+      S("Tickling only works when you can't predict it.", "a startled friend jumping as someone sneaks up behind them in a living room, candid", "static"),
+      S("Scientists built a robot that tickled people a split second late.", "lab robotic arm with a soft foam tip touching a volunteer's palm, white lab, blue monitors", "pan-right"),
+      S("Add a delay of a fifth of a second, and it tickles again.", "large analog stopwatch frozen at 0.2 seconds, motion blur around it, dark background", "zoom-out"),
+      S("So go ahead. Try tickling yourself again.", "the same hand from the first shot, now relaxed, a laughing face in soft focus behind", "zoom-out")
+    ],
+    titles: ["Why You Can't Tickle Yourself", "Your Brain Blocks Your Own Tickle", "Try Tickling Yourself (It Won't Work)"],
+    description: "Your cerebellum predicts every touch you make, and that prediction cancels the tickle. Delay the touch by a fifth of a second and it works again.",
+    hashtags: "#science #brain #psychology #facts #shorts", pinned: "Could you ever tickle yourself? Tell me below." });
+  return p;
+}
+
+/* ---------- Media store (images and audio stay on this device) ---------- */
+const media = {
+  db: null,
+  async open() {
+    try { this.db = await new Promise((res, rej) => { const r = indexedDB.open("hookline-media", 1); r.onupgradeneeded = () => r.result.createObjectStore("m"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+    catch { this.db = null; }
+  },
+  tx(mode, fn) { return new Promise((res) => { if (!this.db) return res(null); try { const t = this.db.transaction("m", mode); const r = fn(t.objectStore("m")); t.oncomplete = () => res(r && r.result); t.onerror = () => res(null); } catch { res(null); } }); },
+  put(k, v) { return this.tx("readwrite", s => s.put(v, k)); },
+  get(k) { return this.tx("readonly", s => s.get(k)); },
+  del(k) { return this.tx("readwrite", s => s.delete(k)); }
+};
+const imgCache = new Map(); // key -> {img, url}
+let voice = null, music = null; // {buf, name}
+async function blobToImage(blob) { const url = URL.createObjectURL(blob); const img = new Image(); img.src = url; try { await img.decode(); } catch {} return { img, url }; }
+async function decodeAudio(blob) { const ab = await blob.arrayBuffer(); const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext; const oc = new AC(2, 44100, 44100); return await new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); }
+async function loadMedia(p) {
+  for (const s of p.scenes) {
+    const k = p.id + ":" + s.id;
+    if (imgCache.has(k)) continue;
+    const rec = await media.get(k);
+    if (rec && rec.blob) imgCache.set(k, await blobToImage(rec.blob));
+  }
+  voice = null; music = null;
+  for (const which of ["voice", "music"]) {
+    const rec = await media.get(p.id + ":" + which);
+    if (rec && rec.blob) { try { const buf = await decodeAudio(rec.blob); if (which === "voice") voice = { buf, name: rec.name }; else music = { buf, name: rec.name }; } catch {} }
+  }
+  if (P && P.id === p.id) { renderScenes(); renderAudio(); updateTimeline(); }
+}
+async function setSceneImage(s, file) {
+  const k = P.id + ":" + s.id;
+  const old = imgCache.get(k); if (old) URL.revokeObjectURL(old.url);
+  imgCache.set(k, await blobToImage(file));
+  await media.put(k, { blob: file });
+  s.hasImage = true; changed();
+}
+
+/* ---------- Project storage (account sync when available, else this device) ---------- */
+const LS_KEY = "hookline.projects.v1";
+const store = {
+  mode: "local", col: null, list: [], queue: new Map(), writing: new Set(),
+  readLocal() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } },
+  writeLocal(map) { try { localStorage.setItem(LS_KEY, JSON.stringify(map)); } catch {} },
+  initLocal() { const map = this.readLocal(); this.list = Object.values(map).sort((a, b) => b.updatedAt - a.updatedAt); },
+  async initRemote() {
+    if (!window.claude || !window.claude.use) return;
+    try {
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      if (!db || !user) return;
+      const id = await user.id(); if (!id) return;
+      this.col = db.collection("data/users/" + id + "/projects");
+      this.mode = "remote";
+      $("#sync").textContent = "Connecting…";
+      let first = true;
+      const timer = setTimeout(() => { $("#sync").textContent = "Sync is slow. Saving on this device too"; }, 10000);
+      this.col.orderBy("updatedAt", "desc").limit(200).onSnapshot(snap => {
+        if (!snap.metadata.fromCache) { clearTimeout(timer); $("#sync").textContent = "Synced to your account"; }
+        this.list = snap.docs.map(d => d.data()).filter(Boolean);
+        if (first && !snap.metadata.fromCache) {
+          first = false;
+          const local = Object.values(this.readLocal());
+          const have = new Set(this.list.map(p => p.id));
+          local.filter(p => !have.has(p.id)).forEach(p => this.save(p, true));
+        }
+        onListChanged();
+      }, () => { clearTimeout(timer); this.mode = "local"; $("#sync").textContent = "Saved on this device"; this.initLocal(); onListChanged(); });
+    } catch { this.mode = "local"; }
+  },
+  save(p, now = false) {
+    const map = this.readLocal(); map[p.id] = p; this.writeLocal(map);
+    if (this.mode !== "remote") { this.list = Object.values(map).sort((a, b) => b.updatedAt - a.updatedAt); onListChanged(); return; }
+    clearTimeout(this.queue.get(p.id));
+    this.queue.set(p.id, setTimeout(() => this.flush(p), now ? 0 : 1200));
+  },
+  async flush(p) {
+    if (this.writing.has(p.id)) { this.queue.set(p.id, setTimeout(() => this.flush(p), 600)); return; }
+    this.writing.add(p.id);
+    try { await this.col.doc(p.id).set(JSON.parse(JSON.stringify(p))); }
+    catch (e) { $("#sync").textContent = e && e.code === "quota_exceeded" ? "Account storage full. Saved on this device" : "Couldn't sync. Saved on this device"; }
+    finally { this.writing.delete(p.id); }
+  },
+  async remove(id) {
+    const map = this.readLocal(); delete map[id]; this.writeLocal(map);
+    if (this.mode === "remote") { try { await this.col.doc(id).delete(); } catch {} }
+    else { this.list = Object.values(map).sort((a, b) => b.updatedAt - a.updatedAt); onListChanged(); }
+  }
+};
+let P = exampleProject();
+let touched = false;
+function changed(structural) {
+  P.updatedAt = Date.now();
+  if (P.example) { delete P.example; }
+  touched = true;
+  store.save(P);
+  updateTimeline();
+  renderStats();
+  if (structural) renderScenes();
+}
+function onListChanged() {
+  if (!touched && P.example && store.list.length) { openProject(store.list[0]); return; }
+  renderProjects();
+}
+
+/* ---------- AI ---------- */
+let samplerP = null;
+function sampler() { if (!samplerP) samplerP = (window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null); return samplerP; }
+const AI_ERR = {
+  not_granted: "AI writing is off for this page. Allow it from the page's permissions to use it.",
+  rate_limited: "Too many requests at once. Wait a moment and try again.",
+  invalid_json: "The answer came back in the wrong shape. Try again.",
+  refused: "Claude declined this topic. Try a different angle.",
+  unavailable: "AI writing isn't available in this view. You can still paste your own script on the Script tab.",
+  prompt_too_large: "The project is too long to send. Remove some scenes and try again."
+};
+const aiErr = e => AI_ERR[e && e.code] || "Something went wrong. Try again.";
+async function busy(btn, label, fn) {
+  const old = [...btn.childNodes]; btn.disabled = true; btn.replaceChildren(h("span", { class: "spin" }), label);
+  try { return await fn(); } finally { btn.disabled = false; btn.replaceChildren(...old); }
+}
+function targetWords(p) { return Math.round(p.length * p.wps); }
+function styleText(p) { return p.styleText || (STYLES.find(s => s.id === p.style) || STYLES[0]).text; }
+const RULES = {
+  explainer: `FORMAT: AI explainer Short.
+- Scene 1 is the hook: 12 words or fewer. A surprising claim, a sharp question, or a contradiction that opens a curiosity gap. Never open with "Did you know", "In this video", "Hey guys", or "Today".
+- Scene 2 raises the stakes or says why it matters to the viewer.
+- Then deliver the answer as escalating micro-reveals. Each scene gives one new piece; keep one open question until the final 20%.
+- Plain words a 12-year-old understands. Concrete comparisons beat abstractions. Speak to "you".
+- Only include facts you are confident are true. No made-up numbers or studies.`,
+  story: `FORMAT: AI storyteller Short.
+- Scene 1 starts in the middle of the most tense moment. No setup, no greetings, no character names in line one.
+- Short punchy sentences, one consistent tense, vivid sensory detail (sound, smell, light).
+- Escalate every 2 or 3 scenes. Each scene should make the viewer need the next one.
+- An original story only. No copyrighted characters, no real private people.`
+};
+const ENDINGS = {
+  loop: "The final line must flow straight back into the first line so the video loops seamlessly when it replays.",
+  cliffhanger: "End on an unresolved cliffhanger that makes people want Part 2. The last scene can be a very short line like 'Part 2?' only if it fits.",
+  twist: "Land a twist in the final 2 scenes that recontextualizes everything before it.",
+  question: "End with a short, specific question viewers will want to answer in the comments."
+};
+const PERSP = { first: "Narrate in first person (I).", second: "Narrate in second person (you).", third: "Narrate as a storyteller in third person." };
+function scriptPrompt(p, extra = "") {
+  return `You are an elite YouTube Shorts scriptwriter whose videos hold 90%+ retention.
+Write a ${p.length}-second vertical Short.
+
+${RULES[p.mode]}
+- Ending: ${ENDINGS[p.ending]}
+${p.mode === "story" ? "- " + PERSP[p.persp] : ""}
+
+Topic: ${p.topic || "(pick a strong one in the niche)"}
+Niche: ${p.niche || "general"}
+Tone: ${p.tone}
+Visual style of the images: ${styleText(p)}
+${p.character ? "Recurring character: " + p.character : ""}
+${extra}
+
+SCENES:
+- Total narration about ${targetWords(p)} words (spoken at ${p.wps} words per second). Do not exceed it by more than 10%.
+- One scene = one sentence or phrase of 5 to 14 words, about 2 to 4 seconds on screen. Use ${Math.max(6, Math.round(p.length / 3.2))} to ${Math.round(p.length / 2.4)} scenes.
+- Scene 1 narration is the hook.
+- "prompt" describes ONE vertical image for that moment: subject, action, setting, camera angle, lighting. Concrete and visual. No text, letters, logos, real people, brands, or copyrighted characters. Do not repeat the style words; they are added separately.
+- If a character recurs, describe them in "character" once (age, hair, clothing) and repeat that exact description inside every prompt they appear in.
+- "motion" is one of: zoom-in, zoom-out, pan-left, pan-right, static. Vary it.
+
+Reply with ONLY this JSON:
+{"hook":"...","character":"... or empty","scenes":[{"narration":"...","prompt":"...","motion":"zoom-in"}],"titles":["3 title options under 60 characters, curiosity-driven, no clickbait lies"],"description":"2 sentences","hashtags":"5 to 7 hashtags separated by spaces, include #shorts","pinnedComment":"one line that invites replies"}`;
+}
+function scriptText(p) { return p.scenes.map(s => s.narration.trim()).filter(Boolean).join(" "); }
+function applyScript(p, r) {
+  if (!r || !Array.isArray(r.scenes) || !r.scenes.length) throw { code: "invalid_json" };
+  p.scenes = r.scenes.filter(s => s && s.narration).map(s => ({ id: uid(), narration: String(s.narration), prompt: String(s.prompt || ""), motion: MOTIONS.some(m => m[0] === s.motion) ? s.motion : "zoom-in" }));
+  p.hook = p.scenes[0].narration;
+  if (r.character) p.character = String(r.character);
+  p.titles = Array.isArray(r.titles) ? r.titles.map(String).slice(0, 5) : [];
+  p.description = String(r.description || "");
+  p.hashtags = String(r.hashtags || "");
+  p.pinned = String(r.pinnedComment || "");
+  p.hookOptions = [];
+}
+
+/* ---------- Tabs ---------- */
+function setTab(name) {
+  document.body.dataset.tab = name;
+  $$(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  $$(".pane").forEach(p => p.classList.toggle("on", p.id === "pane-" + name));
+  try { localStorage.setItem("hookline.tab", name); } catch {}
+  drawNow();
+}
+$$(".tabs button").forEach(b => b.addEventListener("click", () => { setTab(b.dataset.tab); window.scrollTo({ top: 0 }); }));
+$("#btnGoVideo").addEventListener("click", () => setTab("video"));
+
+/* ---------- Idea pane ---------- */
+function fillSelect(sel, opts, val) { sel.replaceChildren(...opts.map(o => h("option", { value: o[0], text: o[1] }))); sel.value = val; }
+function renderIdea() {
+  const m = MODES[P.mode];
+  $("#modeExplainer").setAttribute("aria-pressed", String(P.mode === "explainer"));
+  $("#modeStory").setAttribute("aria-pressed", String(P.mode === "story"));
+  $("#ideaTitle").textContent = m.title;
+  $("#topicLabel").textContent = m.topicLabel;
+  $("#topic").placeholder = m.topicPh;
+  $("#niche").value = P.niche; $("#topic").value = P.topic; $("#length").value = String(P.length);
+  fillSelect($("#tone"), m.tones.map(t => [t, t]), P.tone);
+  if (!m.tones.includes(P.tone)) { $("#tone").append(h("option", { value: P.tone, text: P.tone })); $("#tone").value = P.tone; }
+  $("#ending").value = P.ending; $("#persp").value = P.persp;
+  $("#perspField").hidden = P.mode !== "story";
+  fillSelect($("#style"), STYLES.map(s => [s.id, s.label]), P.style);
+  $("#nicheChips").replaceChildren(...m.niches.map(n => h("button", { class: "chip" + (n === P.niche ? " on" : ""), type: "button", text: n, onclick: () => { P.niche = n; $("#niche").value = n; changed(); renderIdea(); } })));
+  renderIdeas();
+}
+function renderIdeas() {
+  $("#ideas").replaceChildren(...(P.ideas || []).map(i => h("button", { class: "idea", type: "button", onclick: () => { P.topic = i.title + (i.angle ? ". Angle: " + i.angle : ""); $("#topic").value = P.topic; changed(); $("#topic").focus(); toast("Topic set. Now write the script"); } },
+    h("b", { text: i.title }), h("i", { text: "“" + i.hook + "”" }), i.angle ? h("span", { text: i.angle }) : null)));
+}
+function setMode(mode) {
+  if (P.mode === mode) return;
+  const m = MODES[mode];
+  P.mode = mode; P.tone = m.tones[0]; P.ending = m.ending; P.wps = m.wps; P.style = m.style; P.styleText = "";
+  P.capStyle = mode === "story" ? "story" : "pop"; P.hookOverlay = mode === "explainer"; P.ideas = [];
+  changed(); renderAll();
+}
+$("#modeExplainer").addEventListener("click", () => setMode("explainer"));
+$("#modeStory").addEventListener("click", () => setMode("story"));
+const bind = (id, key, conv = v => v, after) => $(id).addEventListener("input", e => { P[key] = conv(e.target.type === "checkbox" ? e.target.checked : e.target.value); changed(); after && after(); });
+bind("#niche", "niche"); bind("#topic", "topic"); bind("#length", "length", Number); bind("#tone", "tone");
+bind("#ending", "ending"); bind("#persp", "persp");
+bind("#style", "style", v => v, () => { P.styleText = ""; $("#styleText").value = styleText(P); });
+
+$("#btnIdeas").addEventListener("click", e => busy(e.currentTarget, "Finding ideas…", async () => {
+  $("#ideasNote").textContent = ""; $("#ideasNote").className = "note";
+  const sample = await sampler();
+  try {
+    if (!sample) throw { code: "unavailable" };
+    const avoid = (P.ideas || []).map(i => i.title).join("; ");
+    const r = await sample.json(`You find YouTube Shorts ideas that go viral. Format: ${P.mode === "story" ? "AI storyteller (short original fiction narrated over AI images)" : "AI explainer (one surprising idea explained in under a minute)"}.
+Niche: ${P.niche || "anything with broad appeal"}. Tone: ${P.tone}.
+Give 10 ideas. Each must have a built-in curiosity gap, work in ${P.length} seconds, and be visual enough to illustrate scene by scene. ${P.mode === "explainer" ? "Only topics with solid, verifiable answers." : "Original premises only, no copyrighted characters."}
+${avoid ? "Do not repeat these: " + avoid : ""}
+Reply with ONLY a JSON array of 10 objects: [{"title":"short working title","hook":"the opening line, 12 words max","angle":"one sentence on why people will watch to the end"}]`, { modelTier: "default", cache: false });
+    if (!Array.isArray(r)) throw { code: "invalid_json" };
+    P.ideas = r.filter(i => i && i.title).map(i => ({ title: String(i.title), hook: String(i.hook || ""), angle: String(i.angle || "") }));
+    changed(); renderIdeas();
+  } catch (err) { $("#ideasNote").textContent = aiErr(err); $("#ideasNote").className = "note err"; }
+}));
+
+$("#btnWrite").addEventListener("click", e => {
+  if (!P.topic.trim() && !P.niche.trim()) { $("#writeNote").textContent = "Add a topic or pick a niche first."; $("#writeNote").className = "note err"; return; }
+  return busy(e.currentTarget, "Writing script…", async () => {
+    $("#writeNote").className = "note"; $("#writeNote").textContent = "This usually takes 20 to 60 seconds.";
+    const sample = await sampler();
+    try {
+      if (!sample) throw { code: "unavailable" };
+      const r = await sample.json(scriptPrompt(P), { modelTier: "default", cache: false });
+      applyScript(P, r);
+      $("#writeNote").textContent = "";
+      changed(true); renderAll(); setTab("script");
+      toast("Script ready");
+    } catch (err) { $("#writeNote").textContent = aiErr(err); $("#writeNote").className = "note err"; }
+  });
+});
+
+/* ---------- Script pane ---------- */
+function renderScript() {
+  $("#hook").value = P.hook || (P.scenes[0] && P.scenes[0].narration) || "";
+  $("#scriptRead").textContent = scriptText(P) || "No script yet. Write one from the Idea tab, or paste your own below.";
+  $("#hookOpts").replaceChildren(...(P.hookOptions || []).map(o => h("button", { class: "hook-opt", type: "button", onclick: () => setHook(o.text) }, h("span", { class: "badge", text: o.type }), h("span", { text: o.text }))));
+  $("#titles").replaceChildren(...(P.titles.length ? P.titles : ["Titles appear after you write a script"]).map(t => h("button", { class: "hook-opt", type: "button", onclick: () => P.titles.length && copy(t) }, h("span", { text: t }), P.titles.length ? h("span", { class: "badge", text: "copy" }) : null)));
+  $("#desc").value = P.description; $("#tags").value = P.hashtags; $("#pinned").value = P.pinned;
+  $("#btnPart2").hidden = P.mode !== "story";
+  renderStats();
+}
+function setHook(text) {
+  P.hook = text;
+  if (P.scenes.length) P.scenes[0].narration = text; else P.scenes.push({ id: uid(), narration: text, prompt: "", motion: "zoom-in" });
+  changed(true); renderScript(); toast("Hook updated");
+}
+$("#hook").addEventListener("input", e => { P.hook = e.target.value; if (P.scenes[0]) P.scenes[0].narration = e.target.value; changed(); $("#scriptRead").textContent = scriptText(P); syncSceneText(0); });
+bind("#desc", "description"); bind("#tags", "hashtags"); bind("#pinned", "pinned");
+
+const BANNED = /^(did you know|in this video|hey guys|hi guys|today|so,? today|welcome)/i;
+function renderStats() {
+  const tl = timeline();
+  const w = words(scriptText(P)).length;
+  const longest = tl.segs.reduce((m, s) => Math.max(m, s.end - s.start), 0);
+  const withImg = P.scenes.filter(s => imgCache.has(P.id + ":" + s.id)).length;
+  $("#stats").replaceChildren(
+    stat(w, "Words"), stat(fmt(tl.total).replace(/^00:/, "") + "s", voice ? "Length (voice)" : "Est. length"),
+    stat(P.scenes.length, "Scenes"), stat(withImg + "/" + P.scenes.length, "Images"));
+  const hookW = words(P.hook).length;
+  const checks = [
+    [hookW > 0 && hookW <= 12, `Hook is ${hookW} words`, "Aim for 12 or fewer so it lands before the first swipe."],
+    [!BANNED.test((P.hook || "").trim()), "Hook skips slow openers", "Cut “Did you know”, greetings and “In this video”."],
+    [tl.total <= P.length + 5, `Runs ${tl.total.toFixed(0)}s against a ${P.length}s target`, "Trim lines or raise the reading speed."],
+    [longest <= 4.5, `Longest scene holds ${longest.toFixed(1)}s`, "Split long lines. A new visual every 2 to 4 seconds keeps people watching."],
+    [P.scenes.length > 0 && withImg === P.scenes.length, `${withImg} of ${P.scenes.length} scenes have images`, "Scenes without an image render as a color card."]
+  ];
+  $("#checks").replaceChildren(...checks.map(([ok, label, fix]) => h("li", { class: ok ? "ok" : "warn" }, h("span", { class: "dot" }), h("span", {}, label, ok ? null : h("small", { text: " · " + fix })))));
+}
+const stat = (v, k) => h("div", { class: "stat" }, h("div", { class: "v", text: String(v) }), h("div", { class: "k", text: k }));
+
+$("#btnHooks").addEventListener("click", e => busy(e.currentTarget, "Writing hooks…", async () => {
+  $("#hooksNote").textContent = ""; $("#hooksNote").className = "note";
+  const sample = await sampler();
+  try {
+    if (!sample) throw { code: "unavailable" };
+    const r = await sample.json(`You write opening hooks for YouTube Shorts (${P.mode === "story" ? "AI storytelling" : "AI explainer"}).
+Here is the script:
+"""${scriptText(P) || P.topic}"""
+Write 5 alternative opening lines for scene 1, each a different type: Question, Bold claim, Contradiction, In the middle of the action, Direct warning. Each 12 words or fewer, must flow naturally into scene 2, and must not open with "Did you know" or a greeting. Be accurate; no false claims.
+Reply with ONLY a JSON array: [{"type":"Question","text":"..."}]`, { modelTier: "default", cache: false });
+    if (!Array.isArray(r)) throw { code: "invalid_json" };
+    P.hookOptions = r.filter(o => o && o.text).map(o => ({ type: String(o.type || "Hook"), text: String(o.text) }));
+    changed(); renderScript();
+  } catch (err) { $("#hooksNote").textContent = aiErr(err); $("#hooksNote").className = "note err"; }
+}));
+$("#btnCopyScript").addEventListener("click", () => copy(scriptText(P)));
+$("#btnCopyKit").addEventListener("click", () => copy([P.description, "", P.hashtags].join("\n").trim()));
+$("#btnSplit").addEventListener("click", () => {
+  const txt = $("#ownScript").value.trim(); if (!txt) return;
+  const parts = [];
+  txt.replace(/\s+/g, " ").split(/(?<=[.!?…])\s+/).forEach(sent => {
+    const w = words(sent);
+    if (w.length <= 15) { parts.push(sent); return; }
+    let buf = [];
+    sent.split(/(?<=[,;:—])\s+/).forEach(c => { const cw = words(c); if (buf.length && buf.length + cw.length > 14) { parts.push(buf.join(" ")); buf = []; } buf.push(...cw); });
+    if (buf.length) parts.push(buf.join(" "));
+  });
+  P.scenes = parts.map((n, i) => ({ id: uid(), narration: n, prompt: "", motion: MOTIONS[i % 4][0] }));
+  P.hook = P.scenes[0] ? P.scenes[0].narration : "";
+  changed(true); renderAll(); toast(P.scenes.length + " scenes created");
+});
+$("#btnPart2").addEventListener("click", e => busy(e.currentTarget, "Writing Part 2…", async () => {
+  const sample = await sampler();
+  try {
+    if (!sample) throw { code: "unavailable" };
+    const prev = P;
+    const next = Object.assign(newProject("story"), { niche: prev.niche, tone: prev.tone, persp: prev.persp, style: prev.style, styleText: prev.styleText, character: prev.character, length: prev.length, ending: prev.ending, capStyle: prev.capStyle, wps: prev.wps,
+      topic: "Part 2 of: " + (prev.titles[0] || prev.topic) });
+    const r = await sample.json(scriptPrompt(next, `This is PART 2. Part 1 narration was:\n"""${scriptText(prev)}"""\nPick up exactly where Part 1 ended. Scene 1 should re-hook new viewers in one line without recapping slowly. Keep the same character and voice.`), { modelTier: "default", cache: false });
+    applyScript(next, r);
+    P = next; changed(true); renderAll(); loadMedia(P); toast("Part 2 is a new project");
+  } catch (err) { toast(aiErr(err)); }
+}));
+
+let tts = null; let ttsP = null;
+function getTTS() { if (!ttsP) ttsP = (window.claude && window.claude.use) ? window.claude.use("tts").catch(() => null) : Promise.resolve(null); return ttsP; }
+$("#btnRead").addEventListener("click", async e => {
+  const btn = e.currentTarget;
+  tts = await getTTS();
+  if (!tts) { toast("Read aloud isn't available in this view"); return; }
+  if (btn.dataset.on === "1") { tts.stop(); return; }
+  btn.dataset.on = "1"; btn.textContent = "Stop reading";
+  try { await tts.speak(P.scenes.map(s => ({ text: s.narration })).filter(l => l.text.trim()), { voice: P.mode === "story" ? "rounded" : "buttery", rate: Math.min(1.5, Math.max(0.7, P.wps / 2.6)) }); }
+  catch (err) { if (err && err.code === "not_granted") toast("Read aloud is turned off for this page"); }
+  finally { btn.dataset.on = "0"; btn.textContent = "Read aloud"; }
+});
+
+/* ---------- Scenes pane ---------- */
+function renderScenesHead() {
+  $("#styleText").value = styleText(P);
+  $("#character").value = P.character || "";
+}
+$("#styleText").addEventListener("input", e => { P.styleText = e.target.value; changed(); });
+bind("#character", "character");
+function fullPrompt(s) { return [s.prompt.trim(), styleText(P)].filter(Boolean).join(", "); }
+$("#btnCopyPrompts").addEventListener("click", () => copy(P.scenes.map((s, i) => `Scene ${i + 1}: ${fullPrompt(s)}`).join("\n\n")));
+$("#bulkImg").addEventListener("change", async e => {
+  const files = [...e.target.files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const targets = P.scenes.filter(s => !imgCache.has(P.id + ":" + s.id));
+  const list = targets.length >= files.length ? targets : P.scenes;
+  for (let i = 0; i < files.length && i < list.length; i++) await setSceneImage(list[i], files[i]);
+  e.target.value = ""; renderScenes(); toast(Math.min(files.length, list.length) + " images added");
+});
+$("#btnAddScene").addEventListener("click", () => { P.scenes.push({ id: uid(), narration: "", prompt: "", motion: "zoom-in" }); changed(true); const last = $$("#scenes textarea.narr").pop(); last && last.focus(); });
+
+function renderScenes() {
+  const tl = timeline();
+  const box = $("#scenes");
+  if (!P.scenes.length) { box.replaceChildren(h("div", { class: "card" }, h("p", { class: "note", text: "No scenes yet. Write a script on the Idea tab, or paste your own on the Script tab." }))); return; }
+  box.replaceChildren(...P.scenes.map((s, i) => {
+    const k = P.id + ":" + s.id, im = imgCache.get(k), seg = tl.segs[i];
+    const fileId = "img-" + s.id;
+    const file = h("input", { type: "file", id: fileId, class: "hidden-file", accept: "image/*", onchange: async ev => { const f = ev.target.files[0]; if (f) { await setSceneImage(s, f); renderScenes(); } } });
+    const thumb = h("label", { class: "thumb" + (im ? " has" : ""), for: fileId, title: "Add image" }, im ? h("img", { src: im.url, alt: "Scene " + (i + 1) }) : "Add image");
+    const narr = h("textarea", { class: "narr", rows: "2", id: "narr-" + s.id, "aria-label": "Narration for scene " + (i + 1), value: s.narration, oninput: ev => { s.narration = ev.target.value; if (i === 0) { P.hook = s.narration; } changed(); updateSceneTimes(); } });
+    const prm = h("textarea", { class: "prm", rows: "2", id: "prm-" + s.id, "aria-label": "Image prompt for scene " + (i + 1), placeholder: "Image prompt", value: s.prompt, oninput: ev => { s.prompt = ev.target.value; changed(); } });
+    const mot = h("select", { id: "mot-" + s.id, "aria-label": "Camera motion", onchange: ev => { s.motion = ev.target.value; changed(); } }, ...MOTIONS.map(m => h("option", { value: m[0], text: m[1] })));
+    mot.value = s.motion || "zoom-in";
+    const move = d => { const j = i + d; if (j < 0 || j >= P.scenes.length) return; [P.scenes[i], P.scenes[j]] = [P.scenes[j], P.scenes[i]]; P.hook = P.scenes[0].narration; changed(true); };
+    let confirmDel = null;
+    const delBtn = h("button", { class: "btn small ghost", type: "button", text: "Delete", onclick: () => {
+      if (confirmDel) return;
+      confirmDel = h("span", { class: "confirm" }, "Delete scene?", h("button", { class: "btn small", type: "button", text: "Delete", onclick: () => { P.scenes.splice(i, 1); media.del(k); imgCache.delete(k); if (P.scenes[0]) P.hook = P.scenes[0].narration; changed(true); } }), h("button", { class: "btn small ghost", type: "button", text: "Keep", onclick: () => { confirmDel.remove(); confirmDel = null; } }));
+      delBtn.after(confirmDel);
+    } });
+    const rewrite = h("button", { class: "btn small", type: "button", text: "Rewrite line", onclick: ev => busy(ev.currentTarget, "Rewriting…", async () => {
+      const sample = await sampler();
+      try {
+        if (!sample) throw { code: "unavailable" };
+        const r = await sample.json(`You punch up single lines in YouTube Shorts scripts (${P.mode}). Tone: ${P.tone}.
+Full script, numbered:
+${P.scenes.map((x, j) => (j + 1) + ". " + x.narration).join("\n")}
+Rewrite line ${i + 1} so it is punchier and makes the viewer need the next line. Keep it 5 to 14 words, keep the meaning and continuity${P.mode === "explainer" ? ", keep it factually accurate" : ""}. Also write a fresh image prompt for it (subject, action, setting, angle, lighting; no text, no style words${P.character ? "; if the character appears, describe them as: " + P.character : ""}).
+Reply with ONLY JSON: {"narration":"...","prompt":"..."}`, { modelTier: "default", cache: false });
+        if (!r || !r.narration) throw { code: "invalid_json" };
+        s.narration = String(r.narration); if (r.prompt) s.prompt = String(r.prompt);
+        if (i === 0) P.hook = s.narration;
+        changed(true); renderScript();
+      } catch (err) { toast(aiErr(err)); }
+    }) });
+    return h("article", { class: "scene", id: "scene-" + s.id },
+      h("div", {}, thumb, file),
+      h("div", { class: "scene-body" },
+        h("div", { class: "scene-top" }, h("span", { class: "num", text: String(i + 1).padStart(2, "0") }), h("span", { class: "tc", "data-tc": i, text: seg ? fmt(seg.start) + " → " + fmt(seg.end) : "" }), i === 0 ? h("span", { class: "badge", text: "Hook" }) : null,
+          h("span", { class: "sp" }, h("button", { class: "btn small ghost", type: "button", "aria-label": "Move up", text: "↑", onclick: () => move(-1) }), h("button", { class: "btn small ghost", type: "button", "aria-label": "Move down", text: "↓", onclick: () => move(1) }))),
+        narr, prm,
+        h("div", { class: "acts" }, mot, h("button", { class: "btn small", type: "button", text: "Copy prompt", onclick: () => copy(fullPrompt(s)) }), rewrite, delBtn)));
+  }));
+}
+function syncSceneText(i) { const s = P.scenes[i]; if (!s) return; const el = document.getElementById("narr-" + s.id); if (el && el !== document.activeElement) el.value = s.narration; }
+function updateSceneTimes() { const tl = timeline(); $$("#scenes [data-tc]").forEach(el => { const seg = tl.segs[+el.dataset.tc]; if (seg) el.textContent = fmt(seg.start) + " → " + fmt(seg.end); }); }
+
+/* ---------- Video pane ---------- */
+function renderAudio() {
+  $("#voiceName").textContent = voice ? voice.name + " · " + fmt(voice.buf.duration) : "None. Scenes are timed at the reading speed below.";
+  $("#voiceDel").hidden = !voice;
+  $("#musicName").textContent = music ? music.name : "None";
+  $("#musicDel").hidden = !music;
+  $("#musicVol").value = String(P.musicVol); $("#musicVolV").textContent = Math.round(P.musicVol * 100) + "%";
+  $("#wps").value = String(P.wps); $("#wpsV").textContent = P.wps.toFixed(1) + " words/s";
+  $("#wps").disabled = !!voice;
+  $("#capStyle").value = P.capStyle; $("#hookOverlay").checked = !!P.hookOverlay;
+}
+async function addAudio(which, file) {
+  try {
+    const buf = await decodeAudio(file);
+    const rec = { buf, name: file.name };
+    if (which === "voice") voice = rec; else music = rec;
+    await media.put(P.id + ":" + which, { blob: file, name: file.name });
+    renderAudio(); changed(); renderScenes();
+  } catch { toast("That file couldn't be read as audio. Try an MP3, M4A or WAV."); }
+}
+$("#voiceIn").addEventListener("change", e => { const f = e.target.files[0]; if (f) addAudio("voice", f); e.target.value = ""; });
+$("#musicIn").addEventListener("change", e => { const f = e.target.files[0]; if (f) addAudio("music", f); e.target.value = ""; });
+$("#voiceDel").addEventListener("click", () => { voice = null; media.del(P.id + ":voice"); renderAudio(); changed(true); });
+$("#musicDel").addEventListener("click", () => { music = null; media.del(P.id + ":music"); renderAudio(); });
+bind("#musicVol", "musicVol", Number, () => { $("#musicVolV").textContent = Math.round(P.musicVol * 100) + "%"; if (musicGain) musicGain.gain.value = P.musicVol; });
+bind("#wps", "wps", Number, () => { $("#wpsV").textContent = P.wps.toFixed(1) + " words/s"; updateSceneTimes(); });
+bind("#capStyle", "capStyle", v => v, drawNow);
+bind("#hookOverlay", "hookOverlay", v => v, drawNow);
+$("#safeZone").addEventListener("change", drawNow);
+
+/* ---------- Timeline + drawing ---------- */
+function timeline() {
+  const ws = P.scenes.map(s => Math.max(1, words(s.narration).length));
+  const W = ws.reduce((a, b) => a + b, 0) || 1;
+  const total = voice ? voice.buf.duration : Math.max(1, W / P.wps + 0.5);
+  let t = 0;
+  const segs = P.scenes.map((s, i) => { const d = total * ws[i] / W; const seg = { s, i, start: t, end: t + d }; t += d; return seg; });
+  return { segs, total };
+}
+let TL = timeline();
+function updateTimeline() { TL = timeline(); $("#scrub").max = String(TL.total); if (!playing && !rendering) drawNow(); updateTC(); }
+
+const cv = $("#cv"), ctx = cv.getContext("2d");
+const CW = 1080, CH = 1920;
+const HUES = { explainer: [232, 262, 198, 214, 248], story: [350, 18, 280, 205, 330] };
+const ease = k => k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+function drawBG(seg, k, preview) {
+  const s = seg.s, im = imgCache.get(P.id + ":" + s.id);
+  if (im && im.img.naturalWidth) {
+    const img = im.img, base = Math.max(CW / img.naturalWidth, CH / img.naturalHeight);
+    const e = ease(Math.min(1, Math.max(0, k)));
+    let sc = 1.06, dx = 0;
+    if (s.motion === "zoom-in") sc = 1.04 + 0.16 * e;
+    else if (s.motion === "zoom-out") sc = 1.2 - 0.16 * e;
+    else if (s.motion === "pan-left") { sc = 1.2; dx = (0.5 - e) * CW * 0.14; }
+    else if (s.motion === "pan-right") { sc = 1.2; dx = (e - 0.5) * CW * 0.14; }
+    const w = img.naturalWidth * base * sc, hh = img.naturalHeight * base * sc;
+    ctx.drawImage(img, (CW - w) / 2 + dx, (CH - hh) / 2, w, hh);
+  } else {
+    const hues = HUES[P.mode], hue = hues[seg.i % hues.length];
+    const dark = P.mode === "story";
+    const g = ctx.createRadialGradient(CW * (0.3 + 0.4 * k), CH * 0.35, 80, CW / 2, CH / 2, CH * 0.85);
+    g.addColorStop(0, `hsl(${hue} 70% ${dark ? 30 : 52}%)`);
+    g.addColorStop(1, `hsl(${(hue + 30) % 360} 60% ${dark ? 6 : 16}%)`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+    if (preview) {
+      ctx.fillStyle = "rgba(255,255,255,.12)";
+      ctx.font = "800 360px Archivo, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(String(seg.i + 1).padStart(2, "0"), CW / 2, CH * 0.32);
+      ctx.font = "600 34px 'JetBrains Mono', monospace"; ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.fillText("ADD AN IMAGE FOR THIS SCENE", CW / 2, CH * 0.45);
+    }
+  }
+}
+function wrapLines(list, maxW) {
+  const lines = []; let cur = [], w = 0;
+  for (const it of list) { if (cur.length && w + it.w > maxW) { lines.push(cur); cur = []; w = 0; } cur.push(it); w += it.w; }
+  if (cur.length) lines.push(cur); return lines;
+}
+const CAP = {
+  pop: { chunk: 3, font: "900 96px Archivo, 'Arial Black', sans-serif", upper: true, fill: "#FFFFFF", hi: "#FFE14D", stroke: 14, lh: 112, y: 0.6 },
+  clean: { chunk: 7, font: "700 58px Inter, system-ui, sans-serif", upper: false, fill: "#FFFFFF", hi: "#FFFFFF", stroke: 0, box: true, lh: 76, y: 0.66 },
+  story: { chunk: 5, font: "700 70px Archivo, system-ui, sans-serif", upper: false, fill: "#F5F1EA", hi: "#FFB870", stroke: 0, shadow: true, lh: 88, y: 0.62 }
+};
+function drawCaption(seg, t) {
+  const st = CAP[P.capStyle]; if (!st) return;
+  const ws = words(seg.s.narration); if (!ws.length) return;
+  const dur = seg.end - seg.start, wt = ws.map(w => w.length + 2), tot = wt.reduce((a, b) => a + b, 0);
+  let acc = 0, active = ws.length - 1, wStart = seg.start;
+  const local = t - seg.start;
+  for (let i = 0; i < ws.length; i++) { const s0 = acc / tot * dur; acc += wt[i]; if (local < acc / tot * dur) { active = i; wStart = seg.start + s0; break; } }
+  const c0 = Math.floor(active / st.chunk) * st.chunk;
+  ctx.font = st.font; ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  const space = ctx.measureText(" ").width;
+  const items = ws.slice(c0, c0 + st.chunk).map((w, j) => { const txt = st.upper ? w.toUpperCase() : w; return { txt, idx: c0 + j, w: ctx.measureText(txt).width + space }; });
+  const lines = wrapLines(items, CW * 0.84);
+  const baseY = CH * st.y - (lines.length - 1) * st.lh / 2;
+  lines.forEach((line, li) => {
+    const lw = line.reduce((a, b) => a + b.w, 0) - space;
+    let x = (CW - lw) / 2; const y = baseY + li * st.lh;
+    if (st.box) { ctx.fillStyle = "rgba(0,0,0,.62)"; const pad = 18; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - pad, y - st.lh + 14, lw + pad * 2, st.lh + 8, 14) : ctx.rect(x - pad, y - st.lh + 14, lw + pad * 2, st.lh + 8); ctx.fill(); }
+    for (const it of line) {
+      const isA = it.idx === active;
+      const pop = isA && P.capStyle === "pop" ? 1 + 0.07 * Math.max(0, 1 - (t - wStart) / 0.12) : 1;
+      ctx.save();
+      const cx = x + (it.w - space) / 2; ctx.translate(cx, y); ctx.scale(pop, pop); ctx.translate(-cx, -y);
+      if (st.shadow) { ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = 24; ctx.shadowOffsetY = 4; }
+      if (st.stroke) { ctx.lineWidth = st.stroke; ctx.strokeStyle = "#000"; ctx.lineJoin = "round"; ctx.strokeText(it.txt, x, y); }
+      ctx.fillStyle = isA ? st.hi : st.fill;
+      if (P.capStyle === "story" && !isA && it.idx > active) ctx.globalAlpha = 0.55;
+      ctx.fillText(it.txt, x, y);
+      ctx.restore();
+      x += it.w;
+    }
+  });
+}
+function drawHookCard(t) {
+  if (!P.hookOverlay || t > 2.5 || !P.hook) return;
+  const a = t > 2.2 ? (2.5 - t) / 0.3 : 1;
+  ctx.save(); ctx.globalAlpha = Math.max(0, a);
+  ctx.font = "900 66px Archivo, 'Arial Black', sans-serif";
+  const ws = words(P.hook.toUpperCase()); const space = ctx.measureText(" ").width;
+  const lines = wrapLines(ws.map(w => ({ txt: w, w: ctx.measureText(w).width + space })), CW * 0.78);
+  const lh = 80, pad = 34, boxH = lines.length * lh + pad * 1.4;
+  const maxW = Math.max(...lines.map(l => l.reduce((a, b) => a + b.w, 0) - space));
+  const y0 = 300;
+  ctx.fillStyle = "#FFFFFF"; ctx.beginPath(); const bx = (CW - maxW) / 2 - pad;
+  ctx.roundRect ? ctx.roundRect(bx, y0, maxW + pad * 2, boxH, 20) : ctx.rect(bx, y0, maxW + pad * 2, boxH); ctx.fill();
+  ctx.fillStyle = "#0B0C10"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  lines.forEach((l, i) => ctx.fillText(l.map(x => x.txt).join(" "), CW / 2, y0 + pad + 54 + i * lh));
+  ctx.restore();
+}
+function drawSafe() {
+  ctx.save(); ctx.setLineDash([14, 10]); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.fillStyle = "rgba(224,57,63,.22)";
+  const zones = [[0, 0, CW, 150, "Status bar"], [CW - 170, 880, 170, 820, "Buttons"], [0, 1560, CW - 170, 360, "Title and channel"]];
+  ctx.font = "600 30px 'JetBrains Mono', monospace"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  for (const [x, y, w, hh, label] of zones) { ctx.fillRect(x, y, w, hh); ctx.strokeRect(x + 2, y + 2, w - 4, hh - 4); ctx.fillStyle = "#fff"; ctx.fillText(label, x + 16, y + 16); ctx.fillStyle = "rgba(224,57,63,.22)"; }
+  ctx.restore();
+}
+function drawFrame(t, preview) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, CW, CH);
+  const segs = TL.segs;
+  if (!segs.length) {
+    ctx.fillStyle = "#14161F"; ctx.fillRect(0, 0, CW, CH);
+    ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.font = "700 48px Archivo, sans-serif"; ctx.textAlign = "center"; ctx.fillText("Your Short appears here", CW / 2, CH / 2); return;
+  }
+  let idx = segs.findIndex(s => t < s.end); if (idx < 0) idx = segs.length - 1;
+  const seg = segs[idx], k = (t - seg.start) / (seg.end - seg.start);
+  drawBG(seg, k, preview);
+  const XF = 0.22, nxt = segs[idx + 1];
+  if (nxt && t > seg.end - XF) { ctx.save(); ctx.globalAlpha = (t - (seg.end - XF)) / XF; drawBG(nxt, 0, preview); ctx.restore(); }
+  const g = ctx.createLinearGradient(0, CH * 0.42, 0, CH); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.6)");
+  ctx.fillStyle = g; ctx.fillRect(0, CH * 0.42, CW, CH * 0.58);
+  if (P.mode === "story") { const v = ctx.createRadialGradient(CW / 2, CH / 2, CH * 0.3, CW / 2, CH / 2, CH * 0.75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)"); ctx.fillStyle = v; ctx.fillRect(0, 0, CW, CH); }
+  if (!(P.hookOverlay && P.hook && idx === 0 && t <= 2.5)) drawCaption(seg, t);
+  drawHookCard(t);
+  if (preview && $("#safeZone").checked) drawSafe();
+  if (preview) { $$(".scene.playing").forEach(e => e.classList.remove("playing")); const el = document.getElementById("scene-" + seg.s.id); if (el && playing) el.classList.add("playing"); }
+}
+function drawNow() { if (!rendering) drawFrame(playhead, true); }
+
+/* ---------- Preview playback ---------- */
+let ac = null, playing = false, playhead = 0, t0 = 0, srcs = [], musicGain = null, rendering = false;
+function getAC() { if (!ac) { const A = window.AudioContext || window.webkitAudioContext; ac = new A(); } return ac; }
+function startSources(at, offset, destNode) {
+  const a = getAC(); srcs = [];
+  if (voice && offset < voice.buf.duration) { const s = a.createBufferSource(); s.buffer = voice.buf; s.connect(destNode || a.destination); if (destNode) s.connect(a.destination); s.start(at, offset); srcs.push(s); }
+  if (music) { const s = a.createBufferSource(); s.buffer = music.buf; s.loop = true; musicGain = a.createGain(); musicGain.gain.value = P.musicVol; s.connect(musicGain); musicGain.connect(destNode || a.destination); if (destNode) musicGain.connect(a.destination); s.start(at, offset % music.buf.duration); srcs.push(s); }
+}
+function stopSources() { srcs.forEach(s => { try { s.stop(); } catch {} }); srcs = []; musicGain = null; }
+function updateTC() { $("#tc").textContent = fmt(playhead) + " / " + fmt(TL.total); $("#scrub").value = String(playhead); }
+function setPlayIcon(on) { $("#playIcon").innerHTML = on ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>'; $("#btnPlay").setAttribute("aria-label", on ? "Pause" : "Play"); }
+async function play() {
+  if (rendering || !TL.segs.length) return;
+  const a = getAC(); try { await a.resume(); } catch {}
+  if (playhead >= TL.total - 0.05) playhead = 0;
+  playing = true; setPlayIcon(true);
+  t0 = a.currentTime + 0.05 - playhead; startSources(a.currentTime + 0.05, playhead);
+  const loop = () => { if (!playing) return; playhead = Math.min(TL.total, a.currentTime - t0); drawFrame(Math.max(0, playhead), true); updateTC(); if (playhead >= TL.total) { pause(); playhead = TL.total; return; } requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+function pause() { playing = false; stopSources(); setPlayIcon(false); $$(".scene.playing").forEach(e => e.classList.remove("playing")); }
+$("#btnPlay").addEventListener("click", () => playing ? pause() : play());
+$("#scrub").addEventListener("input", e => { const was = playing; if (was) pause(); playhead = Number(e.target.value); drawNow(); updateTC(); });
+
+/* ---------- Render ---------- */
+let recorder = null, resultBlob = null, resultExt = "webm";
+function pickMime() {
+  const opts = ["video/mp4;codecs=avc1.42E01F,mp4a.40.2", "video/mp4;codecs=avc1,mp4a", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+  if (!window.MediaRecorder) return null;
+  return opts.find(m => { try { return MediaRecorder.isTypeSupported(m); } catch { return false; } }) || "";
+}
+$("#btnRender").addEventListener("click", async () => {
+  if (!TL.segs.length) { toast("Add scenes first"); return; }
+  const mime = pickMime();
+  if (mime === null || !cv.captureStream) { $("#renderNote").textContent = "This browser can't record video. Open the page in Chrome, Edge or Safari on a computer."; $("#renderNote").className = "note err"; return; }
+  pause();
+  try { await document.fonts.load("900 96px Archivo"); await document.fonts.load("700 58px Inter"); } catch {}
+  const a = getAC(); try { await a.resume(); } catch {}
+  const dest = a.createMediaStreamDestination();
+  const vstream = cv.captureStream(30);
+  const tracks = [...vstream.getVideoTracks()];
+  if (voice || music) tracks.push(...dest.stream.getAudioTracks());
+  const stream = new MediaStream(tracks);
+  let rec;
+  try { rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 8000000 }, mime ? { mimeType: mime } : {})); }
+  catch { rec = new MediaRecorder(stream); }
+  recorder = rec;
+  resultExt = (rec.mimeType || mime || "").includes("mp4") ? "mp4" : "webm";
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  let cancelled = false;
+  const done = new Promise(res => rec.onstop = res);
+  rendering = true; $("#recTag").hidden = false; $("#btnRender").disabled = true; $("#btnCancel").hidden = false;
+  $("#prog").hidden = false; $("#saveRow").hidden = true; $("#result").hidden = true; $("#renderNote").className = "note";
+  $("#renderNote").textContent = "Recording… keep this screen open and in front.";
+  $("#btnCancel").onclick = () => { cancelled = true; finish(); };
+  let wake = null; try { wake = await navigator.wakeLock.request("screen"); } catch {}
+  drawFrame(0, false);
+  rec.start(250);
+  const start = a.currentTime + 0.15;
+  startSources(start, 0, dest);
+  const total = TL.total + 0.35;
+  let ended = false;
+  function finish() { if (ended) return; ended = true; stopSources(); try { rec.stop(); } catch {} }
+  const loop = () => {
+    if (ended) return;
+    const t = a.currentTime - start;
+    drawFrame(Math.max(0, Math.min(t, TL.total)), false);
+    $("#prog div").style.width = Math.min(100, t / total * 100).toFixed(1) + "%";
+    $("#tc").textContent = fmt(Math.max(0, t)) + " / " + fmt(TL.total);
+    if (t >= total) { finish(); return; }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+  // Fallback clock if the tab is hidden and frames stop.
+  const iv = setInterval(() => { if (ended) return clearInterval(iv); if (a.currentTime - start >= total) finish(); }, 500);
+  await done; clearInterval(iv);
+  try { wake && wake.release(); } catch {}
+  rendering = false; $("#recTag").hidden = true; $("#btnRender").disabled = false; $("#btnCancel").hidden = true; $("#prog").hidden = true;
+  vstream.getTracks().forEach(t => t.stop());
+  if (cancelled) { $("#renderNote").textContent = "Render stopped."; drawNow(); return; }
+  resultBlob = new Blob(chunks, { type: rec.mimeType || (resultExt === "mp4" ? "video/mp4" : "video/webm") });
+  const v = $("#result"); if (v.src) URL.revokeObjectURL(v.src);
+  v.src = URL.createObjectURL(resultBlob); v.hidden = false;
+  $("#saveRow").hidden = false; $("#saveNote").textContent = (resultBlob.size / 1048576).toFixed(1) + " MB · " + resultExt.toUpperCase();
+  $("#renderNote").textContent = "Done. Watch it back, then save it and upload it to YouTube Shorts.";
+  playhead = 0; drawNow(); updateTC();
+});
+$("#btnSave").addEventListener("click", async () => {
+  if (!resultBlob) return;
+  const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
+  const name = ((P.titles[0] || P.topic || "short").replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "short").replace(/\s+/g, "-").toLowerCase() + "." + resultExt;
+  if (!dl) { $("#saveNote").textContent = "Saving isn't available in this view. Play the video above and use your browser's save option."; return; }
+  try { await dl.save({ filename: name, data: resultBlob }); toast("Saved"); }
+  catch (e) { $("#saveNote").textContent = e && e.code === "declined" ? "Not saved." : "Couldn't save the file here. Try again from a computer browser."; }
+});
+
+/* ---------- Projects ---------- */
+function projName(p) { return p.titles && p.titles[0] || p.topic || "Untitled " + p.mode; }
+function renderProjects() {
+  $("#projSub").textContent = store.mode === "remote" ? "Projects sync to your account, so you can switch between your computer and phone. Images and audio stay on the device you added them on." : "Projects are saved in this browser.";
+  const list = store.list;
+  if (!list.length) { $("#plist").replaceChildren(h("p", { class: "note", text: "No saved projects yet. Your first edit to the example saves it as a project." })); return; }
+  $("#plist").replaceChildren(...list.map(p => {
+    let conf = null;
+    const del = h("button", { class: "btn small ghost", type: "button", text: "Delete", onclick: () => {
+      if (conf) return;
+      conf = h("span", { class: "confirm" }, "Delete for good?", h("button", { class: "btn small", type: "button", text: "Delete", onclick: async () => { await store.remove(p.id); (p.scenes || []).forEach(s => media.del(p.id + ":" + s.id)); media.del(p.id + ":voice"); media.del(p.id + ":music"); if (P.id === p.id) { P = newProject(P.mode); renderAll(); } } }), h("button", { class: "btn small ghost", type: "button", text: "Keep", onclick: () => { conf.remove(); conf = null; } }));
+      del.after(conf);
+    } });
+    return h("div", { class: "pitem" + (p.id === P.id ? " cur" : "") },
+      h("span", { class: "badge", text: p.mode }),
+      h("span", { class: "t", text: projName(p) }),
+      h("span", { class: "m", text: (p.scenes || []).length + " scenes · " + new Date(p.updatedAt).toLocaleDateString() }),
+      p.id === P.id ? h("span", { class: "badge", text: "Open" }) : h("button", { class: "btn small", type: "button", text: "Open", onclick: () => { openProject(p); setTab("script"); } }),
+      h("button", { class: "btn small ghost", type: "button", text: "Duplicate", onclick: () => { const c = JSON.parse(JSON.stringify(p)); c.id = uid(); c.scenes.forEach(s => s.id = uid()); c.topic = (c.topic || "") ; c.titles = (c.titles || []).map((t, i) => i === 0 ? t + " (copy)" : t); c.updatedAt = Date.now(); store.save(c, true); toast("Duplicated"); } }),
+      del);
+  }));
+}
+function openProject(p) {
+  pause();
+  P = Object.assign(newProject(p.mode), JSON.parse(JSON.stringify(p)));
+  touched = true; playhead = 0;
+  renderAll(); loadMedia(P);
+}
+$("#btnNew").addEventListener("click", () => { pause(); P = newProject(P.mode); touched = true; voice = null; music = null; playhead = 0; renderAll(); setTab("idea"); $("#topic").focus(); });
+
+/* ---------- Boot ---------- */
+function renderAll() {
+  renderIdea(); renderScript(); renderScenesHead(); renderScenes(); renderAudio(); renderProjects();
+  $("#dockTitle").textContent = P.example ? "Example · " + projName(P) : projName(P);
+  updateTimeline();
+}
+async function boot() {
+  store.initLocal();
+  await media.open();
+  if (store.list.length) { P = Object.assign(newProject(store.list[0].mode), store.list[0]); touched = true; }
+  renderAll();
+  let tab = "idea"; try { tab = localStorage.getItem("hookline.tab") || "idea"; } catch {}
+  if (P.example) tab = "scenes";
+  setTab(tab);
+  loadMedia(P);
+  try { await document.fonts.ready; } catch {}
+  drawNow();
+  store.initRemote();
+  sampler().then(s => { if (!s) { ["#btnIdeas", "#btnWrite", "#btnHooks"].forEach(id => $(id).title = AI_ERR.unavailable); $("#writeNote").textContent = AI_ERR.unavailable; } });
+}
+boot();
+setInterval(() => { $("#dockTitle").textContent = P.example ? "Example · " + projName(P) : projName(P); }, 1500);
+})();
+</script>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scene 3 Microfiche</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Old+Standard+TT:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F2B544}a:hover{color:#BFE8C9}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #151917; color: #BFE8C9; font-family: 'IBM Plex Mono', monospace">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; inset: 0" role="img" aria-label="The Archivist and Pip stare in terror at an old newspaper on a microfiche reader">
+    <defs>
+      <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#000" fill-opacity="0.22"/></pattern>
+      <radialGradient id="glow" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#173A2F"/><stop offset="1" stop-color="#07130F"/></radialGradient>
+    </defs>
+    <rect x="40" y="50" width="760" height="500" rx="18" fill="url(#glow)" stroke="#2C3530" stroke-width="10"/>
+    <g fill="#BFE8C9">
+      <rect x="90" y="96" width="660" height="10"/><rect x="90" y="118" width="660" height="3" fill-opacity="0.5"/>
+      <rect x="90" y="250" width="300" height="4" fill-opacity="0.5"/><rect x="90" y="262" width="300" height="4" fill-opacity="0.5"/><rect x="90" y="274" width="260" height="4" fill-opacity="0.5"/><rect x="90" y="286" width="300" height="4" fill-opacity="0.5"/><rect x="90" y="298" width="280" height="4" fill-opacity="0.5"/><rect x="90" y="310" width="300" height="4" fill-opacity="0.5"/>
+      <rect x="420" y="250" width="330" height="200" fill-opacity="0.18"/><path d="M420 450 L520 370 L590 410 L660 340 L750 450 Z" fill-opacity="0.7"/>
+    </g>
+    <rect x="80" y="150" width="680" height="84" fill="none" stroke="#F2B544" stroke-width="2" stroke-dasharray="8 6"/>
+    <rect x="40" y="50" width="760" height="500" rx="18" fill="url(#scan)"/>
+    <rect x="40" y="580" width="760" height="100" fill="#0B0E0C"/>
+    <g fill="#1E2A25" stroke="#3A4A43"><rect x="60" y="596" width="130" height="68"/><rect x="206" y="596" width="130" height="68"/><rect x="352" y="596" width="130" height="68" stroke="#F2B544" stroke-width="2"/><rect x="498" y="596" width="130" height="68"/><rect x="644" y="596" width="130" height="68"/></g>
+    <sc-for list="{{ chars }}" as="c" hint-placeholder-count="2">
+      <g transform="{{ c.t }}">
+        <sc-for list="{{ c.shapes }}" as="s" hint-placeholder-count="12">
+          <path d="{{ s.d }}" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="{{ s.sw }}" stroke-linecap="round" stroke-linejoin="round"/>
+        </sc-for>
+      </g>
+    </sc-for>
+  </svg>
+  <div style="position: absolute; left: 96px; top: 164px; width: 660px; font-family: 'Old Standard TT', Georgia, serif; font-weight: 700; font-size: 44px; line-height: 1.1; color: #BFE8C9">SNOW FALLS IN JULY</div>
+  <div style="position: absolute; left: 60px; top: 18px; font-size: 13px; letter-spacing: 0.16em; color: #6F8C7C">READER 03 · ROLL 1816-B · FRAME 0412</div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 152px; display: flex; justify-content: center">
+    <span style="background: rgba(7,19,15,0.9); color: #F2B544; font-size: 24px; font-weight: 500; padding: 7px 16px; border: 1px solid #F2B544">Then they found the newspapers.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+  const K = '#111111', R = '#D9363E', W = '#FFFFFF', B = '#5BB8F0', P = '#F08AA0', N = 'none';
+  const f = (d, fill, stroke, sw) => ({ d, fill: fill || N, stroke: stroke || N, sw: sw || 0 });
+  const capsule = (x, y, w, h) => 'M' + x + ' ' + (y + w / 2) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + w + ' 0 v' + (h - w) + ' a' + w / 2 + ' ' + w / 2 + ' 0 0 1 ' + (-w) + ' 0 z';
+  const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 z';
+  const drop = (x, y, s) => 'M' + x + ' ' + y + ' C ' + (x + s) + ' ' + (y + 1.6 * s) + ' ' + (x + s) + ' ' + (y + 2.4 * s) + ' ' + x + ' ' + (y + 2.4 * s) + ' C ' + (x - s) + ' ' + (y + 2.4 * s) + ' ' + (x - s) + ' ' + (y + 1.6 * s) + ' ' + x + ' ' + y + ' Z';
+  const eyes = (w, h, y) => [f(capsule(182 - w, y, w, h), K), f(capsule(218, y, w, h), K)];
+  const FACES = {
+    terrified: [f(circ(166, 166, 34), W, K, 8), f(circ(234, 166, 34), W, K, 8), f(circ(160, 172, 7), K), f(circ(228, 172, 7), K), f('M178 224 q22 -6 44 0 q8 34 -22 58 q-30 -24 -22 -58 z', R, K, 8), f('M326 120 l18 6 M330 160 l22 0', N, K, 7), f(drop(98, 96, 12), B, K, 4)],
+    nervous: [...eyes(30, 52, 146), f('M164 248 q9 -10 18 0 t18 0 t18 0 t18 0', N, K, 8), f(drop(312, 108, 14), B, K, 4)]
+  };
+  const POSES = {
+    shiver: ['M200 300 V430 M200 350 C 156 370 156 404 188 404 M200 350 C 244 370 244 404 212 404 M200 430 L184 524 M200 430 L216 524', 'M212 396 l10 14'],
+    stand: ['M200 300 V430 M200 350 L140 420 M200 350 L260 420 M200 430 L168 524 M200 430 L232 524', 'M250 404 l14 14']
+  };
+  const HATS = {
+    cap: [f('M92 132 C 100 50 300 50 308 132 C 250 110 150 110 92 132 Z', '#D9A441', K, 8), f('M70 142 C 140 112 250 110 318 132 C 250 128 150 132 70 142 Z', '#B9852C', K, 8), f(circ(200, 72, 9), K)],
+    beanie: [f('M98 138 C 98 36 302 36 302 138 Z', '#4C9A5B', K, 8), f('M90 128 h220 v26 h-220 z', '#3C7D49', K, 8), f(circ(200, 40, 20), '#4C9A5B', K, 7)]
+  };
+  const person = (face, pose, hat, wrist) => [f(POSES[pose][0], N, K, 24), ...(wrist ? [f(POSES[pose][1], N, '#C8281E', 12)] : []), f(circ(200, 180, 120), W, K, 11), f('M98 238 C 140 306 260 306 302 238 C 296 280 252 298 200 298 C 148 298 104 280 98 238 Z', '#E9E9E9'), ...HATS[hat], ...FACES[face]];
+  return { chars: [
+    { t: 'translate(1110 250) scale(-0.62 0.62)', shapes: person('nervous', 'stand', 'beanie', false) },
+    { t: 'translate(830 170) scale(0.95)', shapes: person('terrified', 'shiver', 'cap', true) }
+  ] };
+}
+}
+</script>
+</body>
+</html>
